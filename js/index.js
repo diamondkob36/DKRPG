@@ -89,6 +89,11 @@ window.selectClass = function(key) {
 
     // 5. เปิดโชว์กล่องพรีวิว (เผื่อมันซ่อนอยู่)
     document.getElementById('class-preview').style.display = 'block';
+
+    const imgEl = document.getElementById('preview-img');
+    imgEl.src = stats.img;       // เอารูปจาก gameData มาใส่
+    imgEl.style.display = 'inline-block'; // เปิดการแสดงผล
+    imgEl.onerror = function() { this.src = 'https://placehold.co/100x100?text=No+Image'; }; // กันภาพแตกถ้ายังไม่มีไฟล์
 }
 
 // ฟังก์ชันยืนยันสร้างตัวละคร
@@ -164,6 +169,13 @@ function updateUI() {
     // โชว์ชื่อและอาชีพ
     document.getElementById('display-name').innerText = gameData.name;
     document.getElementById('display-class').innerText = gameData.className;
+
+    if(gameData.classKey && classStats[gameData.classKey]) {
+        document.getElementById('hero-img').src = classStats[gameData.classKey].img;
+    } else {
+        // กรณีเซฟเก่าไม่มี classKey
+        document.getElementById('hero-img').src = 'https://placehold.co/100x100?text=Hero';
+    }
     
     // โชว์สเตตัส
     document.getElementById('lvl').innerText = gameData.lvl;

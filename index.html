@@ -23,6 +23,9 @@
     <div id="create-screen" style="display:none;">
         <div class="box" style="max-width: 500px;">
             <h2>📜 ลงทะเบียนผู้กล้า</h2>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img id="preview-img" src="" style="width: 100px; height: 100px; display: none;" class="char-portrait">
+            </div>
             <p>ตั้งชื่อนามของท่าน</p>
             <input type="text" id="hero-name" placeholder="ใส่ชื่อตัวละคร..." maxlength="12">
             
@@ -62,9 +65,12 @@
     <div id="game-screen" style="display:none;">
         <div class="box">
             <h2>Sir <span id="display-name">Hero</span></h2>
+                    
+            <div style="text-align: center; margin: 10px 0;">
+                <img id="hero-img" src="" class="char-portrait">
+            </div>
             <small style="color:#bdc3c7;">อาชีพ: <span id="display-class">-</span></small>
-            <hr>
-            
+
             <div style="display: flex; justify-content: space-around; text-align: left;">
                 <div>
                     <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
