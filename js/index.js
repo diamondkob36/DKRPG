@@ -1,8 +1,8 @@
-// นำเข้า Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// เพิ่มบรรทัดนี้: นำเข้าระบบ Authentication
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// --- Config ของคุณ (dk-rpg) ---
 const firebaseConfig = {
     apiKey: "AIzaSyB4xTY6BTjufK9fi0YlgzllOSK2349l0Zk",
     authDomain: "dk-rpg.firebaseapp.com",
@@ -12,30 +12,51 @@ const firebaseConfig = {
     appId: "1:954909256548:web:4f347b5cbf5f55fbdc6871"
 };
 
-// เริ่มต้นระบบ
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app); // เริ่มต้นระบบ Auth
+const provider = new GoogleAuthProvider(); // เตรียมล็อกอินผ่าน Google
 
-// ตัวแปรเกม
-let currentUser = "";
-let gameData = { lvl: 1, gold: 0 };
+let currentUser = null; // เก็บข้อมูลคนเล่น (UID, Email)
+let gameData = { lvl: 1, gold: 0, name: "New Hero" };
 
-// --- ฟังก์ชันควบคุมเกม ---
-// หมายเหตุ: ต้องใช้ window.xxxx เพื่อให้ HTML มองเห็นฟังก์ชันใน Module
-window.login = async function() {
-    const nameInput = document.getElementById('username');
-    const name = nameInput.value.trim();
-    
-    if(!name) return alert("กรุณาตั้งชื่อก่อนครับ!");
-
-    currentUser = name;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'block';
-    document.getElementById('display-name').innerText = currentUser;
-
-    await loadData();
+// --- ฟังก์ชันล็อกอิน (Google) ---
+window.loginGoogle = async function() {
+    try {
+        const result = await signInWithPopup(auth, provider);
+        // ล็อกอินสำเร็จ Firebase จะจัดการต่อเองใน onAuthStateChanged
+        console.log("Logged in:", result.user);
+    } catch (error) {
+        console.error(error);
+        setStatus("❌ ล็อกอินไม่ผ่าน: " + error.message, "error");
+    }
 };
 
+window.logout = function() {
+    signOut(auth).then(() => {
+        location.reload(); // รีเฟรชหน้าจอเมื่อออก
+    });
+};
+
+// --- ตรวจสอบสถานะ: ว่าล็อกอินอยู่ไหม? ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // ถ้ามีคนล็อกอินอยู่
+        currentUser = user;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('display-name').innerText = user.displayName;
+        
+        // โหลดข้อมูลโดยใช้ UID (รหัสประจำตัวที่ไม่ซ้ำกัน) เป็นชื่อเซฟ
+        await loadData(user.uid);
+    } else {
+        // ถ้ายังไม่ล็อกอิน
+        document.getElementById('login-screen').style.display = 'block';
+        document.getElementById('game-screen').style.display = 'none';
+    }
+});
+
+// --- ฟังก์ชันเกม ---
 window.train = function() {
     gameData.lvl++;
     updateUI();
@@ -55,37 +76,41 @@ function updateUI() {
 function setStatus(msg, type) {
     const el = document.getElementById('status');
     el.innerText = msg;
-    el.className = type;
 }
 
-// --- ระบบบันทึก (Save) ---
+// --- Save / Load (ใช้ UID เป็น Key) ---
 window.saveData = async function() {
-    setStatus("กำลังส่งข้อมูลไป Cloud...", "");
+    if (!currentUser) return;
+    setStatus("กำลังบันทึก...", "");
     try {
-        await setDoc(doc(db, "players", currentUser), gameData);
-        setStatus("✅ บันทึกข้อมูลขึ้น dk-rpg สำเร็จ!", "success");
+        // บันทึกชื่อคนเล่นไปด้วย
+        gameData.name = currentUser.displayName;
+        
+        // ใช้ currentUser.uid เป็นชื่อเอกสาร (ปลอดภัยกว่าใช้ชื่อเล่น)
+        await setDoc(doc(db, "players", currentUser.uid), gameData);
+        setStatus("✅ บันทึกเรียบร้อย!", "success");
     } catch (e) {
-        console.error("Save Error:", e);
         setStatus("❌ บันทึกไม่ได้: " + e.message, "error");
     }
 };
 
-// --- ระบบโหลด (Load) ---
-async function loadData() {
-    setStatus("กำลังค้นหาเซฟเก่า...", "");
+async function loadData(uid) {
+    setStatus("กำลังโหลดข้อมูล...", "");
     try {
-        const docRef = doc(db, "players", currentUser);
+        const docRef = doc(db, "players", uid);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             gameData = docSnap.data();
             updateUI();
-            setStatus("📂 พบเซฟเก่า! โหลดข้อมูลเรียบร้อย", "success");
+            setStatus("📂 โหลดเซฟสำเร็จ พร้อมลุย!", "success");
         } else {
-            setStatus("✨ ไม่พบเซฟ เป็นผู้เล่นใหม่สินะ", "");
+            // ถ้าเป็นผู้เล่นใหม่ ให้รีเซ็ตค่า
+            gameData = { lvl: 1, gold: 0, name: currentUser.displayName };
+            updateUI();
+            setStatus("✨ ยินดีต้อนรับผู้กล้าคนใหม่!", "");
         }
     } catch (e) {
-        console.error("Load Error:", e);
-        setStatus("⚠️ โหลดเซฟไม่ได้ (อาจเป็นเน็ต หรือ Permission)", "error");
+        setStatus("⚠️ โหลดเซฟไม่ได้", "error");
     }
 }

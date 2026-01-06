@@ -2,42 +2,42 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>DK-RPG: Online</title>
-    <link rel="stylesheet" href="css/index.css">
+    <title>DK-RPG: Medieval</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <h1>🔥 DK-RPG Online System</h1>
-    <small>เชื่อมต่อกับ Database: dk-rpg</small>
-    <br><br>
+    <h1>⚜️ DK-RPG Legends ⚜️</h1>
     
     <div id="login-screen">
         <div class="box">
-            <p>ใส่ชื่อตัวละครเพื่อเริ่มเกม</p>
-            <input type="text" id="username" placeholder="ชื่อ Hero ของคุณ...">
-            <br><br>
-            <button onclick="login()">🚀 เข้าสู่ระบบ</button>
+            <h2>Gate of Heroes</h2>
+            <p>โปรดแสดงตัวตนเพื่อเข้าสู่ดินแดน</p>
+            <br>
+            <button class="google-btn" onclick="loginGoogle()">
+                🛡️ เข้าสู่ระบบด้วย Google
+            </button>
         </div>
     </div>
 
     <div id="game-screen" style="display:none;">
-        <h2>ยินดีต้อนรับ, <span id="display-name" style="color:#f1c40f"></span></h2>
-        
         <div class="box">
-            <p style="font-size: 24px;">Level: <span id="lvl">1</span></p>
-            <p style="font-size: 24px;">Gold: <span id="gold">0</span> 💰</p>
-            <hr style="border-color: rgba(255,255,255,0.2);">
+            <h2>Sir <span id="display-name">Hero</span></h2>
+            <hr>
+            <p style="font-size: 20px;">Level: <span id="lvl">1</span></p>
+            <p style="font-size: 20px;">Gold: <span id="gold">0</span> 🪙</p>
+            <hr>
             
-            <button onclick="train()">⚔️ ฝึกดาบ (XP+)</button>
-            <button onclick="farm()">💎 ขุดเหมือง (Gold+)</button>
+            <button onclick="train()">⚔️ ฝึกดาบ</button>
+            <button onclick="farm()">📜 รับภารกิจ</button>
             <br><br>
-            <button onclick="saveData()" style="background-color: #27ae60; width: 100%;">💾 บันทึกเกม (Save Cloud)</button>
+            <button class="save-btn" onclick="saveData()">💾 บันทึกการเดินทาง</button>
+            <button onclick="logout()" style="background:#c0392b; border-color:#e74c3c;">🚪 ออกจากระบบ</button>
         </div>
-
         <p id="status"></p>
     </div>
 
-    <script type="module" src="js/index.js"></script>
+    <script type="module" src="js/script.js"></script>
     
 </body>
 </html>
