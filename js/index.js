@@ -160,7 +160,11 @@ window.farm = function() {
     updateUI();
 };
 
-window.saveData = async function() {
+// แก้ไขฟังก์ชัน saveData นิดหน่อย (เพื่อกันไม่ให้ HUD หุบตอนกดปุ่มเซฟ)
+window.saveData = async function(event) {
+    if(event) event.stopPropagation(); // หยุดการคลิกไม่ให้ทะลุไปโดนกล่องใหญ่
+    
+    // ... (โค้ดบันทึกเดิม) ...
     if (!currentUser) return;
     setStatus("กำลังบันทึก...", "");
     try {
@@ -191,6 +195,10 @@ function updateUI() {
     document.getElementById('str').innerText = gameData.str;
     document.getElementById('int').innerText = gameData.int;
     document.getElementById('agi').innerText = gameData.agi;
+
+    // 👇 เพิ่มส่วนนี้: คำนวณหลอดเลือดเป็น % 👇
+    const hpPercent = (gameData.hp / gameData.maxHp) * 100;
+    document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
 }
 
 function setStatus(msg, type) {
@@ -200,3 +208,9 @@ function setStatus(msg, type) {
         el.className = type;
     }
 }
+
+// 1. เพิ่มฟังก์ชันเปิด/ปิด HUD (ไว้ที่ไหนก็ได้ หรือล่างสุด)
+window.toggleHUD = function() {
+    const panel = document.getElementById('char-status-panel');
+    panel.classList.toggle('expanded');
+};

@@ -13,41 +13,42 @@ body {
     flex-direction: column;
 }
 
-/* --- Top Bar --- */
+/* --- 1. ปรับ Top Bar ให้เล็กลง --- */
 #top-bar {
+    height: 40px; /* ลดความสูง */
+    padding: 0 15px;
+    /* ... (ค่าอื่นๆ คงเดิม) ... */
     background: linear-gradient(to bottom, #2c231e, #1a0f0a);
-    border-bottom: 3px solid #d4af37;
-    padding: 10px 20px;
+    border-bottom: 2px solid #d4af37;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 60px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.5);
     z-index: 100;
     flex-shrink: 0;
 }
 
 #top-bar h1 {
+    font-size: 18px; /* ลดขนาดฟอนต์ */
+    margin: 0;
+    /* ... (ค่าอื่นๆ คงเดิม) ... */
     font-family: 'Cinzel', serif;
     color: #d4af37;
     text-shadow: 2px 2px 4px #000;
-    margin: 0;
-    font-size: 24px;
-    letter-spacing: 2px;
 }
 
 .logout-btn-top {
+    padding: 5px 10px; /* ลดขนาดปุ่ม */
+    font-size: 12px;
+    /* ... (ค่าอื่นๆ คงเดิม) ... */
     background: linear-gradient(to bottom, #c0392b, #962d22);
-    border: 2px solid #e74c3c;
+    border: 1px solid #e74c3c;
     color: #fff;
-    padding: 8px 15px;
     font-family: 'Cinzel', serif;
-    font-size: 14px;
     cursor: pointer;
     border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    transition: all 0.2s;
 }
+
 .logout-btn-top:hover {
     background: linear-gradient(to bottom, #e74c3c, #c0392b);
     box-shadow: 0 0 10px #e74c3c;
@@ -109,22 +110,115 @@ body {
 #zone-train { top: 20%; left: 15%; }
 #zone-quest { top: 30%; right: 20%; }
 
-/* --- Character Status Panel (แผงลอย) --- */
+/* --- 2. เปลี่ยน Status Panel เป็น Mini HUD --- */
 #char-status-panel.box {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 250px;
-    padding: 20px;
-    margin: 0;
-    min-width: auto;
-    background-color: rgba(244, 228, 188, 0.95); /* ให้โปร่งแสงนิดหน่อย */
-    box-shadow: 0 0 20px rgba(0,0,0,0.7);
-    z-index: 50;
+    top: 60px; /* อยู่ใต้ Top Bar นิดหน่อย */
+    left: 20px; /* ย้ายมามุมซ้าย (หลบปุ่มภารกิจด้านขวา) */
+    right: auto; /* ยกเลิกค่า Right เดิม */
+    
+    width: 220px; /* ความกว้างตอนหุบ */
+    padding: 10px;
+    background-color: rgba(30, 20, 15, 0.95); /* พื้นหลังสีเข้มโปร่งแสง */
+    border: 2px solid #d4af37;
+    border-radius: 8px;
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    height: 50px; /* ความสูงตอนหุบ (โชว์แค่หัว) */
+    overflow: hidden; /* ซ่อนส่วนเกิน */
+    cursor: pointer; /* เมาส์เป็นรูปมือ */
+    z-index: 999;
 }
-#char-status-panel h2 { font-size: 18px; margin-bottom: 5px; }
-#char-status-panel p { margin: 5px 0; }
 
+/* ตอนขยาย (เพิ่ม Class นี้ด้วย JS) */
+#char-status-panel.expanded {
+    height: auto; /* ยืดความสูงอัตโนมัติ */
+    background-color: rgba(244, 228, 188, 0.95); /* เปลี่ยนเป็นสีรดานเมื่อเปิด */
+}
+#char-status-panel.expanded h2, 
+#char-status-panel.expanded p,
+#char-status-panel.expanded span {
+    color: #3e2723 !important; /* เปลี่ยนสีตัวหนังสือกลับเป็นสีเข้ม */
+}
+
+/* --- จัดเลย์เอาต์ภายใน HUD --- */
+/* ส่วนหัว (โชว์ตลอดเวลา) */
+.hud-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+}
+
+.hud-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* รูปวงกลม */
+    border: 2px solid #d4af37;
+    object-fit: cover;
+    background: #000;
+}
+
+.hud-info {
+    flex-grow: 1;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.hud-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #f1c40f; /* ชื่อสีทองในโหมดมืด */
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* หลอดเลือด (HP Bar) */
+.hp-bar-bg {
+    background: #333;
+    height: 6px;
+    width: 100%;
+    border-radius: 3px;
+    margin-top: 4px;
+    border: 1px solid #555;
+    position: relative;
+}
+
+.hp-bar-fill {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    height: 100%;
+    width: 100%; /* JS จะมาแก้ตรงนี้ */
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ส่วนรายละเอียด (ซ่อนอยู่) */
+.hud-details {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    opacity: 0; /* จางหาย */
+    transition: opacity 0.2s;
+    pointer-events: none; /* กดไม่ได้ตอนซ่อน */
+}
+
+#char-status-panel.expanded .hud-details {
+    opacity: 1; /* ปรากฏ */
+    pointer-events: auto;
+}
+
+/* ไอคอนลูกศรเล็กๆ บอกว่ากดได้ */
+.toggle-icon {
+    font-size: 10px;
+    color: #bdc3c7;
+    transition: transform 0.3s;
+}
+#char-status-panel.expanded .toggle-icon {
+    transform: rotate(180deg);
+    color: #5d4037;
+}
 /* --- General Styles (จากของเดิม) --- */
 h2 {
     font-family: 'Cinzel', serif;

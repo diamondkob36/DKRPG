@@ -72,28 +72,38 @@
                 <span class="zone-label">บอร์ดภารกิจ</span>
             </div>
 
-            <div id="char-status-panel" class="box">
-                <h2>Sir <span id="display-name">Hero</span></h2>
-                <div style="text-align: center; margin: 10px 0;">
-                     <img id="hero-img" src="" class="char-portrait" style="width: 80px; height: 80px;">
-                </div>
-                <small style="color:#bdc3c7;">อาชีพ: <span id="display-class">-</span></small>
-                <hr style="margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; text-align: left; font-size: 14px;">
-                    <div>
-                        <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
-                        <p>⚔️ STR: <span id="str">0</span></p>
+            <div id="char-status-panel" class="box" onclick="toggleHUD()">
+                
+                <div class="hud-header">
+                    <img id="hero-img" src="" class="hud-avatar">
+                    
+                    <div class="hud-info">
+                        <h2 id="display-name" class="hud-name">Hero</h2>
+                        <div class="hp-bar-bg">
+                            <div id="hp-bar-fill" class="hp-bar-fill" style="width: 100%;"></div>
+                        </div>
                     </div>
-                    <div>
-                        <p>🔥 INT: <span id="int">0</span></p>
-                        <p>💨 AGI: <span id="agi">0</span></p>
-                    </div>
+                    
+                    <div class="toggle-icon">▼</div>
                 </div>
-                <hr style="margin: 10px 0;">
-                <p style="font-size: 16px;">Lv: <span id="lvl">1</span> | 🪙 <span id="gold">0</span></p>
-                <hr style="margin: 10px 0;">
-                <button class="save-btn" onclick="saveData()" style="width: 100%; padding: 8px; font-size: 14px;">💾 บันทึก</button>
-                <p id="status" style="font-size: 12px; margin-top: 5px;"></p>
+
+                <div class="hud-details">
+                    <small>อาชีพ: <span id="display-class">-</span></small>
+                    <div style="display: flex; justify-content: space-between; text-align: left; font-size: 14px; margin-top: 5px;">
+                        <div>
+                            <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
+                            <p>⚔️ STR: <span id="str">0</span></p>
+                        </div>
+                        <div>
+                            <p>🔥 INT: <span id="int">0</span></p>
+                            <p>💨 AGI: <span id="agi">0</span></p>
+                        </div>
+                    </div>
+                    <p style="font-size: 14px; margin: 5px 0;">Lv: <span id="lvl">1</span> | 🪙 <span id="gold">0</span></p>
+                    
+                    <button class="save-btn" onclick="saveData(event)" style="width: 100%; padding: 5px; font-size: 14px; margin: 5px 0;">💾 บันทึกเกม</button>
+                    <p id="status" style="font-size: 10px; margin: 0;"></p>
+                </div>
             </div>
         </div>
     </div>
