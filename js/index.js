@@ -76,6 +76,9 @@ function updateUI() {
 function setStatus(msg, type) {
     const el = document.getElementById('status');
     el.innerText = msg;
+    
+    // เพิ่มบรรทัดนี้ครับ! เพื่อให้ CSS เปลี่ยนสีตัวหนังสือ
+    el.className = type; 
 }
 
 // --- Save / Load (ใช้ UID เป็น Key) ---
