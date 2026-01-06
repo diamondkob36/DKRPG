@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Sarabun:wght@400;700&display=swap');
 
+/* --- 1. Global Layout (โครงสร้างหลัก) --- */
 body {
     background-color: #1a0f0a;
     background-image: radial-gradient(circle, #2e1e16 0%, #0d0604 100%);
@@ -8,16 +9,15 @@ body {
     text-align: center;
     margin: 0;
     height: 100vh;
-    overflow: hidden; /* ซ่อน Scrollbar */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-/* --- 1. ปรับ Top Bar ให้เล็กลง --- */
+/* --- 2. Top Bar (แถบบนย่อส่วน) --- */
 #top-bar {
-    height: 40px; /* ลดความสูง */
+    height: 40px; /* เล็กกะทัดรัด */
     padding: 0 15px;
-    /* ... (ค่าอื่นๆ คงเดิม) ... */
     background: linear-gradient(to bottom, #2c231e, #1a0f0a);
     border-bottom: 2px solid #d4af37;
     display: flex;
@@ -29,18 +29,16 @@ body {
 }
 
 #top-bar h1 {
-    font-size: 18px; /* ลดขนาดฟอนต์ */
-    margin: 0;
-    /* ... (ค่าอื่นๆ คงเดิม) ... */
+    font-size: 18px;
     font-family: 'Cinzel', serif;
     color: #d4af37;
     text-shadow: 2px 2px 4px #000;
+    margin: 0;
 }
 
 .logout-btn-top {
-    padding: 5px 10px; /* ลดขนาดปุ่ม */
+    padding: 5px 12px;
     font-size: 12px;
-    /* ... (ค่าอื่นๆ คงเดิม) ... */
     background: linear-gradient(to bottom, #c0392b, #962d22);
     border: 1px solid #e74c3c;
     color: #fff;
@@ -48,13 +46,12 @@ body {
     cursor: pointer;
     border-radius: 4px;
 }
-
 .logout-btn-top:hover {
     background: linear-gradient(to bottom, #e74c3c, #c0392b);
-    box-shadow: 0 0 10px #e74c3c;
+    box-shadow: 0 0 8px #e74c3c;
 }
 
-/* --- Screen Containers (Login/Create) --- */
+/* --- 3. Screen Containers (สำหรับหน้า Login/Create) --- */
 .screen-container {
     flex-grow: 1;
     display: flex;
@@ -64,7 +61,7 @@ body {
     overflow-y: auto;
 }
 
-/* --- Game Map Screen --- */
+/* --- 4. Game Map (แผนที่) --- */
 #game-screen {
     flex-grow: 1;
     position: relative;
@@ -80,154 +77,46 @@ body {
 #world-map-img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* ให้ภาพเต็มจอโดยไม่เสียสัดส่วน */
+    object-fit: cover;
     display: block;
 }
 
-/* --- Map Zones (ปุ่มบนแผนที่) --- */
+/* ปุ่มกดบนแผนที่ */
 .map-zone {
     position: absolute;
-    background: rgba(93, 64, 55, 0.8);
+    background: rgba(93, 64, 55, 0.85);
     border: 2px solid #d4af37;
-    padding: 10px 15px;
+    padding: 8px 15px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6);
     transition: all 0.2s;
 }
 .map-zone:hover {
-    background: rgba(139, 90, 43, 0.9);
+    background: rgba(139, 90, 43, 0.95);
     transform: scale(1.05);
     box-shadow: 0 0 15px #d4af37;
+    z-index: 10;
 }
-.zone-icon { font-size: 24px; }
-.zone-label { font-family: 'Cinzel', serif; color: #f4e4bc; font-weight: bold; }
+.zone-icon { font-size: 20px; }
+.zone-label { font-family: 'Cinzel', serif; color: #f4e4bc; font-weight: bold; font-size: 14px; }
 
-/* ตำแหน่งปุ่มบนแผนที่ (ปรับแก้ได้ตามชอบ) */
+/* ตำแหน่งปุ่ม */
 #zone-train { top: 20%; left: 15%; }
 #zone-quest { top: 30%; right: 20%; }
 
-/* --- 2. เปลี่ยน Status Panel เป็น Mini HUD --- */
-#char-status-panel.box {
-    position: absolute;
-    top: 60px; /* อยู่ใต้ Top Bar นิดหน่อย */
-    left: 20px; /* ย้ายมามุมซ้าย (หลบปุ่มภารกิจด้านขวา) */
-    right: auto; /* ยกเลิกค่า Right เดิม */
-    
-    width: 220px; /* ความกว้างตอนหุบ */
-    padding: 10px;
-    background-color: rgba(30, 20, 15, 0.95); /* พื้นหลังสีเข้มโปร่งแสง */
-    border: 2px solid #d4af37;
-    border-radius: 8px;
-    
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    height: 50px; /* ความสูงตอนหุบ (โชว์แค่หัว) */
-    overflow: hidden; /* ซ่อนส่วนเกิน */
-    cursor: pointer; /* เมาส์เป็นรูปมือ */
-    z-index: 999;
-}
-
-/* ตอนขยาย (เพิ่ม Class นี้ด้วย JS) */
-#char-status-panel.expanded {
-    height: auto; /* ยืดความสูงอัตโนมัติ */
-    background-color: rgba(244, 228, 188, 0.95); /* เปลี่ยนเป็นสีรดานเมื่อเปิด */
-}
-#char-status-panel.expanded h2, 
-#char-status-panel.expanded p,
-#char-status-panel.expanded span {
-    color: #3e2723 !important; /* เปลี่ยนสีตัวหนังสือกลับเป็นสีเข้ม */
-}
-
-/* --- จัดเลย์เอาต์ภายใน HUD --- */
-/* ส่วนหัว (โชว์ตลอดเวลา) */
-.hud-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 100%;
-}
-
-.hud-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%; /* รูปวงกลม */
-    border: 2px solid #d4af37;
-    object-fit: cover;
-    background: #000;
-}
-
-.hud-info {
-    flex-grow: 1;
-    text-align: left;
-    line-height: 1.2;
-}
-
-.hud-name {
-    font-size: 14px;
-    font-weight: bold;
-    color: #f1c40f; /* ชื่อสีทองในโหมดมืด */
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* หลอดเลือด (HP Bar) */
-.hp-bar-bg {
-    background: #333;
-    height: 6px;
-    width: 100%;
-    border-radius: 3px;
-    margin-top: 4px;
-    border: 1px solid #555;
-    position: relative;
-}
-
-.hp-bar-fill {
-    background: linear-gradient(to right, #e74c3c, #c0392b);
-    height: 100%;
-    width: 100%; /* JS จะมาแก้ตรงนี้ */
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-/* ส่วนรายละเอียด (ซ่อนอยู่) */
-.hud-details {
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(0,0,0,0.1);
-    opacity: 0; /* จางหาย */
-    transition: opacity 0.2s;
-    pointer-events: none; /* กดไม่ได้ตอนซ่อน */
-}
-
-#char-status-panel.expanded .hud-details {
-    opacity: 1; /* ปรากฏ */
-    pointer-events: auto;
-}
-
-/* ไอคอนลูกศรเล็กๆ บอกว่ากดได้ */
-.toggle-icon {
-    font-size: 10px;
-    color: #bdc3c7;
-    transition: transform 0.3s;
-}
-#char-status-panel.expanded .toggle-icon {
-    transform: rotate(180deg);
-    color: #5d4037;
-}
-/* --- General Styles (จากของเดิม) --- */
+/* --- 5. UI Components (ปุ่ม, กล่องข้อความ) --- */
 h2 {
     font-family: 'Cinzel', serif;
     color: #d4af37;
     text-shadow: 2px 2px 4px #000;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
+    margin-bottom: 15px;
 }
 
+/* กล่อง .box (ใช้เฉพาะหน้า Login/Create) */
 .box {
     background-color: #f4e4bc;
     border: 4px double #5d4037;
@@ -236,7 +125,9 @@ h2 {
     border-radius: 4px;
     box-shadow: 0 0 20px rgba(0,0,0,0.7), inset 0 0 50px rgba(160, 116, 75, 0.3);
     position: relative;
+    max-width: 90%;
 }
+/* ลายกนกมุมกล่อง */
 .box::before, .box::after {
     content: '❖';
     color: #5d4037;
@@ -246,18 +137,19 @@ h2 {
 .box::before { top: 5px; left: 10px; }
 .box::after { bottom: 5px; right: 10px; }
 
+/* ปุ่มทั่วไป */
 button {
     background: linear-gradient(to bottom, #8b5a2b, #5d4037);
     border: 2px solid #d4af37;
     color: #f4e4bc;
-    padding: 10px 25px;
+    padding: 10px 20px;
     font-family: 'Cinzel', serif;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    margin: 10px;
+    margin: 5px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    transition: transform 0.1s;
     border-radius: 4px;
+    transition: transform 0.1s;
 }
 button:hover {
     background: linear-gradient(to bottom, #a06b35, #6d4c41);
@@ -279,51 +171,126 @@ input {
     width: 60%;
     border-radius: 4px;
 }
-
 hr {
-    border: 0;
-    height: 1px;
+    border: 0; height: 1px;
     background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(93, 64, 55, 0.75), rgba(0, 0, 0, 0));
-    margin: 20px 0;
+    margin: 15px 0;
 }
 
-#status {
-    color: #d4af37;
-    margin-top: 15px;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px #000;
+/* --- 6. Mini HUD (แก้ไขใหม่ ไม่ให้ตีกับ .box) --- */
+#char-status-panel {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    width: 220px;
+    height: 50px; /* ค่าเริ่มต้น */
+    padding: 10px;
+    
+    background-color: rgba(30, 20, 15, 0.95);
+    border: 2px solid #d4af37; /* ทับ border ของ .box */
+    border-radius: 8px;
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 999;
+    
+    /* ล้างค่าเงาและลายกนกจาก .box */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
 }
-.success { color: #2ecc71 !important; }
-.error { color: #e74c3c !important; }
 
-.char-portrait {
-    width: 120px;
-    height: 120px;
+/* สำคัญ: ซ่อนลายกนกที่ติดมาจาก class .box */
+#char-status-panel::before, 
+#char-status-panel::after {
+    display: none !important;
+}
+
+/* สถานะตอนเปิดขยาย */
+#char-status-panel.expanded {
+    height: auto;
+    background-color: rgba(244, 228, 188, 0.95); /* สีสว่าง */
+}
+#char-status-panel.expanded .hud-name,
+#char-status-panel.expanded p,
+#char-status-panel.expanded span,
+#char-status-panel.expanded small {
+    color: #3e2723 !important;
+}
+
+/* องค์ประกอบภายใน HUD */
+.hud-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+}
+.hud-avatar {
+    width: 45px; height: 45px;
+    border-radius: 50%;
+    border: 2px solid #d4af37;
     object-fit: cover;
-    border: 3px solid #d4af37;
-    border-radius: 10px;
-    background-color: #000;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+    background: #000;
+}
+.hud-info {
+    flex-grow: 1; text-align: left; line-height: 1.2;
+}
+.hud-name {
+    font-size: 14px; font-weight: bold;
+    color: #f1c40f; margin: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Class Selection */
+.hp-bar-bg {
+    background: #333;
+    height: 6px; width: 100%;
+    border-radius: 3px; margin-top: 4px;
+    border: 1px solid #555;
+}
+.hp-bar-fill {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    height: 100%; width: 50%; /* JS จะมาเติมตรงนี้ */
+    border-radius: 3px; transition: width 0.3s ease;
+}
+
+.toggle-icon {
+    font-size: 10px; color: #bdc3c7; transition: transform 0.3s;
+}
+#char-status-panel.expanded .toggle-icon {
+    transform: rotate(180deg); color: #5d4037;
+}
+
+.hud-details {
+    margin-top: 15px; padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+#char-status-panel.expanded .hud-details {
+    opacity: 1; pointer-events: auto;
+}
+
+/* --- 7. Class Selection & Others --- */
+.char-portrait {
+    width: 100px; height: 100px;
+    object-fit: cover;
+    border: 3px solid #d4af37; border-radius: 10px;
+    background-color: #000;
+}
 .class-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
 .class-card {
-    background: rgba(0,0,0,0.3);
-    border: 2px solid #5d4037;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 30%;
+    background: rgba(0,0,0,0.3); border: 2px solid #5d4037;
+    padding: 10px; border-radius: 5px; cursor: pointer; width: 30%;
     transition: all 0.2s;
 }
 .class-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #d4af37; }
 .class-card.selected {
-    background: #5d4037;
-    border-color: #f1c40f;
-    box-shadow: 0 0 10px #f1c40f;
-    transform: scale(1.05);
+    background: #5d4037; border-color: #f1c40f;
+    box-shadow: 0 0 10px #f1c40f; transform: scale(1.05);
 }
-.class-card h3 { margin: 5px 0; font-size: 14px; color: #f4e4bc; }
+.class-card h3 { margin: 5px 0; font-size: 13px; color: #f4e4bc; }
 .class-card small { font-size: 10px; color: #ccc; }
-#class-preview b { color: #fff; text-shadow: 1px 1px 0 #000; margin-left: 5px; }
+
+#status {
+    font-size: 12px; margin-top: 5px; font-weight: bold;
+}
+.success { color: #2ecc71 !important; }
+.error { color: #e74c3c !important; }
