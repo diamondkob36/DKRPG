@@ -68,17 +68,27 @@ async function checkAndLoadData(uid) {
     }
 }
 
-// ฟังก์ชันเลือกอาชีพ (ในหน้าสร้างตัวละคร)
 window.selectClass = function(key) {
     selectedClassKey = key;
     
-    // ล้าง selection เก่า
+    // 1. จัดการเรื่อง UI การ์ด (เหมือนเดิม)
     document.querySelectorAll('.class-card').forEach(el => el.classList.remove('selected'));
-    // เลือกอันใหม่
     document.getElementById('card-' + key).classList.add('selected');
     
-    // โชว์คำอธิบาย
-    document.getElementById('class-desc').innerText = classStats[key].desc;
+    // 2. ดึงข้อมูลอาชีพจาก gameData (import มาแล้ว)
+    const stats = classStats[key];
+
+    // 3. อัปเดตคำอธิบาย
+    document.getElementById('class-desc').innerText = stats.desc;
+
+    // 4. (ใหม่!) อัปเดตค่าสถานะในกล่องพรีวิว
+    document.getElementById('pre-hp').innerText = stats.maxHp;
+    document.getElementById('pre-str').innerText = stats.str;
+    document.getElementById('pre-int').innerText = stats.int;
+    document.getElementById('pre-agi').innerText = stats.agi;
+
+    // 5. เปิดโชว์กล่องพรีวิว (เผื่อมันซ่อนอยู่)
+    document.getElementById('class-preview').style.display = 'block';
 }
 
 // ฟังก์ชันยืนยันสร้างตัวละคร
