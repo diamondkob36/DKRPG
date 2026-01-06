@@ -7,9 +7,14 @@
 </head>
 <body>
 
-    <h1>⚜️ DK-RPG Legends ⚜️</h1>
-    
-    <div id="login-screen">
+    <header id="top-bar">
+        <h1>⚜️ DK-RPG Legends ⚜️</h1>
+        <div id="user-info-top" style="display: none;">
+             <button onclick="logout()" class="logout-btn-top">🚪 ออกจากระบบ</button>
+        </div>
+    </header>
+
+    <div id="login-screen" class="screen-container">
         <div class="box">
             <h2>Gate of Heroes</h2>
             <p>โปรดแสดงตัวตนเพื่อเข้าสู่ดินแดน</p>
@@ -20,34 +25,28 @@
         </div>
     </div>
 
-    <div id="create-screen" style="display:none;">
-        <div class="box" style="max-width: 500px;">
+    <div id="create-screen" class="screen-container" style="display:none;">
+        <div class="box" style="max-width: 600px;">
             <h2>📜 ลงทะเบียนผู้กล้า</h2>
             <div style="text-align: center; margin-bottom: 10px;">
                 <img id="preview-img" src="" style="width: 100px; height: 100px; display: none;" class="char-portrait">
             </div>
             <p>ตั้งชื่อนามของท่าน</p>
             <input type="text" id="hero-name" placeholder="ใส่ชื่อตัวละคร..." maxlength="12">
-            
             <hr>
             <p>เลือกสายอาชีพ</p>
             <div class="class-container">
                 <div class="class-card" onclick="selectClass('knight')" id="card-knight">
-                    <h3>⚔️ อัศวิน</h3>
-                    <small>ถึกทน / โจมตีหนัก</small>
+                    <h3>⚔️ อัศวิน</h3><small>ถึกทน / โจมตีหนัก</small>
                 </div>
                 <div class="class-card" onclick="selectClass('mage')" id="card-mage">
-                    <h3>🔮 นักเวทย์</h3>
-                    <small>พลังเวทย์ / ฮีลแรง</small>
+                    <h3>🔮 นักเวทย์</h3><small>พลังเวทย์ / ฮีลแรง</small>
                 </div>
                 <div class="class-card" onclick="selectClass('rogue')" id="card-rogue">
-                    <h3>🗡️ โจร</h3>
-                    <small>ว่องไว / คริติคอล</small>
+                    <h3>🗡️ โจร</h3><small>ว่องไว / คริติคอล</small>
                 </div>
             </div>
-
-            <div id="class-desc" style="color: #f1c40f; margin: 10px;"></div>
-
+            <div id="class-desc" style="color: #f1c40f; margin: 10px; font-style: italic;"></div>
             <div id="class-preview" style="display:none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-bottom: 15px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; padding-left: 20px;">
                     <span style="color:#e74c3c;">❤️ HP: <b id="pre-hp">0</b></span>
@@ -56,42 +55,47 @@
                     <span style="color:#2ecc71;">💨 AGI: <b id="pre-agi">0</b></span>
                 </div>
             </div>
-            
             <button class="save-btn" onclick="confirmCreate()">✨ เริ่มต้นการผจญภัย</button>
-            <button onclick="logout()" style="background:#c0392b; border-color:#e74c3c;">🚪 ออกจากระบบ</button>
         </div>
     </div>
 
     <div id="game-screen" style="display:none;">
-        <div class="box">
-            <h2>Sir <span id="display-name">Hero</span></h2>
-                    
-            <div style="text-align: center; margin: 10px 0;">
-                <img id="hero-img" src="" class="char-portrait">
-            </div>
-            <small style="color:#bdc3c7;">อาชีพ: <span id="display-class">-</span></small>
+        <div id="game-map-container">
+            <img src="image/world_map.png" alt="World Map" id="world-map-img">
 
-            <div style="display: flex; justify-content: space-around; text-align: left;">
-                <div>
-                    <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
-                    <p>⚔️ STR: <span id="str">0</span></p>
-                </div>
-                <div>
-                    <p>🔥 INT: <span id="int">0</span></p>
-                    <p>💨 AGI: <span id="agi">0</span></p>
-                </div>
+            <div class="map-zone" id="zone-train" onclick="train()">
+                <span class="zone-icon">⚔️</span>
+                <span class="zone-label">ลานฝึกฝน</span>
             </div>
-            
-            <p style="font-size: 18px; margin-top:10px;">Level: <span id="lvl">1</span> | Gold: <span id="gold">0</span> 🪙</p>
-            <hr>
-            
-            <button onclick="train()">⚔️ ฝึกดาบ</button>
-            <button onclick="farm()">📜 รับภารกิจ</button>
-            <br><br>
-            <button class="save-btn" onclick="saveData()">💾 บันทึกการเดินทาง</button>
-            <button onclick="logout()" style="background:#c0392b; border-color:#e74c3c;">🚪 ออกจากระบบ</button>
+            <div class="map-zone" id="zone-quest" onclick="farm()">
+                <span class="zone-icon">📜</span>
+                <span class="zone-label">บอร์ดภารกิจ</span>
+            </div>
+
+            <div id="char-status-panel" class="box">
+                <h2>Sir <span id="display-name">Hero</span></h2>
+                <div style="text-align: center; margin: 10px 0;">
+                     <img id="hero-img" src="" class="char-portrait" style="width: 80px; height: 80px;">
+                </div>
+                <small style="color:#bdc3c7;">อาชีพ: <span id="display-class">-</span></small>
+                <hr style="margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; text-align: left; font-size: 14px;">
+                    <div>
+                        <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
+                        <p>⚔️ STR: <span id="str">0</span></p>
+                    </div>
+                    <div>
+                        <p>🔥 INT: <span id="int">0</span></p>
+                        <p>💨 AGI: <span id="agi">0</span></p>
+                    </div>
+                </div>
+                <hr style="margin: 10px 0;">
+                <p style="font-size: 16px;">Lv: <span id="lvl">1</span> | 🪙 <span id="gold">0</span></p>
+                <hr style="margin: 10px 0;">
+                <button class="save-btn" onclick="saveData()" style="width: 100%; padding: 8px; font-size: 14px;">💾 บันทึก</button>
+                <p id="status" style="font-size: 12px; margin-top: 5px;"></p>
+            </div>
         </div>
-        <p id="status"></p>
     </div>
 
     <script type="module" src="js/index.js"></script>

@@ -40,6 +40,9 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         document.getElementById('login-screen').style.display = 'none';
+
+        // 👇 เพิ่มบรรทัดนี้ครับ: โชว์ปุ่มออกจากระบบบน Top Bar 👇
+        document.getElementById('user-info-top').style.display = 'block';
         
         // เช็คว่ามีเซฟหรือไม่?
         await checkAndLoadData(user.uid);
@@ -47,6 +50,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('login-screen').style.display = 'block';
         document.getElementById('create-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'none';
+
+        // 👇 เพิ่มบรรทัดนี้ครับ: ซ่อนปุ่มออกจากระบบบน Top Bar 👇
+        document.getElementById('user-info-top').style.display = 'none';
     }
 });
 

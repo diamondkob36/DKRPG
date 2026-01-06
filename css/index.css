@@ -1,38 +1,148 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Sarabun:wght@400;700&display=swap');
 
 body {
-    background-color: #1a0f0a; /* สีพื้นหลังดำน้ำตาลเข้ม */
+    background-color: #1a0f0a;
     background-image: radial-gradient(circle, #2e1e16 0%, #0d0604 100%);
     color: #3e2723;
-    font-family: 'Sarabun', sans-serif; /* ฟอนต์ไทยอ่านง่าย */
+    font-family: 'Sarabun', sans-serif;
     text-align: center;
-    padding-top: 40px;
     margin: 0;
     height: 100vh;
+    overflow: hidden; /* ซ่อน Scrollbar */
+    display: flex;
+    flex-direction: column;
 }
 
-h1, h2 {
-    font-family: 'Cinzel', serif; /* ฟอนต์หัวข้อสไตล์ยุคกลาง */
-    color: #d4af37; /* สีทอง */
+/* --- Top Bar --- */
+#top-bar {
+    background: linear-gradient(to bottom, #2c231e, #1a0f0a);
+    border-bottom: 3px solid #d4af37;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+#top-bar h1 {
+    font-family: 'Cinzel', serif;
+    color: #d4af37;
     text-shadow: 2px 2px 4px #000;
-    margin-bottom: 10px;
+    margin: 0;
+    font-size: 24px;
     letter-spacing: 2px;
 }
 
-/* กล่องหลัก (เหมือนกระดาษเก่า) */
-.box {
-    background-color: #f4e4bc; /* สีครีมกระดาษ */
-    border: 4px double #5d4037; /* ขอบเส้นคู่สีน้ำตาล */
-    display: inline-block;
-    padding: 30px;
+.logout-btn-top {
+    background: linear-gradient(to bottom, #c0392b, #962d22);
+    border: 2px solid #e74c3c;
+    color: #fff;
+    padding: 8px 15px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    cursor: pointer;
     border-radius: 4px;
-    margin-top: 20px;
-    min-width: 320px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.7), inset 0 0 50px rgba(160, 116, 75, 0.3);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    transition: all 0.2s;
+}
+.logout-btn-top:hover {
+    background: linear-gradient(to bottom, #e74c3c, #c0392b);
+    box-shadow: 0 0 10px #e74c3c;
+}
+
+/* --- Screen Containers (Login/Create) --- */
+.screen-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* --- Game Map Screen --- */
+#game-screen {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+#game-map-container {
+    width: 100%;
+    height: 100%;
     position: relative;
 }
 
-/* ตกแต่งมุมกล่องด้วยจุดทอง */
+#world-map-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ให้ภาพเต็มจอโดยไม่เสียสัดส่วน */
+    display: block;
+}
+
+/* --- Map Zones (ปุ่มบนแผนที่) --- */
+.map-zone {
+    position: absolute;
+    background: rgba(93, 64, 55, 0.8);
+    border: 2px solid #d4af37;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    transition: all 0.2s;
+}
+.map-zone:hover {
+    background: rgba(139, 90, 43, 0.9);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #d4af37;
+}
+.zone-icon { font-size: 24px; }
+.zone-label { font-family: 'Cinzel', serif; color: #f4e4bc; font-weight: bold; }
+
+/* ตำแหน่งปุ่มบนแผนที่ (ปรับแก้ได้ตามชอบ) */
+#zone-train { top: 20%; left: 15%; }
+#zone-quest { top: 30%; right: 20%; }
+
+/* --- Character Status Panel (แผงลอย) --- */
+#char-status-panel.box {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    padding: 20px;
+    margin: 0;
+    min-width: auto;
+    background-color: rgba(244, 228, 188, 0.95); /* ให้โปร่งแสงนิดหน่อย */
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    z-index: 50;
+}
+#char-status-panel h2 { font-size: 18px; margin-bottom: 5px; }
+#char-status-panel p { margin: 5px 0; }
+
+/* --- General Styles (จากของเดิม) --- */
+h2 {
+    font-family: 'Cinzel', serif;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px #000;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.box {
+    background-color: #f4e4bc;
+    border: 4px double #5d4037;
+    display: inline-block;
+    padding: 30px;
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7), inset 0 0 50px rgba(160, 116, 75, 0.3);
+    position: relative;
+}
 .box::before, .box::after {
     content: '❖';
     color: #5d4037;
@@ -44,7 +154,7 @@ h1, h2 {
 
 button {
     background: linear-gradient(to bottom, #8b5a2b, #5d4037);
-    border: 2px solid #d4af37; /* ขอบทอง */
+    border: 2px solid #d4af37;
     color: #f4e4bc;
     padding: 10px 25px;
     font-family: 'Cinzel', serif;
@@ -53,26 +163,27 @@ button {
     margin: 10px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.5);
     transition: transform 0.1s;
+    border-radius: 4px;
 }
-
 button:hover {
     background: linear-gradient(to bottom, #a06b35, #6d4c41);
     color: #fff;
-    box-shadow: 0 0 10px #d4af37; /* เรืองแสงสีทอง */
+    box-shadow: 0 0 10px #d4af37;
 }
+button:active { transform: scale(0.95); }
 
-button:active {
-    transform: scale(0.95);
-}
+button.google-btn { background: #4285F4; border-color: #fff; color: #fff; }
+button.save-btn { background: linear-gradient(to bottom, #27ae60, #1e8449); border-color: #2ecc71; }
 
-/* ปุ่มพิเศษ */
-button.google-btn {
-    background: #4285F4;
-    border-color: #fff;
-}
-button.save-btn {
-    background: linear-gradient(to bottom, #27ae60, #1e8449);
-    border-color: #2ecc71;
+input {
+    background: #2e1e16;
+    border: 2px solid #5d4037;
+    color: #f1c40f;
+    padding: 10px;
+    font-family: 'Sarabun', sans-serif;
+    text-align: center;
+    width: 60%;
+    border-radius: 4px;
 }
 
 hr {
@@ -88,15 +199,21 @@ hr {
     font-weight: bold;
     text-shadow: 1px 1px 2px #000;
 }
+.success { color: #2ecc71 !important; }
+.error { color: #e74c3c !important; }
 
-/* กล่องเลือกอาชีพ */
-.class-container {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 15px 0;
+.char-portrait {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border: 3px solid #d4af37;
+    border-radius: 10px;
+    background-color: #000;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
 }
 
+/* Class Selection */
+.class-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
 .class-card {
     background: rgba(0,0,0,0.3);
     border: 2px solid #5d4037;
@@ -106,45 +223,13 @@ hr {
     width: 30%;
     transition: all 0.2s;
 }
-
-.class-card:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #d4af37;
-}
-
-/* คลาสสำหรับอาชีพที่ถูกเลือก */
+.class-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #d4af37; }
 .class-card.selected {
     background: #5d4037;
     border-color: #f1c40f;
     box-shadow: 0 0 10px #f1c40f;
     transform: scale(1.05);
 }
-
-.class-card h3 { margin: 5px 0; font-size: 14px; }
+.class-card h3 { margin: 5px 0; font-size: 14px; color: #f4e4bc; }
 .class-card small { font-size: 10px; color: #ccc; }
-
-input {
-    background: #2e1e16;
-    border: 2px solid #5d4037;
-    color: #f1c40f;
-    padding: 10px;
-    font-family: 'Sarabun', sans-serif;
-    text-align: center;
-    width: 60%;
-}
-
-#class-preview b {
-    color: #fff;
-    text-shadow: 1px 1px 0 #000;
-    margin-left: 5px;
-}
-
-.char-portrait {
-    width: 120px;
-    height: 120px;
-    object-fit: cover; /* กันรูปเบี้ยว */
-    border: 3px solid #d4af37; /* ขอบทอง */
-    border-radius: 10px; /* มนๆ หน่อย */
-    background-color: #000;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); /* เรืองแสงสีทอง */
-}
+#class-preview b { color: #fff; text-shadow: 1px 1px 0 #000; margin-left: 5px; }
