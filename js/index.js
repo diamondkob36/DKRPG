@@ -1,179 +1,104 @@
 // js/index.js
 
-// 1. นำเข้า Firebase จากไฟล์ที่เราเพิ่งสร้าง (สะอาดขึ้นเยอะ!)
 import { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut } from "./firebase-init.js";
-
-// 2. นำเข้าข้อมูลอาชีพ
-import { classStats } from "./gameData.js";
+import { GameLogic } from "./game-logic.js"; // 🧠 นำเข้าสมอง
+import { UI } from "./ui.js";                // 🎨 นำเข้าหน้าตา
 
 let currentUser = null;
 let gameData = {}; 
 let selectedClassKey = null;
 
-// --- ระบบ Auth ---
-window.loginGoogle = async function() {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        alert("Login Failed: " + error.message);
-    }
+// --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
+window.loginGoogle = async () => {
+    try { await signInWithPopup(auth, provider); } 
+    catch (e) { alert(e.message); }
 };
 
-window.logout = function() {
-    signOut(auth).then(() => location.reload());
-};
+window.logout = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('user-info-top').style.display = 'block';
+        // ซ่อนหน้า Login ระหว่างโหลด
+        UI.showScreen(''); 
+        UI.toggleAuthButton(true);
         await checkAndLoadData(user.uid);
     } else {
-        document.getElementById('login-screen').style.display = 'block';
-        document.getElementById('create-screen').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'none';
-        document.getElementById('user-info-top').style.display = 'none';
+        UI.showScreen('login-screen');
+        UI.toggleAuthButton(false);
     }
 });
 
-// --- ระบบโหลด/สร้างตัวละคร ---
+// --- 2. ตัวควบคุมหลัก (Controller) ---
 async function checkAndLoadData(uid) {
-    setStatus("กำลังตรวจสอบข้อมูลฮีโร่...", "");
-    const docRef = doc(db, "players", uid);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-        gameData = docSnap.data();
-        enterGame();
-        setStatus("ยินดีต้อนรับกลับมา!", "success");
-        setTimeout(() => setStatus("", ""), 2000); // ซ่อนข้อความต้อนรับ
-    } else {
-        document.getElementById('create-screen').style.display = 'block';
-        setStatus("โปรดสร้างตัวละครของท่าน", "");
-    }
-}
-
-window.selectClass = function(key) {
-    selectedClassKey = key;
-    document.querySelectorAll('.class-card').forEach(el => el.classList.remove('selected'));
-    document.getElementById('card-' + key).classList.add('selected');
+    UI.setStatus("กำลังโหลด...", "");
+    const snapshot = await getDoc(doc(db, "players", uid));
     
-    const stats = classStats[key];
-    document.getElementById('class-desc').innerText = stats.desc;
-
-    // พรีวิวสเตตัส
-    document.getElementById('pre-hp').innerText = stats.maxHp;
-    document.getElementById('pre-str').innerText = stats.str;
-    document.getElementById('pre-int').innerText = stats.int;
-    document.getElementById('pre-agi').innerText = stats.agi;
-    document.getElementById('class-preview').style.display = 'block';
-
-    // พรีวิวรูป
-    const imgEl = document.getElementById('preview-img');
-    imgEl.src = stats.img;
-    imgEl.style.display = 'inline-block';
-}
-
-window.confirmCreate = async function() {
-    const nameInput = document.getElementById('hero-name').value.trim();
-    if (!nameInput) return alert("กรุณาตั้งชื่อตัวละคร!");
-    if (!selectedClassKey) return alert("กรุณาเลือกอาชีพ!");
-
-    setStatus("กำลังจารึกชื่อผู้กล้า...", "");
-    const baseStats = classStats[selectedClassKey];
-
-    gameData = {
-        name: nameInput,
-        classKey: selectedClassKey,
-        className: baseStats.name,
-        lvl: 1,
-        gold: 0,
-        hp: baseStats.hp,
-        maxHp: baseStats.maxHp,
-        str: baseStats.str,
-        int: baseStats.int,
-        agi: baseStats.agi
-    };
-
-    try {
-        await setDoc(doc(db, "players", currentUser.uid), gameData);
-        document.getElementById('create-screen').style.display = 'none';
+    if (snapshot.exists()) {
+        gameData = snapshot.data();
         enterGame();
-        setStatus("สร้างตัวละครสำเร็จ!", "success");
-    } catch (e) {
-        alert("Error: " + e.message);
+        UI.setStatus("ยินดีต้อนรับ!", "success");
+        setTimeout(() => UI.setStatus("", ""), 2000);
+    } else {
+        UI.showScreen('create-screen');
+        UI.setStatus("สร้างตัวละครใหม่", "");
     }
 }
+
+// เมื่อกดเลือกอาชีพ
+window.selectClass = (key) => {
+    selectedClassKey = key;
+    UI.selectClass(key);
+}
+
+// เมื่อกดยืนยันสร้างตัวละคร
+window.confirmCreate = async () => {
+    const name = document.getElementById('hero-name').value.trim();
+    if(!name || !selectedClassKey) return alert("กรุณากรอกข้อมูลให้ครบ");
+    
+    UI.setStatus("กำลังสร้างตัวละคร...", "");
+    
+    // เรียกใช้ Logic สร้างข้อมูล
+    gameData = GameLogic.createCharacter(name, selectedClassKey);
+
+    // บันทึกและเข้าเกม
+    await saveToFirebase();
+    enterGame();
+    UI.setStatus("สร้างสำเร็จ!", "success");
+};
 
 function enterGame() {
-    document.getElementById('game-screen').style.display = 'block';
-    updateUI();
+    UI.showScreen('game-screen');
+    UI.updateGameScreen(gameData);
 }
 
-// --- ระบบเกม (Auto Save) ---
-
-// 1. ฝึกดาบ
-window.train = async function() {
-    gameData.lvl++;
-    gameData.maxHp += 10;
-    gameData.str += 1;
-    gameData.hp = gameData.maxHp; // เลเวลอัปเลือดเต็ม
-    
-    updateUI();
-    await saveData(); // ✅ บันทึกทันที
+// --- 3. ระบบเกม (Game Actions) ---
+window.train = async () => {
+    // 1. ให้ Logic คำนวณค่าใหม่
+    gameData = GameLogic.train(gameData);
+    // 2. ให้ UI อัปเดตหน้าจอ
+    UI.updateGameScreen(gameData);
+    // 3. บันทึกลง Database
+    await saveToFirebase();
 };
 
-// 2. รับภารกิจ
-window.farm = async function() {
-    gameData.gold += 100;
-    
-    updateUI();
-    await saveData(); // ✅ บันทึกทันที
+window.farm = async () => {
+    gameData = GameLogic.farm(gameData);
+    UI.updateGameScreen(gameData);
+    await saveToFirebase();
 };
 
-// ฟังก์ชันบันทึก (ทำงานเงียบๆ)
-window.saveData = async function() {
-    if (!currentUser) return;
-    setStatus("กำลังบันทึก...", ""); 
+window.toggleHUD = () => UI.toggleHUD();
+
+// ฟังก์ชันบันทึก
+async function saveToFirebase() {
+    if(!currentUser) return;
+    UI.setStatus("กำลังบันทึก...", "");
     try {
         await setDoc(doc(db, "players", currentUser.uid), gameData);
-        setStatus("✅ บันทึกอัตโนมัติเรียบร้อย", "success");
-        setTimeout(() => setStatus("", ""), 1500); // หายไปเองเร็วขึ้นนิดนึง
-    } catch (e) {
-        setStatus("❌ บันทึกไม่ได้: " + e.message, "error");
-    }
-};
-
-// --- UI Helper ---
-function updateUI() {
-    document.getElementById('display-name').innerText = gameData.name;
-    document.getElementById('display-class').innerText = gameData.className;
-
-    if(gameData.classKey && classStats[gameData.classKey]) {
-        document.getElementById('hero-img').src = classStats[gameData.classKey].img;
-    }
-
-    document.getElementById('lvl').innerText = gameData.lvl;
-    document.getElementById('gold').innerText = gameData.gold;
-    document.getElementById('hp').innerText = gameData.hp;
-    document.getElementById('maxHp').innerText = gameData.maxHp;
-    document.getElementById('str').innerText = gameData.str;
-    document.getElementById('int').innerText = gameData.int;
-    document.getElementById('agi').innerText = gameData.agi;
-
-    const hpPercent = (gameData.hp / gameData.maxHp) * 100;
-    document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
-}
-
-function setStatus(msg, type) {
-    const el = document.getElementById('status');
-    if(el) {
-        el.innerText = msg;
-        el.className = type;
+        UI.setStatus("✅ บันทึกแล้ว", "success");
+        setTimeout(() => UI.setStatus("", ""), 1500);
+    } catch(e) {
+        UI.setStatus("Error: " + e.message, "error");
     }
 }
-
-window.toggleHUD = function() {
-    document.getElementById('char-status-panel').classList.toggle('expanded');
-};
