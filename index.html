@@ -20,12 +20,53 @@
         </div>
     </div>
 
+    <div id="create-screen" style="display:none;">
+        <div class="box" style="max-width: 500px;">
+            <h2>📜 ลงทะเบียนผู้กล้า</h2>
+            <p>ตั้งชื่อนามของท่าน</p>
+            <input type="text" id="hero-name" placeholder="ใส่ชื่อตัวละคร..." maxlength="12">
+            
+            <hr>
+            <p>เลือกสายอาชีพ</p>
+            <div class="class-container">
+                <div class="class-card" onclick="selectClass('knight')" id="card-knight">
+                    <h3>⚔️ อัศวิน</h3>
+                    <small>ถึกทน / โจมตีหนัก</small>
+                </div>
+                <div class="class-card" onclick="selectClass('mage')" id="card-mage">
+                    <h3>🔮 นักเวทย์</h3>
+                    <small>พลังเวทย์ / ฮีลแรง</small>
+                </div>
+                <div class="class-card" onclick="selectClass('rogue')" id="card-rogue">
+                    <h3>🗡️ โจร</h3>
+                    <small>ว่องไว / คริติคอล</small>
+                </div>
+            </div>
+
+            <div id="class-desc" style="color: #f1c40f; margin: 10px;"></div>
+            
+            <button class="save-btn" onclick="confirmCreate()">✨ เริ่มต้นการผจญภัย</button>
+        </div>
+    </div>
+
     <div id="game-screen" style="display:none;">
         <div class="box">
             <h2>Sir <span id="display-name">Hero</span></h2>
+            <small style="color:#bdc3c7;">อาชีพ: <span id="display-class">-</span></small>
             <hr>
-            <p style="font-size: 20px;">Level: <span id="lvl">1</span></p>
-            <p style="font-size: 20px;">Gold: <span id="gold">0</span> 🪙</p>
+            
+            <div style="display: flex; justify-content: space-around; text-align: left;">
+                <div>
+                    <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
+                    <p>⚔️ STR: <span id="str">0</span></p>
+                </div>
+                <div>
+                    <p>🔥 INT: <span id="int">0</span></p>
+                    <p>💨 AGI: <span id="agi">0</span></p>
+                </div>
+            </div>
+            
+            <p style="font-size: 18px; margin-top:10px;">Level: <span id="lvl">1</span> | Gold: <span id="gold">0</span> 🪙</p>
             <hr>
             
             <button onclick="train()">⚔️ ฝึกดาบ</button>
