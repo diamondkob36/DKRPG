@@ -161,17 +161,24 @@ window.farm = function() {
 };
 
 // แก้ไขฟังก์ชัน saveData นิดหน่อย (เพื่อกันไม่ให้ HUD หุบตอนกดปุ่มเซฟ)
-window.saveData = async function(event) {
-    if(event) event.stopPropagation(); // หยุดการคลิกไม่ให้ทะลุไปโดนกล่องใหญ่
-    
-    // ... (โค้ดบันทึกเดิม) ...
+window.saveData = async function() {
     if (!currentUser) return;
-    setStatus("กำลังบันทึก...", "");
+    
+    setStatus("กำลังบันทึก...", ""); // บอกสถานะนิดหน่อย
+    
     try {
         await setDoc(doc(db, "players", currentUser.uid), gameData);
-        setStatus("✅ บันทึกเรียบร้อย!", "success");
+        
+        // เปลี่ยนข้อความให้ดูเหมือน Auto Save
+        setStatus("✅ บันทึกอัตโนมัติเรียบร้อย", "success");
+        
+        // ตั้งเวลาให้ข้อความหายไปเองใน 2 วินาที (จะได้ไม่รก)
+        setTimeout(() => {
+            setStatus("", "");
+        }, 2000);
+        
     } catch (e) {
-        setStatus("❌ บันทึกไม่ได้", "error");
+        setStatus("❌ บันทึกไม่ได้: " + e.message, "error");
     }
 };
 

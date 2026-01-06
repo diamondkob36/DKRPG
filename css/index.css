@@ -106,7 +106,7 @@ body {
 
 /* ตำแหน่งปุ่ม */
 #zone-train { top: 20%; left: 15%; }
-#zone-quest { top: 30%; right: 20%; }
+#zone-quest { top: 38%; right: 28%; }
 
 /* --- 5. UI Components (ปุ่ม, กล่องข้อความ) --- */
 h2 {
@@ -180,7 +180,7 @@ hr {
 /* --- 6. Mini HUD (แก้ไขใหม่ ไม่ให้ตีกับ .box) --- */
 #char-status-panel {
     position: absolute;
-    top: 60px;
+    top: 20px;
     left: 20px;
     width: 220px;
     height: 50px; /* ค่าเริ่มต้น */
