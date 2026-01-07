@@ -1,5 +1,5 @@
 // js/game-logic.js
-import { classStats } from "./gameData.js";
+import { classStats, items } from "./gameData.js";
 
 export const GameLogic = {
     // 🛠️ Helper: คำนวณ MaxExp ตามสูตร "คูณ 2 ทุก 10 เลเวล"

@@ -1,4 +1,4 @@
-import { classStats } from "./gameData.js";
+import { classStats, items } from "./gameData.js";
 
 export const UI = {
     // สลับหน้าจอ (Login -> Create -> Game)
