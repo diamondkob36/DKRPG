@@ -378,3 +378,57 @@ hr {
     font-weight: bold;
 }
 .plus-btn:active { transform: scale(0.9); }
+
+/* ปุ่มยืนยัน (สีเขียว) */
+.confirm-btn {
+    background: linear-gradient(to bottom, #27ae60, #1e8449);
+    border: 1px solid #2ecc71;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    flex: 1; /* ให้ขยายเต็มพื้นที่ */
+}
+
+/* ปุ่มรีเซ็ต (สีส้ม) */
+.reset-btn {
+    background: linear-gradient(to bottom, #e67e22, #d35400);
+    border: 1px solid #f39c12;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    flex: 1;
+}
+
+.confirm-btn:hover { box-shadow: 0 0 10px #2ecc71; }
+.reset-btn:hover { box-shadow: 0 0 10px #f39c12; }
+
+/* จัดกลุ่มปุ่มบวกลบให้อยู่แนวนอน */
+.stat-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* ระยะห่างระหว่างปุ่มกับตัวเลข */
+}
+
+/* ปุ่มลบ (-) */
+.minus-btn {
+    background: linear-gradient(to bottom, #c0392b, #922b21);
+    border: 1px solid #e74c3c;
+    width: 28px; height: 28px;
+    padding: 0; margin: 0;
+    line-height: 26px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    /* ซ่อนไว้ก่อน (JS จะสั่งโชว์เมื่อจำเป็น) */
+    display: none; 
+}
+.minus-btn:active { transform: scale(0.9); }
+
+/* ปรับขนาดปุ่มบวกให้เท่ากัน */
+.plus-btn {
+    width: 28px; height: 28px;
+    line-height: 26px;
+    margin: 0; /* ลบ margin เดิมออก */
+}

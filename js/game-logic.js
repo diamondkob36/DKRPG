@@ -80,12 +80,40 @@ export const GameLogic = {
             exp: 0,             // เริ่มต้น 0
             maxExp: 100,        // เริ่มต้น 100
             gold: 0,
-            statPoints: 0,
+            statPoints: 5,   // เริ่มต้น 5 แต้ม
             hp: base.hp,
             maxHp: base.maxHp,
             str: base.str,
             int: base.int,
             agi: base.agi
         };
+    },
+
+    // 👇 เพิ่มฟังก์ชันนี้: ลดสเตตัส (คืนแต้ม) 👇
+    downgradeStat(currentData, originalData, statType) {
+        const newData = { ...currentData };
+
+        // เช็คว่าค่าปัจจุบัน มากกว่า ค่าเริ่มต้นไหม? (กันไม่ให้ลดต่ำกว่าเดิม)
+        let currentVal = (statType === 'hp') ? newData.maxHp : newData[statType];
+        let originalVal = (statType === 'hp') ? originalData.maxHp : originalData[statType];
+
+        if (currentVal <= originalVal) {
+            throw new Error("ไม่สามารถลดต่ำกว่าค่าเริ่มต้นได้!");
+        }
+
+        // คืนแต้ม
+        newData.statPoints++;
+
+        // ลดค่าพลัง
+        switch (statType) {
+            case 'str': newData.str -= 1; break;
+            case 'int': newData.int -= 1; break;
+            case 'agi': newData.agi -= 1; break;
+            case 'hp':  
+                newData.maxHp -= 10;
+                newData.hp -= 10; // ลดเลือดปัจจุบันด้วย
+                break;
+        }
+        return newData;
     }
 };

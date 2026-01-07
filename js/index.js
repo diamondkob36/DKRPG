@@ -103,33 +103,62 @@ async function saveToFirebase() {
     }
 }
 
-// --- ระบบปุ่มอัปเกรด ---
+// --- ระบบปุ่มอัปเกรด (แบบมี Temp State) ---
+
+let tempGameData = null; // ตัวแปรเก็บข้อมูลชั่วคราว
 
 // 1. เปิด Popup
 window.openUpgradeModal = () => {
-    // เรียก UI ให้เปิดหน้าต่าง
+    tempGameData = { ...gameData }; 
+    // ส่งทั้ง "ค่าชั่วคราว" และ "ค่าจริง" ไปให้ UI เปรียบเทียบ
+    UI.updateModalOnly(tempGameData, gameData);
     UI.toggleUpgradeModal(true);
 };
 
-// 2. ปิด Popup
+// 2. ปิด Popup (ยกเลิกการทำรายการ)
 window.closeUpgradeModal = () => {
+    tempGameData = null; // ล้างค่าทิ้ง
     UI.toggleUpgradeModal(false);
 };
 
-// 3. กดปุ่มบวก (+)
-window.upgradeStat = async (type) => {
+// 2. กดปุ่มบวก (+)
+window.addTempStat = (type) => {
     try {
-        // ให้ Logic คำนวณ (ตัดแต้ม + เพิ่มพลัง)
-        gameData = GameLogic.upgradeStat(gameData, type);
-        
-        // อัปเดตหน้าจอ (ตัวเลขเปลี่ยนทันที)
-        UI.updateGameScreen(gameData);
-        
-        // บันทึกลง Firebase
-        await saveToFirebase();
-        
+        tempGameData = GameLogic.upgradeStat(tempGameData, type);
+        UI.updateModalOnly(tempGameData, gameData); // ส่งค่าจริงไปด้วย
     } catch (e) {
-        // ถ้าแต้มหมด หรือมีปัญหา ให้แจ้งเตือน
         alert(e.message);
     }
+};
+
+// 3. 👇 เพิ่มฟังก์ชันนี้: กดปุ่มลบ (-) 👇
+window.removeTempStat = (type) => {
+    try {
+        // เรียก Logic ลดค่า (ส่งค่าจริงไปเช็คด้วยว่าห้ามต่ำกว่าเดิม)
+        tempGameData = GameLogic.downgradeStat(tempGameData, gameData, type);
+        UI.updateModalOnly(tempGameData, gameData);
+    } catch (e) {
+        console.error(e.message); // ปกติจะไม่ error เพราะปุ่มมันซ่อนอยู่แล้ว
+    }
+};
+
+// 4. ปุ่มรีเซ็ต
+window.resetTempStats = () => {
+    tempGameData = { ...gameData };
+    UI.updateModalOnly(tempGameData, gameData);
+};
+
+// 5. ปุ่มยืนยัน (บันทึกจริง)
+window.saveUpgrade = async () => {
+    // เอาข้อมูลชั่วคราว มาเป็นข้อมูลจริง
+    gameData = { ...tempGameData };
+    
+    // อัปเดตหน้าจอหลัก
+    UI.updateGameScreen(gameData);
+    
+    // ปิด Modal
+    closeUpgradeModal();
+    
+    // บันทึกลง Firebase
+    await saveToFirebase();
 };

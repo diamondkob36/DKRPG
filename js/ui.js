@@ -95,6 +95,40 @@ export const UI = {
         if (el) {
             el.style.display = show ? 'flex' : 'none';
         }
+    },
+    // อัปเดตตัวเลขใน Modal และจัดการปุ่ม + -
+    updateModalOnly(tempData, originalData) {
+        setText('modal-points', tempData.statPoints);
+        setText('modal-str', tempData.str);
+        setText('modal-int', tempData.int);
+        setText('modal-agi', tempData.agi);
+        setText('modal-maxHp', tempData.maxHp);
+
+        // รายการสเตตัส
+        const stats = ['str', 'int', 'agi', 'hp'];
+
+        stats.forEach(stat => {
+            const btnPlus = document.getElementById('btn-plus-' + stat);
+            const btnMinus = document.getElementById('btn-minus-' + stat);
+
+            // 1. จัดการปุ่ม + (แต้มหมด = ซ่อน)
+            if (tempData.statPoints > 0) {
+                btnPlus.style.display = 'inline-block';
+            } else {
+                btnPlus.style.display = 'none';
+            }
+
+            // 2. จัดการปุ่ม - (ค่าเท่าเดิม = ซ่อน)
+            // เช็คพิเศษสำหรับ HP เพราะใช้ maxHp
+            let currentVal = (stat === 'hp') ? tempData.maxHp : tempData[stat];
+            let originalVal = (stat === 'hp') ? originalData.maxHp : originalData[stat];
+
+            if (currentVal > originalVal) {
+                btnMinus.style.display = 'inline-block';
+            } else {
+                btnMinus.style.display = 'none';
+            }
+        });
     }
 };
 
