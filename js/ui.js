@@ -18,23 +18,38 @@ export const UI = {
 
     // อัปเดตข้อมูลบนหน้าจอเกม
     updateGameScreen(gameData) {
-        // ชื่อและอาชีพ
         setText('display-name', gameData.name);
         setText('display-class', gameData.className);
 
-        // รูปภาพ
         if(gameData.classKey && classStats[gameData.classKey]) {
             document.getElementById('hero-img').src = classStats[gameData.classKey].img;
         }
 
-        // ตัวเลขสเตตัสต่างๆ
-        ['lvl', 'gold', 'hp', 'maxHp', 'str', 'int', 'agi'].forEach(key => {
+        // แสดงสเตตัสพื้นฐาน
+        ['gold', 'hp', 'maxHp', 'str', 'int', 'agi'].forEach(key => {
             setText(key, gameData[key]);
         });
+
+        // 👇 แก้ไขตรงนี้: แสดง Level คู่กับ Exp 👇
+        // ตัวอย่าง: Lv: 5 (80/100)
+        const currentExp = gameData.exp || 0;
+        const requiredExp = gameData.maxExp || 100;
+        setText('lvl', `${gameData.lvl} (${currentExp}/${requiredExp})`);
 
         // หลอดเลือด
         const hpPercent = (gameData.hp / gameData.maxHp) * 100;
         document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
+
+        // แต้มอัปเกรด
+        const points = gameData.statPoints || 0;
+        setText('hud-points', points);
+        setText('modal-points', points);
+        
+        // Modal
+        setText('modal-str', gameData.str);
+        setText('modal-int', gameData.int);
+        setText('modal-agi', gameData.agi);
+        setText('modal-maxHp', gameData.maxHp);
     },
 
     // จัดการหน้าเลือกอาชีพ

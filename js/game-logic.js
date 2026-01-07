@@ -1,24 +1,75 @@
+// js/game-logic.js
 import { classStats } from "./gameData.js";
 
 export const GameLogic = {
-    // สูตรฝึกดาบ
-    train(currentData) {
-        const newData = { ...currentData }; // ก๊อปปี้ข้อมูลมาแกะ
-        newData.lvl++;
-        newData.maxHp += 10;
-        newData.str += 1;
-        newData.hp = newData.maxHp; // เลเวลอัปเลือดเต็ม
-        return newData; // ส่งคืนค่าใหม่
+    // 🛠️ Helper: คำนวณ MaxExp ตามสูตร "คูณ 2 ทุก 10 เลเวล"
+    calculateMaxExp(lvl) {
+        // หารเลเวลด้วย 10 เพื่อหา Tier (เช่น เลเวล 1-10 คือ Tier 0, 11-20 คือ Tier 1)
+        const tier = Math.floor((lvl - 1) / 10);
+        // สูตร: 100 * (2 ยกกำลัง Tier)
+        return 100 * Math.pow(2, tier);
     },
 
-    // สูตรฟาร์มของ
+    // 🛠️ Helper: ฟังก์ชันเพิ่ม Exp และจัดการ Level Up
+    addExp(data, amount) {
+        // กันเหนียว: ถ้าไม่มีค่า exp ให้เริ่มที่ 0
+        data.exp = (data.exp || 0) + amount;
+        data.maxExp = data.maxExp || this.calculateMaxExp(data.lvl);
+
+        // วนลูปเช็คเลเวลอัป (เผื่อได้ exp เยอะจนอัปหลายเวลรวด)
+        while (data.exp >= data.maxExp) {
+            data.exp -= data.maxExp; // หัก Exp ที่ใช้ไป
+            data.lvl++;             // เพิ่มเลเวล
+            
+            // คำนวณ MaxExp ของเลเวลชั้นถัดไป
+            data.maxExp = this.calculateMaxExp(data.lvl);
+
+            // ได้แต้มอัปเกรด 5 แต้ม
+            data.statPoints = (data.statPoints || 0) + 5;
+            
+            // เลเวลอัปเลือดเต็มทันที
+            data.hp = data.maxHp;
+        }
+        return data;
+    },
+
+    // 1. สูตรฝึกดาบ (เปลี่ยนเป็นได้ Exp)
+    train(currentData) {
+        const newData = { ...currentData };
+        // สมมติ: ฝึก 1 ครั้ง ได้ 20 Exp (ปรับค่านี้ได้ตามใจชอบ)
+        return this.addExp(newData, 20);
+    },
+
+    // 2. สูตรอัปเกรดค่าพลัง (คงเดิม)
+    upgradeStat(currentData, statType) {
+        const newData = { ...currentData };
+        
+        if (!newData.statPoints || newData.statPoints <= 0) {
+            throw new Error("แต้มไม่พอ!");
+        }
+
+        newData.statPoints--;
+
+        switch (statType) {
+            case 'str': newData.str += 1; break;
+            case 'int': newData.int += 1; break;
+            case 'agi': newData.agi += 1; break;
+            case 'hp':  
+                newData.maxHp += 10;
+                newData.hp += 10;
+                break;
+        }
+        return newData;
+    },
+
+    // 3. สูตรฟาร์ม (คงเดิม)
     farm(currentData) {
         const newData = { ...currentData };
         newData.gold += 100;
         return newData;
     },
 
-    // สูตรสร้างตัวละครใหม่
+    // 4. สร้างตัวละคร (เพิ่มค่า exp เริ่มต้น)
     createCharacter(name, classKey) {
         const base = classStats[classKey];
         return {
@@ -26,7 +77,10 @@ export const GameLogic = {
             classKey: classKey,
             className: base.name,
             lvl: 1,
+            exp: 0,             // เริ่มต้น 0
+            maxExp: 100,        // เริ่มต้น 100
             gold: 0,
+            statPoints: 0,
             hp: base.hp,
             maxHp: base.maxHp,
             str: base.str,
