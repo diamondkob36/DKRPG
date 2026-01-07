@@ -86,6 +86,15 @@ export const UI = {
     // เปิด/ปิด HUD
     toggleHUD() {
         document.getElementById('char-status-panel').classList.toggle('expanded');
+    },
+
+    // เปิด/ปิด Modal อัปเกรดสเตตัส
+
+    toggleUpgradeModal(show) {
+        const el = document.getElementById('upgrade-modal');
+        if (el) {
+            el.style.display = show ? 'flex' : 'none';
+        }
     }
 };
 

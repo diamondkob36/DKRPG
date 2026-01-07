@@ -85,20 +85,56 @@
                     <div class="toggle-icon">▼</div>
                 </div>
 
-                <div class="hud-details">
-                    <small>อาชีพ: <span id="display-class">-</span></small>
-                    <div style="display: flex; justify-content: space-between; text-align: left; font-size: 14px; margin-top: 5px;">
-                        <div>
-                            <p>❤️ HP: <span id="hp">0</span>/<span id="maxHp">0</span></p>
-                            <p>⚔️ STR: <span id="str">0</span></p>
-                        </div>
-                        <div>
-                            <p>🔥 INT: <span id="int">0</span></p>
-                            <p>💨 AGI: <span id="agi">0</span></p>
+            <div class="hud-details">
+                            <p style="font-size: 14px; margin: 5px 0;">Lv: <span id="lvl">1</span> | 🪙 <span id="gold">0</span></p>
+                            
+                            <div style="margin-top: 10px;">
+                                <button class="upgrade-btn-hud" onclick="openUpgradeModal()">
+                                    ✨ อัปเกรด (<span id="hud-points">0</span>)
+                                </button>
+                            </div>
+
+                        </div> </div> <div id="upgrade-modal" class="modal-overlay" style="display: none;">
+                        <div class="modal-box box">
+                            <div class="modal-header">
+                                <h2>⚡ อัปเกรดตัวละคร</h2>
+                                <button class="close-btn" onclick="closeUpgradeModal()">✖</button>
+                            </div>
+                            
+                            <p>แต้มคงเหลือ: <span id="modal-points" style="color: #f1c40f; font-size: 20px; font-weight: bold;">0</span></p>
+                            <hr>
+
+                            <div class="stat-row">
+                                <span>⚔️ STR (โจมตี)</span>
+                                <div>
+                                    <b id="modal-str">0</b>
+                                    <button class="plus-btn" onclick="upgradeStat('str')">+</button>
+                                </div>
+                            </div>
+                            <div class="stat-row">
+                                <span>🔥 INT (เวทย์)</span>
+                                <div>
+                                    <b id="modal-int">0</b>
+                                    <button class="plus-btn" onclick="upgradeStat('int')">+</button>
+                                </div>
+                            </div>
+                            <div class="stat-row">
+                                <span>💨 AGI (ความเร็ว)</span>
+                                <div>
+                                    <b id="modal-agi">0</b>
+                                    <button class="plus-btn" onclick="upgradeStat('agi')">+</button>
+                                </div>
+                            </div>
+                            <div class="stat-row">
+                                <span>❤️ Max HP (+10)</span>
+                                <div>
+                                    <b id="modal-maxHp">0</b>
+                                    <button class="plus-btn" onclick="upgradeStat('hp')">+</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <p style="font-size: 14px; margin: 5px 0;">Lv: <span id="lvl">1</span> | 🪙 <span id="gold">0</span></p>
-                    
+
                 </div>
             </div> </div> </div> <script type="module" src="js/index.js"></script>
     

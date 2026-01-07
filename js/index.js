@@ -102,3 +102,34 @@ async function saveToFirebase() {
         UI.setStatus("Error: " + e.message, "error");
     }
 }
+
+// --- ระบบปุ่มอัปเกรด ---
+
+// 1. เปิด Popup
+window.openUpgradeModal = () => {
+    // เรียก UI ให้เปิดหน้าต่าง
+    UI.toggleUpgradeModal(true);
+};
+
+// 2. ปิด Popup
+window.closeUpgradeModal = () => {
+    UI.toggleUpgradeModal(false);
+};
+
+// 3. กดปุ่มบวก (+)
+window.upgradeStat = async (type) => {
+    try {
+        // ให้ Logic คำนวณ (ตัดแต้ม + เพิ่มพลัง)
+        gameData = GameLogic.upgradeStat(gameData, type);
+        
+        // อัปเดตหน้าจอ (ตัวเลขเปลี่ยนทันที)
+        UI.updateGameScreen(gameData);
+        
+        // บันทึกลง Firebase
+        await saveToFirebase();
+        
+    } catch (e) {
+        // ถ้าแต้มหมด หรือมีปัญหา ให้แจ้งเตือน
+        alert(e.message);
+    }
+};
