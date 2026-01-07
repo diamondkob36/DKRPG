@@ -69,7 +69,7 @@ export const GameLogic = {
         return newData;
     },
 
-    // 4. สร้างตัวละคร (เพิ่มค่า exp เริ่มต้น)
+// 👇 2. แก้ไข createCharacter (เพิ่ม inventory: {}) 👇
     createCharacter(name, classKey) {
         const base = classStats[classKey];
         return {
@@ -77,15 +77,16 @@ export const GameLogic = {
             classKey: classKey,
             className: base.name,
             lvl: 1,
-            exp: 0,             // เริ่มต้น 0
-            maxExp: 100,        // เริ่มต้น 100
+            exp: 0,
+            maxExp: 100,
             gold: 0,
-            statPoints: 5,   // เริ่มต้น 5 แต้ม
+            statPoints: 5,
             hp: base.hp,
             maxHp: base.maxHp,
             str: base.str,
             int: base.int,
-            agi: base.agi
+            agi: base.agi,
+            inventory: { "potion_s": 3 } // 🎁 แถมยาให้ 3 ขวดตอนเริ่มเกม!
         };
     },
 
@@ -115,5 +116,32 @@ export const GameLogic = {
                 break;
         }
         return newData;
-    }
+    },
+    // 👇 1. เพิ่มฟังก์ชันกดใช้ไอเทม 👇
+    useItem(currentData, itemId) {
+        const newData = { ...currentData };
+        
+        // เช็คว่ามีของไหม?
+        if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
+            throw new Error("ไม่มีไอเทมนี้!");
+        }
+
+        const itemData = items[itemId];
+        if (!itemData) throw new Error("ไอเทมไม่ถูกต้อง");
+
+        // ใช้ Effect
+        if (itemData.effect.hp) {
+            newData.hp = Math.min(newData.hp + itemData.effect.hp, newData.maxHp);
+        }
+        if (itemData.effect.str) newData.str += itemData.effect.str;
+        // (เพิ่ม effect อื่นๆ ตรงนี้ได้ในอนาคต)
+
+        // ลดจำนวนไอเทม
+        newData.inventory[itemId]--;
+        if (newData.inventory[itemId] <= 0) {
+            delete newData.inventory[itemId]; // หมดแล้วลบออกจากกระเป๋า
+        }
+
+        return newData;
+    },
 };

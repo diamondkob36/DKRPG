@@ -162,3 +162,37 @@ window.saveUpgrade = async () => {
     // บันทึกลง Firebase
     await saveToFirebase();
 };
+
+// --- ระบบกระเป๋าไอเทม ---
+
+// 1. เปิดกระเป๋า
+window.openInventory = () => {
+    // วาดไอเทมล่าสุดก่อนเปิด
+    UI.renderInventory(gameData.inventory);
+    UI.toggleInventory(true);
+};
+
+// 2. ปิดกระเป๋า
+window.closeInventory = () => {
+    UI.toggleInventory(false);
+};
+
+// 3. กดใช้ไอเทม
+window.useItem = async (itemId) => {
+    try {
+        if(!confirm("ต้องการใช้ไอเทมนี้หรือไม่?")) return;
+
+        // เรียก Logic ใช้ของ
+        gameData = GameLogic.useItem(gameData, itemId);
+
+        // อัปเดตหน้าจอ (ทั้งกระเป๋า และ HP ที่เพิ่มขึ้น)
+        UI.renderInventory(gameData.inventory);
+        UI.updateGameScreen(gameData);
+        
+        // บันทึก
+        await saveToFirebase();
+
+    } catch (e) {
+        alert(e.message);
+    }
+};

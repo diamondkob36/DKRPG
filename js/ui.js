@@ -129,6 +129,42 @@ export const UI = {
                 btnMinus.style.display = 'none';
             }
         });
+    },
+    // 👇 1. เปิด/ปิดหน้าต่างกระเป๋า 👇
+    toggleInventory(show) {
+        const el = document.getElementById('inventory-modal');
+        if(el) el.style.display = show ? 'flex' : 'none';
+    },
+
+    // 👇 2. วาดไอเทมลงในตาราง 👇
+    renderInventory(inventory) {
+        const grid = document.getElementById('inventory-grid');
+        grid.innerHTML = ""; // ล้างของเก่า
+
+        if (!inventory || Object.keys(inventory).length === 0) {
+            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1;">(กระเป๋าว่างเปล่า)</p>';
+            return;
+        }
+
+        // วนลูปไอเทมที่มี
+        for (const [itemId, count] of Object.entries(inventory)) {
+            const itemInfo = items[itemId];
+            if (!itemInfo) continue;
+
+            const slot = document.createElement('div');
+            slot.className = 'item-slot';
+            // ใส่ Tooltip ง่ายๆ
+            slot.title = `${itemInfo.name}\n${itemInfo.desc}`; 
+            
+            // คลิกเพื่อกดใช้
+            slot.onclick = () => window.useItem(itemId); 
+
+            slot.innerHTML = `
+                <span class="item-icon">${itemInfo.icon}</span>
+                <span class="item-count">${count}</span>
+            `;
+            grid.appendChild(slot);
+        }
     }
 };
 

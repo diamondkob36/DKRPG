@@ -432,3 +432,58 @@ hr {
     line-height: 26px;
     margin: 0; /* ลบ margin เดิมออก */
 }
+
+/* ปุ่มกระเป๋า (มุมซ้ายล่าง) */
+#inventory-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    
+    background: linear-gradient(to bottom, #d35400, #a04000);
+    border: 2px solid #e67e22;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+#inventory-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px #e67e22; }
+
+/* ตารางไอเทม */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* แถวละ 4 ช่อง */
+    gap: 10px;
+    margin-top: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* ช่องไอเทมแต่ละอัน */
+.item-slot {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #5d4037;
+    border-radius: 5px;
+    padding: 5px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+.item-slot:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #f1c40f;
+}
+
+.item-icon { font-size: 24px; display: block; }
+.item-count {
+    position: absolute;
+    bottom: 2px; right: 2px;
+    background: #000;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
