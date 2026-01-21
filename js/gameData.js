@@ -87,7 +87,7 @@ export const items = {
         category: "material",
         inShop: false       // 👈 ไม่โชว์ในร้าน!
     },
-    
+
     // 👇 เพิ่มหมวด Loot (ของดรอป ไว้ขายอย่างเดียว) 👇
     slime_gel: {
         id: "slime_gel",
@@ -110,5 +110,48 @@ export const items = {
         sellPrice: 30,
         category: "loot",
         inShop: false
-    }
+    },
+    wooden_sword: {
+        id: "wooden_sword", name: "ดาบไม้", icon: "🗡️", desc: "ดาบฝึกหัด (Atk +2)",
+        type: "equipment", slot: "main_hand", price: 100, sellPrice: 20,
+        stats: { str: 2 }, category: "weapon", inShop: true
+    },
+    iron_sword: {
+        id: "iron_sword", name: "ดาบเหล็ก", icon: "⚔️", desc: "ดาบมาตรฐาน (Atk +5)",
+        type: "equipment", slot: "main_hand", price: 500, sellPrice: 200,
+        stats: { str: 5 }, category: "weapon", inShop: true
+    },
+
+    // 2. ป้องกัน (Armor)
+    leather_cap: {
+        id: "leather_cap", name: "หมวกหนัง", icon: "🧢", desc: "หมวกธรรมดา (HP +10)",
+        type: "equipment", slot: "head", price: 150, sellPrice: 50,
+        stats: { maxHp: 10 }, category: "armor", inShop: true
+    },
+    cloth_armor: {
+        id: "cloth_armor", name: "เสื้อผ้าดิบ", icon: "👕", desc: "ใส่สบาย (HP +20)",
+        type: "equipment", slot: "body", price: 200, sellPrice: 60,
+        stats: { maxHp: 20 }, category: "armor", inShop: true
+    },
+    
+    // 3. ประดับ (Accessory)
+    ring_str: {
+        id: "ring_str", name: "แหวนพลัง", icon: "💍", desc: "แหวนเก่าๆ (STR +1)",
+        type: "equipment", slot: "accessory", price: 800, sellPrice: 300,
+        stats: { str: 1 }, category: "accessory", inShop: true
+    },
 };
+
+// นิยามช่องสวมใส่ (Slot Definition) เพื่อใช้สร้าง UI
+export const equipmentSlots = [
+    { id: "head", icon: "🧢", name: "ศีรษะ" },
+    { id: "main_hand", icon: "⚔️", name: "มือขวา" },
+    { id: "body", icon: "👕", name: "ลำตัว" },
+    { id: "off_hand", icon: "🛡️", name: "มือซ้าย" },
+    { id: "legs", icon: "👖", name: "กางเกง" },
+    { id: "feet", icon: "👢", name: "รองเท้า" },
+    { id: "accessory", icon: "💍", name: "ประดับ" },
+    { id: "extra_1", icon: "⭐", name: "เสริม 1" },
+    { id: "extra_2", icon: "⭐", name: "เสริม 2" },
+    { id: "extra_3", icon: "⭐", name: "เสริม 3" }
+];

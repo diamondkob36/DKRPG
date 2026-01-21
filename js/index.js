@@ -10,6 +10,7 @@ let gameData = {};
 let selectedClassKey = null;
 let currentShopMode = 'buy';
 let currentCategory = 'all';
+let currentInvCategory = 'all';
 
 // --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
 window.loginGoogle = async () => {
@@ -170,14 +171,50 @@ window.saveUpgrade = async () => {
 
 // 1. เปิดกระเป๋า
 window.openInventory = () => {
-    // วาดไอเทมล่าสุดก่อนเปิด
-    UI.renderInventory(gameData.inventory);
+    // รีเซ็ตหมวด
+    currentInvCategory = 'all';
+    UI.switchInventoryTabUI('all');
+    
+    // วาดทั้ง Equipment และ Inventory
+    UI.renderInventoryModal(gameData, 'all');
     UI.toggleInventory(true);
 };
 
 // 2. ปิดกระเป๋า
 window.closeInventory = () => {
     UI.toggleInventory(false);
+};
+
+// 2. สลับหมวดในกระเป๋า
+window.switchInventoryTab = (category) => {
+    currentInvCategory = category;
+    UI.switchInventoryTabUI(category);
+    UI.renderInventory(gameData.inventory, category);
+};
+
+// 3. สวมใส่ไอเทม
+window.equipItem = async (itemId) => {
+    try {
+        gameData = GameLogic.equipItem(gameData, itemId);
+        
+        // อัปเดตหน้าจอทั้งหมด
+        UI.renderInventoryModal(gameData, currentInvCategory); // รีเฟรช Modal
+        UI.updateGameScreen(gameData); // รีเฟรช HUD สเตตัส
+        await saveToFirebase();
+        
+    } catch (e) { alert(e.message); }
+};
+
+// 4. ถอดไอเทม
+window.unequipItem = async (slotId) => {
+    try {
+        gameData = GameLogic.unequipItem(gameData, slotId);
+        
+        UI.renderInventoryModal(gameData, currentInvCategory);
+        UI.updateGameScreen(gameData);
+        await saveToFirebase();
+
+    } catch (e) { alert(e.message); }
 };
 
 // 3. กดใช้ไอเทม

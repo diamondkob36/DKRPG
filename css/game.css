@@ -1,4 +1,6 @@
-/* --- Game Map --- */
+/* css/game.css */
+
+/* --- 1. Game Map (แผนที่และโซน) --- */
 #game-screen { flex-grow: 1; position: relative; overflow: hidden; }
 #game-map-container { width: 100%; height: 100%; position: relative; }
 #world-map-img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -15,11 +17,13 @@
 }
 .zone-icon { font-size: 20px; }
 .zone-label { font-family: 'Cinzel', serif; color: #f4e4bc; font-weight: bold; font-size: 14px; }
+
+/* ตำแหน่งโซนต่างๆ */
 #zone-train { top: 20%; left: 15%; }
 #zone-quest { top: 38%; right: 28%; }
-#zone-shop { top: 30%; left: 38%; }
+#zone-shop { top: 30%; left: 38%; } /* ปรับตำแหน่งร้านค้า */
 
-/* --- Mini HUD --- */
+/* --- 2. Mini HUD (แถบสถานะมุมซ้ายบน) --- */
 #char-status-panel {
     position: absolute; top: 20px; left: 20px; width: 220px; height: 50px;
     padding: 10px; background-color: rgba(30, 20, 15, 0.95);
@@ -52,7 +56,7 @@
 }
 @keyframes glow { from { box-shadow: 0 0 5px #8e44ad; } to { box-shadow: 0 0 15px #9b59b6; } }
 
-/* --- Inventory & Shop & Upgrade Grids --- */
+/* --- 3. Inventory & Shop Basics --- */
 #inventory-btn {
     position: absolute; bottom: 20px; left: 20px; z-index: 100;
     background: linear-gradient(to bottom, #d35400, #a04000); border: 2px solid #e67e22;
@@ -63,6 +67,77 @@
 
 .inventory-grid, .shop-grid { display: grid; gap: 10px; margin-top: 15px; max-height: 300px; overflow-y: auto; }
 .inventory-grid { grid-template-columns: repeat(4, 1fr); }
+
+/* --- Inventory Layout (Split View) --- */
+.inventory-layout {
+    display: flex;
+    gap: 20px;
+    text-align: left;
+}
+
+.equipment-panel {
+    width: 320px; /* ด้านซ้ายกว้างหน่อย */
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #5d4037;
+}
+
+.bag-panel {
+    flex-grow: 1; /* ด้านขวายืดเต็มที่เหลือ */
+}
+
+/* --- Equipment Grid (3x5) --- */
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 คอลัมน์ */
+    grid-template-rows: repeat(5, 70px);   /* 5 แถว แถวละ 70px */
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* ช่องสวมใส่ (Slot) */
+.equip-slot {
+    background: rgba(0,0,0,0.4);
+    border: 2px dashed #5d4037;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.equip-slot:hover {
+    border-color: #f1c40f;
+    background: rgba(255,255,255,0.05);
+}
+
+.equip-slot.occupied {
+    border-style: solid;
+    background: rgba(93, 64, 55, 0.3);
+}
+
+.slot-placeholder {
+    font-size: 24px;
+    opacity: 0.3;
+}
+.slot-name {
+    font-size: 10px;
+    color: #aaa;
+    margin-top: 2px;
+}
+
+/* ไอเทมที่สวมใส่อยู่ */
+.equipped-item-icon { font-size: 28px; }
+.equipped-item-img { width: 40px; height: 40px; }
+
+.inventory-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* ปรับให้ยืดหยุ่น */
+}
+
 .shop-grid { display: flex; flex-direction: column; text-align: left; }
 
 .item-slot {
@@ -78,10 +153,23 @@
 .shop-info { flex-grow: 1; }
 .shop-info b { color: #f1c40f; }
 .shop-info small { color: #ccc; font-size: 12px; }
-.buy-btn { background: linear-gradient(to bottom, #f39c12, #d35400); border: 1px solid #e67e22; padding: 5px 10px; font-size: 12px; min-width: 80px; }
-.buy-btn:hover { box-shadow: 0 0 5px #f1c40f; }
 
-/* Upgrade Rows */
+/* ปุ่ม Buy/Sell ขนาดเล็ก */
+.buy-btn, .sell-btn { 
+    background: linear-gradient(to bottom, #f39c12, #d35400); 
+    border: 1px solid #e67e22; 
+    padding: 5px 10px; 
+    font-size: 12px; 
+    min-width: 80px; 
+}
+.buy-btn:hover { box-shadow: 0 0 5px #f1c40f; }
+.sell-btn { 
+    background: linear-gradient(to bottom, #c0392b, #922b21); 
+    border: 1px solid #e74c3c; 
+}
+.sell-btn:hover { box-shadow: 0 0 5px #e74c3c; }
+
+/* --- 4. Upgrade Rows (หน้าอัปเกรด) --- */
 .stat-row {
     display: flex; justify-content: space-between; align-items: center; margin: 8px 0;
     font-size: 16px; background: rgba(93, 64, 55, 0.1); padding: 8px 12px;
@@ -89,23 +177,18 @@
 }
 .stat-controls { display: flex; align-items: center; gap: 8px; }
 
-/* ปุ่มบวก (+) แก้ไขใหม่ */
+/* ปุ่มบวก (+) กลมและกลาง */
 .plus-btn { 
     background: linear-gradient(to bottom, #27ae60, #1e8449); 
     border: 1px solid #2ecc71; 
     width: 28px; height: 28px; 
     border-radius: 50%; 
     font-size: 18px; font-weight: bold; 
-    
-    /* 👇 เพิ่มส่วนนี้: ล้างค่า Padding เดิม และจัดกึ่งกลาง */
-    padding: 0; 
-    margin: 0;
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
+    padding: 0; margin: 0;
+    display: flex; justify-content: center; align-items: center;
 }
 
-/* ปุ่มลบ (-) แก้ไขใหม่ */
+/* ปุ่มลบ (-) กลมและกลาง */
 .minus-btn { 
     background: linear-gradient(to bottom, #c0392b, #922b21); 
     border: 1px solid #e74c3c; 
@@ -113,179 +196,64 @@
     border-radius: 50%; 
     font-size: 18px; font-weight: bold; 
     color: white; cursor: pointer; 
-    
-    /* 👇 ซ่อนไว้ก่อน (JS จะสั่งโชว์แบบ Flex เอง) */
     display: none; 
-
-    /* 👇 เพิ่มส่วนนี้: ล้างค่า Padding เดิม */
-    padding: 0;
-    margin: 0;
-    justify-content: center; 
-    align-items: center;
+    padding: 0; margin: 0;
+    justify-content: center; align-items: center;
 }
 
-/* --- Shop Categories --- */
+/* --- 5. Shop Categories (หมวดหมู่สินค้า) --- */
 .shop-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 10px;
+    display: flex; justify-content: center; gap: 5px; margin-bottom: 10px;
 }
-
 .shop-tab-btn {
-    background: transparent;
-    border: 1px solid #5d4037;
-    color: #5d4037;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-family: 'Sarabun', sans-serif;
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow: none;
-    margin: 0;
-}
-
-.shop-tab-btn:hover {
-    background: rgba(93, 64, 55, 0.1);
-}
-
-/* ปุ่มที่ถูกเลือก (Active) */
-.shop-tab-btn.active {
-    background: #5d4037;
-    color: #f4e4bc;
-    border-color: #5d4037;
-    font-weight: bold;
-}
-
-/* --- Shop Modes (Buy/Sell) --- */
-.shop-mode-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed rgba(93, 64, 55, 0.5);
-}
-
-.mode-btn {
-    flex: 1;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid #5d4037;
-    color: #ccc;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 8px;
-}
-
-.mode-btn:hover {
-    background: rgba(93, 64, 55, 0.3);
-    color: #fff;
-}
-
-/* ปุ่มโหมดที่ถูกเลือก (สีทอง) */
-.mode-btn.active {
-    background: linear-gradient(to bottom, #f1c40f, #f39c12);
-    border-color: #d35400;
-    color: #5d4037;
-    box-shadow: 0 0 10px #f1c40f;
-    transform: scale(1.05);
-}
-
-/* ปุ่มขาย (สีแดง) */
-.sell-btn {
-    background: linear-gradient(to bottom, #c0392b, #922b21);
-    border: 1px solid #e74c3c;
-    padding: 5px 10px;
-    font-size: 12px;
-    min-width: 80px;
-}
-.sell-btn:hover { box-shadow: 0 0 5px #e74c3c; }
-
-/* --- Shop Categories --- */
-.shop-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-.shop-tab-btn {
-    background: transparent;
-    border: 1px solid #5d4037;
-    color: #5d4037;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-family: 'Sarabun', sans-serif;
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow: none;
-    margin: 0;
+    background: transparent; border: 1px solid #5d4037; color: #5d4037;
+    padding: 5px 10px; font-size: 12px; font-family: 'Sarabun', sans-serif;
+    border-radius: 4px; cursor: pointer; box-shadow: none; margin: 0;
 }
 .shop-tab-btn:hover { background: rgba(93, 64, 55, 0.1); }
 .shop-tab-btn.active {
-    background: #5d4037;
-    color: #f4e4bc;
-    border-color: #5d4037;
-    font-weight: bold;
+    background: #5d4037; color: #f4e4bc; border-color: #5d4037; font-weight: bold;
 }
 
-/* --- Shop Modes (Buy/Sell) --- */
+/* --- 6. Shop Modes (โหมดซื้อ/ขาย) --- */
 .shop-mode-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
+    display: flex; gap: 10px; margin-bottom: 15px; padding-bottom: 10px;
     border-bottom: 1px dashed rgba(93, 64, 55, 0.5);
 }
-
 .mode-btn {
-    flex: 1;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid #5d4037;
-    color: #ccc;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 8px;
+    flex: 1; background: rgba(0,0,0,0.2); border: 1px solid #5d4037; color: #ccc;
+    padding: 10px; font-size: 14px; font-weight: bold; border-radius: 8px;
 }
 .mode-btn:hover { background: rgba(93, 64, 55, 0.3); color: #fff; }
 .mode-btn.active {
     background: linear-gradient(to bottom, #f1c40f, #f39c12);
-    border-color: #d35400;
-    color: #5d4037;
-    box-shadow: 0 0 10px #f1c40f;
-    transform: scale(1.05);
+    border-color: #d35400; color: #5d4037;
+    box-shadow: 0 0 10px #f1c40f; transform: scale(1.05);
 }
 
+/* --- 7. Shop Actions (Input & Sell All) --- */
 /* กลุ่ม Action: ช่องกรอก + ปุ่ม */
 .action-group {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    display: flex; align-items: center; gap: 5px;
 }
 
 /* ช่องกรอกจำนวน */
 .qty-input {
-    width: 40px !important;
-    padding: 5px !important;
-    text-align: center;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid #5d4037;
-    color: #fff;
-    border-radius: 4px;
-    margin: 0;
+    width: 40px !important; padding: 5px !important; text-align: center;
+    background: rgba(0,0,0,0.3); border: 1px solid #5d4037; color: #fff;
+    border-radius: 4px; margin: 0;
 }
 
-/* ปุ่มขายทั้งหมด (ปรับขนาดให้เล็กลง) */
+/* ปุ่มขายทั้งหมด (ขนาดกะทัดรัด) */
 .sell-all-btn {
-    width: auto;               /* 1. ไม่ยืดเต็มจอแล้ว ให้ขนาดพอดีตัวอักษร */
-    display: block;            /* หรือ inline-block แล้วแต่ชอบ */
+    width: auto;               /* พอดีข้อความ */
+    display: block;            
     margin: 0 auto 10px auto;  /* จัดกึ่งกลาง */
     background: linear-gradient(to bottom, #c0392b, #922b21);
     border: 1px solid #e74c3c;
     color: white;
-    padding: 5px 15px;         /* 2. ลด Padding (เดิม 8px) */
-    font-size: 12px;           /* 3. ลดขนาดตัวอักษร */
+    padding: 5px 15px;         /* ขนาดพอเหมาะ */
+    font-size: 12px;
     border-radius: 4px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.4);
@@ -294,11 +262,4 @@
     background: linear-gradient(to bottom, #e74c3c, #c0392b);
     transform: scale(1.05);
     box-shadow: 0 0 8px #e74c3c;
-}
-
-/* ปุ่ม Buy/Sell เล็ก */
-.buy-btn, .sell-btn {
-    padding: 5px 10px;
-    font-size: 12px;
-    min-width: 80px;
 }

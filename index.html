@@ -198,18 +198,40 @@
                 🎒 กระเป๋า
             </button>
 
-            <div id="inventory-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-box box" style="width: 350px;"> 
+           <div id="inventory-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box box" style="width: 850px; max-width: 95%;"> 
                     <div class="modal-header">
-                        <h2>🎒 กระเป๋าสัมภาระ</h2>
+                        <h2>🎒 ตัวละคร & กระเป๋า</h2>
                         <button class="close-btn" onclick="closeInventory()">✖</button>
                     </div>
                     <hr>
                     
-                    <div id="inventory-grid" class="inventory-grid">
-                        <p style="color: #ccc;">(กระเป๋าว่างเปล่า)</p>
-                    </div>
+                    <div class="inventory-layout">
+                        
+                        <div class="equipment-panel">
+                            <h3>สวมใส่</h3>
+                            <div id="equipment-grid" class="equipment-grid">
+                                </div>
+                            <div class="equipment-stats-summary">
+                                </div>
+                        </div>
 
+                        <div class="bag-panel">
+                            <h3>กระเป๋า</h3>
+                            
+                            <div class="shop-tabs" style="justify-content: flex-start; margin-bottom: 10px;">
+                                <button class="shop-tab-btn active" onclick="switchInventoryTab('all')">ทั้งหมด</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('weapon')">อาวุธ</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('armor')">ชุดเกราะ</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('potion')">ยา</button>
+                            </div>
+
+                            <div id="inventory-grid" class="inventory-grid" style="height: 350px; overflow-y: auto;">
+                                <p style="color: #ccc;">(กระเป๋าว่างเปล่า)</p>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 

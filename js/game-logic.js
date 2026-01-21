@@ -62,8 +62,94 @@ export const GameLogic = {
             name: name, classKey: classKey, className: base.name,
             lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
             hp: base.hp, maxHp: base.maxHp, str: base.str, int: base.int, agi: base.agi,
-            inventory: { "potion_s": 3 }
+            inventory: { "potion_s": 3, "wooden_sword": 1 }, // แถมดาบ!
+            equipment: {} // 🆕 เพิ่มช่องเก็บข้อมูลของที่ใส่อยู่
         };
+    },
+
+    // 🆕 ฟังก์ชันสวมใส่ไอเทม
+    equipItem(currentData, itemId, targetSlot = null) {
+        const newData = { ...currentData };
+        newData.equipment = newData.equipment || {}; // กันเหนียว
+
+        // 1. ตรวจสอบของในกระเป๋า
+        if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
+            throw new Error("ไม่มีไอเทมนี้!");
+        }
+
+        const item = items[itemId];
+        if (item.type !== 'equipment') throw new Error("ไอเทมนี้สวมใส่ไม่ได้!");
+
+        // 2. หาช่องที่จะใส่ (ถ้าไม่ระบุ ให้ใช้ค่า default ของไอเทม)
+        // สำหรับช่อง extra อาจต้องส่ง targetSlot มาเจาะจง
+        const slot = targetSlot || item.slot; 
+
+        // 3. ถอดของเก่าออกก่อน (ถ้ามี)
+        if (newData.equipment[slot]) {
+            const oldItemId = newData.equipment[slot];
+            // คืนของเก่าเข้ากระเป๋า
+            newData.inventory[oldItemId] = (newData.inventory[oldItemId] || 0) + 1;
+            
+            // ลบสเตตัสของเก่า
+            const oldItem = items[oldItemId];
+            if(oldItem.stats) {
+                if(oldItem.stats.str) newData.str -= oldItem.stats.str;
+                if(oldItem.stats.int) newData.int -= oldItem.stats.int;
+                if(oldItem.stats.agi) newData.agi -= oldItem.stats.agi;
+                if(oldItem.stats.maxHp) newData.maxHp -= oldItem.stats.maxHp;
+            }
+        }
+
+        // 4. สวมของใหม่
+        newData.equipment[slot] = itemId;
+        
+        // ลบออกจากกระเป๋า 1 ชิ้น
+        newData.inventory[itemId]--;
+        if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
+
+        // 5. เพิ่มสเตตัสของใหม่
+        if(item.stats) {
+            if(item.stats.str) newData.str += item.stats.str;
+            if(item.stats.int) newData.int += item.stats.int;
+            if(item.stats.agi) newData.agi += item.stats.agi;
+            if(item.stats.maxHp) newData.maxHp += item.stats.maxHp;
+        }
+
+        // ปรับเลือดปัจจุบันไม่ให้เกิน Max ใหม่
+        newData.hp = Math.min(newData.hp, newData.maxHp);
+
+        return newData;
+    },
+
+    // 🆕 ฟังก์ชันถอดไอเทม
+    unequipItem(currentData, slot) {
+        const newData = { ...currentData };
+        newData.equipment = newData.equipment || {};
+
+        const itemId = newData.equipment[slot];
+        if (!itemId) throw new Error("ไม่มีไอเทมในช่องนี้");
+
+        const item = items[itemId];
+
+        // 1. ลบออกจากตัว
+        delete newData.equipment[slot];
+
+        // 2. คืนเข้ากระเป๋า
+        newData.inventory = newData.inventory || {};
+        newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
+
+        // 3. ลบสเตตัสออก
+        if(item.stats) {
+            if(item.stats.str) newData.str -= item.stats.str;
+            if(item.stats.int) newData.int -= item.stats.int;
+            if(item.stats.agi) newData.agi -= item.stats.agi;
+            if(item.stats.maxHp) newData.maxHp -= item.stats.maxHp;
+        }
+
+        // ปรับเลือดปัจจุบัน
+        newData.hp = Math.min(newData.hp, newData.maxHp);
+
+        return newData;
     },
 
     useItem(currentData, itemId) {

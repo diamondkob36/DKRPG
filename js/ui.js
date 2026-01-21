@@ -1,4 +1,4 @@
-import { classStats, items } from "./gameData.js";
+import { classStats, items, equipmentSlots } from "./gameData.js";
 
 export const UI = {
     // สลับหน้าจอ (Login -> Create -> Game)
@@ -139,36 +139,108 @@ export const UI = {
         if(el) el.style.display = show ? 'flex' : 'none';
     },
 
+    // 🆕 1. วาดหน้าต่าง Equipment + Inventory
+    renderInventoryModal(gameData, filterCategory = 'all') {
+        this.renderEquipment(gameData.equipment);
+        this.renderInventory(gameData.inventory, filterCategory);
+    },
+
+    // 🆕 2. วาดช่องสวมใส่ (3x5 Grid)
+    renderEquipment(equipment = {}) {
+        const grid = document.getElementById('equipment-grid');
+        grid.innerHTML = "";
+
+        // วนลูปสร้างช่องตาม equipmentSlots ที่เรากำหนดไว้ใน gameData
+        // เรากำหนดไว้ 10 ช่อง แต่ User อยากได้ 3x5 = 15 ช่อง
+        // ดังนั้นเราจะใส่ช่องว่าง (Spacer) เพื่อจัด Layout ให้สวย
+        
+        // Layout Map (3 columns):
+        // [  ] [Head] [  ]
+        // [Main] [Body] [Off]
+        // [Acc] [Legs] [Acc]
+        // [Extra] [Feet] [Extra]
+        // [Extra] [    ] [     ]
+        
+        // เพื่อความง่าย ผมจะเรียงตามลำดับที่ประกาศใน equipmentSlots เลย 
+        // แล้วคุณสามารถ CSS Grid Area จัดตำแหน่งทีหลังได้ ถ้าต้องการความเป๊ะ
+        // แต่เบื้องต้นจะเรียงกันไปก่อนครับ
+        
+        equipmentSlots.forEach(slotDef => {
+            const itemId = equipment[slotDef.id];
+            const item = itemId ? items[itemId] : null;
+
+            const slotEl = document.createElement('div');
+            slotEl.className = `equip-slot ${item ? 'occupied' : ''}`;
+            slotEl.title = item ? `${item.name}\n${item.desc}` : slotDef.name;
+            
+            // คลิกเพื่อถอด
+            if (item) {
+                slotEl.onclick = () => window.unequipItem(slotDef.id);
+                slotEl.innerHTML = `
+                    <div class="equipped-item-icon">${item.icon}</div>
+                    <div class="slot-name" style="color:#f1c40f;">${item.name}</div>
+                `;
+            } else {
+                slotEl.innerHTML = `
+                    <div class="slot-placeholder">${slotDef.icon}</div>
+                    <div class="slot-name">${slotDef.name}</div>
+                `;
+            }
+
+            grid.appendChild(slotEl);
+        });
+    },
+
     // 👇 2. วาดไอเทมลงในตาราง 👇
-    renderInventory(inventory) {
+renderInventory(inventory, filterCategory = 'all') {
         const grid = document.getElementById('inventory-grid');
-        grid.innerHTML = ""; // ล้างของเก่า
+        grid.innerHTML = "";
 
         if (!inventory || Object.keys(inventory).length === 0) {
-            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1;">(กระเป๋าว่างเปล่า)</p>';
+            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1; padding: 20px;">(กระเป๋าว่างเปล่า)</p>';
             return;
         }
 
-        // วนลูปไอเทมที่มี
         for (const [itemId, count] of Object.entries(inventory)) {
-            const itemInfo = items[itemId];
-            if (!itemInfo) continue;
+            const item = items[itemId];
+            if (!item) continue;
+
+            // กรองหมวดหมู่
+            if (filterCategory !== 'all' && item.category !== filterCategory) continue;
 
             const slot = document.createElement('div');
             slot.className = 'item-slot';
-            // ใส่ Tooltip ง่ายๆ
-            slot.title = `${itemInfo.name}\n${itemInfo.desc}`; 
+            slot.title = `${item.name}\n${item.desc}\n(คลิกเพื่อใช้งาน/สวมใส่)`;
             
-            // คลิกเพื่อกดใช้
-            slot.onclick = () => window.useItem(itemId); 
+            // คลิก: เช็คว่าเป็นของสวมใส่ หรือ ยา
+            slot.onclick = () => {
+                if (item.type === 'equipment') {
+                    window.equipItem(itemId);
+                } else if (item.type === 'consumable') {
+                    window.useItem(itemId);
+                }
+            };
 
             slot.innerHTML = `
-                <span class="item-icon">${itemInfo.icon}</span>
+                <span class="item-icon">${item.icon}</span>
                 <span class="item-count">${count}</span>
             `;
             grid.appendChild(slot);
         }
     },
+
+    // 🆕 Helper สำหรับเปลี่ยนสีปุ่ม Tab Inventory
+    switchInventoryTabUI(category) {
+        // หาปุ่มใน .bag-panel แล้วเปลี่ยน class active
+        const tabs = document.querySelectorAll('.bag-panel .shop-tab-btn');
+        tabs.forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.getAttribute('onclick').includes(`'${category}'`)) {
+                btn.classList.add('active');
+            }
+        });
+    },
+    
     // 👇 1. เปิด/ปิดร้านค้า 👇
     toggleShop(show) {
         const el = document.getElementById('shop-modal');
