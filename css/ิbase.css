@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Sarabun:wght@400;700&display=swap');
+
+/* --- Global Layout --- */
+body {
+    background-color: #1a0f0a;
+    background-image: radial-gradient(circle, #2e1e16 0%, #0d0604 100%);
+    color: #3e2723;
+    font-family: 'Sarabun', sans-serif;
+    text-align: center;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Top Bar --- */
+#top-bar {
+    height: 40px;
+    padding: 0 15px;
+    background: linear-gradient(to bottom, #2c231e, #1a0f0a);
+    border-bottom: 2px solid #d4af37;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+#top-bar h1 {
+    font-size: 18px;
+    font-family: 'Cinzel', serif;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px #000;
+    margin: 0;
+}
+
+.logout-btn-top {
+    padding: 5px 12px;
+    font-size: 12px;
+    background: linear-gradient(to bottom, #c0392b, #962d22);
+    border: 1px solid #e74c3c;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.logout-btn-top:hover {
+    background: linear-gradient(to bottom, #e74c3c, #c0392b);
+    box-shadow: 0 0 8px #e74c3c;
+}
+
+/* --- Screen Containers --- */
+.screen-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* --- Class Selection (Create Screen) --- */
+.char-portrait {
+    width: 100px; height: 100px;
+    object-fit: cover;
+    border: 3px solid #d4af37; border-radius: 10px;
+    background-color: #000;
+}
+.class-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+.class-card {
+    background: rgba(0,0,0,0.3); border: 2px solid #5d4037;
+    padding: 10px; border-radius: 5px; cursor: pointer; width: 30%;
+    transition: all 0.2s;
+}
+.class-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #d4af37; }
+.class-card.selected {
+    background: #5d4037; border-color: #f1c40f;
+    box-shadow: 0 0 10px #f1c40f; transform: scale(1.05);
+}
+.class-card h3 { margin: 5px 0; font-size: 13px; color: #f4e4bc; }
+.class-card small { font-size: 10px; color: #ccc; }

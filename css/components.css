@@ -1,0 +1,93 @@
+/* --- UI Components --- */
+h2 {
+    font-family: 'Cinzel', serif;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px #000;
+    margin-bottom: 15px;
+}
+
+/* กล่อง .box Theme Medieval */
+.box {
+    background-color: #f4e4bc;
+    border: 4px double #5d4037;
+    display: inline-block;
+    padding: 30px;
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7), inset 0 0 50px rgba(160, 116, 75, 0.3);
+    position: relative;
+    max-width: 90%;
+}
+.box::before, .box::after {
+    content: '❖';
+    color: #5d4037;
+    font-size: 20px;
+    position: absolute;
+}
+.box::before { top: 5px; left: 10px; }
+.box::after { bottom: 5px; right: 10px; }
+
+/* Buttons */
+button {
+    background: linear-gradient(to bottom, #8b5a2b, #5d4037);
+    border: 2px solid #d4af37;
+    color: #f4e4bc;
+    padding: 10px 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    transition: transform 0.1s;
+}
+button:hover {
+    background: linear-gradient(to bottom, #a06b35, #6d4c41);
+    color: #fff;
+    box-shadow: 0 0 10px #d4af37;
+}
+button:active { transform: scale(0.95); }
+
+button.google-btn { background: #4285F4; border-color: #fff; color: #fff; }
+button.save-btn { background: linear-gradient(to bottom, #27ae60, #1e8449); border-color: #2ecc71; }
+.confirm-btn { background: linear-gradient(to bottom, #27ae60, #1e8449); border: 1px solid #2ecc71; color: white; padding: 8px 15px; border-radius: 5px; flex: 1; }
+.reset-btn { background: linear-gradient(to bottom, #e67e22, #d35400); border: 1px solid #f39c12; color: white; padding: 8px 15px; border-radius: 5px; flex: 1; }
+.confirm-btn:hover { box-shadow: 0 0 10px #2ecc71; }
+.reset-btn:hover { box-shadow: 0 0 10px #f39c12; }
+
+/* Inputs & HR */
+input {
+    background: #2e1e16;
+    border: 2px solid #5d4037;
+    color: #f1c40f;
+    padding: 10px;
+    font-family: 'Sarabun', sans-serif;
+    text-align: center;
+    width: 60%;
+    border-radius: 4px;
+}
+hr {
+    border: 0; height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(93, 64, 55, 0.75), rgba(0, 0, 0, 0));
+    margin: 15px 0;
+}
+#status { font-size: 12px; margin-top: 5px; font-weight: bold; }
+.success { color: #2ecc71 !important; }
+.error { color: #e74c3c !important; }
+
+/* --- Modals (Popup System) --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-box {
+    width: 320px; text-align: center;
+    background-color: #f4e4bc; border: 4px double #5d4037;
+    padding: 20px; border-radius: 8px; position: relative;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.modal-header h2 { margin: 0; font-size: 20px; color: #5d4037; }
+.close-btn { background: none; border: none; color: #5d4037; font-size: 24px; padding: 0; margin: 0; width: auto; box-shadow: none; }
+.close-btn:hover { color: #c0392b; background: none; box-shadow: none; transform: scale(1.2); }
