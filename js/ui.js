@@ -30,6 +30,9 @@ export const UI = {
             setText(key, gameData[key]);
         });
 
+        // 👇✅ เพิ่มบรรทัดนี้ครับ: สั่งให้อัปเดตเงินในร้านค้าด้วย!
+        setText('shop-gold', gameData.gold);
+
         // 👇 แก้ไขตรงนี้: แสดง Level คู่กับ Exp 👇
         // ตัวอย่าง: Lv: 5 (80/100)
         const currentExp = gameData.exp || 0;
