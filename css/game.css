@@ -88,5 +88,27 @@
     border-radius: 6px; border: 1px solid rgba(93, 64, 55, 0.2);
 }
 .stat-controls { display: flex; align-items: center; gap: 8px; }
-.plus-btn { background: linear-gradient(to bottom, #27ae60, #1e8449); border: 1px solid #2ecc71; width: 28px; height: 28px; line-height: 26px; border-radius: 50%; font-size: 18px; font-weight: bold; }
-.minus-btn { background: linear-gradient(to bottom, #c0392b, #922b21); border: 1px solid #e74c3c; width: 28px; height: 28px; line-height: 26px; border-radius: 50%; font-size: 18px; font-weight: bold; color: white; cursor: pointer; display: none; }
+.plus-btn { 
+    background: linear-gradient(to bottom, #27ae60, #1e8449); 
+    border: 1px solid #2ecc71; 
+    width: 28px; height: 28px; 
+    border-radius: 50%; 
+    font-size: 18px; font-weight: bold; 
+    padding: 0; 
+    margin: 0;
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    line-height: normal; /* ล้างค่า line-height เดิม */
+}
+.minus-btn { 
+    background: linear-gradient(to bottom, #c0392b, #922b21); 
+    border: 1px solid #e74c3c; 
+    width: 28px; height: 28px; 
+    border-radius: 50%; 
+    font-size: 18px; font-weight: bold; 
+    color: white; cursor: pointer; 
+    display: none; /* ซ่อนไว้ก่อน (JS จะสั่งโชว์เมื่อจำเป็น) */
+    padding: 0;
+    margin: 0;
+}

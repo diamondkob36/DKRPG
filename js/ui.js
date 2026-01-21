@@ -127,9 +127,9 @@ export const UI = {
             let originalVal = (stat === 'hp') ? originalData.maxHp : originalData[stat];
 
             if (currentVal > originalVal) {
-                btnMinus.style.display = 'inline-block';
+                btnPlus.style.display = (tempData.statPoints > 0) ? 'flex' : 'none';
             } else {
-                btnMinus.style.display = 'none';
+                btnMinus.style.display = (currentVal > originalVal) ? 'flex' : 'none';
             }
         });
     },
