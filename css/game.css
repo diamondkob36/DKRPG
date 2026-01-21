@@ -88,11 +88,7 @@
     border-radius: 6px; border: 1px solid rgba(93, 64, 55, 0.2);
 }
 .stat-controls { display: flex; align-items: center; gap: 8px; }
-.stat-row {
-    display: flex; justify-content: space-between; align-items: center; margin: 8px 0;
-    font-size: 16px; background: rgba(93, 64, 55, 0.1); padding: 8px 12px;
-    border-radius: 6px; border: 1px solid rgba(93, 64, 55, 0.2);
-}
+
 /* ปุ่มบวก (+) แก้ไขใหม่ */
 .plus-btn { 
     background: linear-gradient(to bottom, #27ae60, #1e8449); 

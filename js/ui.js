@@ -231,7 +231,7 @@ export const UI = {
         // เรียกวาดร้านค้าใหม่
         this.renderShop(category);
     },
-    
+
     renderSellShop(inventory) {
         const grid = document.getElementById('shop-grid');
         if(!grid) return;
@@ -248,8 +248,12 @@ export const UI = {
             const item = items[itemId];
             if (!item) continue;
 
-            // คำนวณราคาขาย (50%)
-            const sellPrice = Math.floor(item.price / 2);
+            let showSellPrice;
+            if (item.sellPrice !== undefined) {
+                showSellPrice = item.sellPrice;
+            } else {
+                showSellPrice = Math.floor(item.price / 2);
+            }
 
             const card = document.createElement('div');
             card.className = 'shop-item';

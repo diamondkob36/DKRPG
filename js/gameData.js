@@ -53,6 +53,7 @@ export const items = {
         desc: "ฟื้นฟูเลือด 100 หน่วย",
         type: "consumable",
         price: 120,
+        sellPrice: 40,
         effect: { hp: 100 },
         category: "potion",
         inShop: true
@@ -66,6 +67,7 @@ export const items = {
         desc: "เพิ่ม STR ถาวร +1",
         type: "consumable",
         price: 500,
+        sellPrice: 200,
         effect: { str: 1 },
         category: "special", // 👈 หมวดพิเศษ
         inShop: false       // 👈 ไม่ขายในร้าน!
@@ -79,6 +81,7 @@ export const items = {
         desc: "ชิ้นส่วนหายากจากมังกร",
         type: "material",
         price: 0,
+        sellPrice: 20000,
         effect: {},
         category: "material",
         inShop: false       // 👈 ไม่โชว์ในร้าน!
