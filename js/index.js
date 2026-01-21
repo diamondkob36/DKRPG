@@ -236,14 +236,31 @@ window.buyItem = async (itemId) => {
     try {
         const qtyInput = document.getElementById(`buy-qty-${itemId}`);
         const amount = qtyInput ? parseInt(qtyInput.value) : 1;
+        
         if(amount < 1) return alert("จำนวนไม่ถูกต้อง");
 
+        // 👇 1. ดึงข้อมูลไอเทมเพื่อมาโชว์ชื่อและราคา
+        const item = items[itemId];
+        const totalPrice = item.price * amount;
+
+        // 👇 2. สร้างกล่อง Confirm แจ้งเตือน
+        if(!confirm(`ยืนยันการซื้อ "${item.name}"\nจำนวน: ${amount} ชิ้น\nราคารวม: ${totalPrice} G ใช่หรือไม่?`)) {
+            return; // ถ้ากด Cancel ก็จบฟังก์ชันตรงนี้ ไม่ซื้อ
+        }
+
+        // 3. ถ้ากด OK ถึงจะเรียก Logic ซื้อของ
         gameData = GameLogic.buyItem(gameData, itemId, amount);
+        
+        // รีเซ็ตช่องกรอกกลับเป็น 1
         if(qtyInput) qtyInput.value = 1;
+
         UI.updateGameScreen(gameData);
         await saveToFirebase();
         refreshShopDisplay();
-    } catch (e) { alert(e.message); }
+        
+    } catch (e) { 
+        alert(e.message); 
+    }
 };
 
 window.sellItem = async (itemId) => {

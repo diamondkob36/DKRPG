@@ -224,14 +224,16 @@ export const UI = {
         const grid = document.getElementById('shop-grid');
         grid.innerHTML = "";
 
-        // ปุ่มขายทิ้งทั้งหมด (Sell All) - โชว์เมื่อเจาะจงหมวด หรือเลือก Loot
-        if ((filterCategory === 'loot' || filterCategory !== 'all') && inventory) {
+        // ✅ แก้ไข: โชว์ปุ่มเฉพาะหมวด Loot เท่านั้น
+        if (filterCategory === 'loot' && inventory) {
              const sellAllDiv = document.createElement('div');
              sellAllDiv.style.width = '100%';
-             sellAllDiv.style.marginBottom = '10px';
+             sellAllDiv.style.textAlign = 'center'; // จัดปุ่มกลาง
+             sellAllDiv.style.marginBottom = '5px';
+             
              sellAllDiv.innerHTML = `
                 <button class="sell-all-btn" onclick="sellAllLoot('${filterCategory}')">
-                    🗑️ ขายไอเทมหมวด "${filterCategory}" ทั้งหมด
+                    🗑️ ขายขยะทิ้งทั้งหมด
                 </button>
              `;
              grid.appendChild(sellAllDiv);

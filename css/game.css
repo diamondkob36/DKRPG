@@ -276,19 +276,25 @@
     margin: 0;
 }
 
-/* ปุ่มขายทั้งหมด */
+/* ปุ่มขายทั้งหมด (ปรับขนาดให้เล็กลง) */
 .sell-all-btn {
-    width: 100%;
-    background: linear-gradient(to bottom, #e74c3c, #c0392b);
-    border: 1px solid #922b21;
+    width: auto;               /* 1. ไม่ยืดเต็มจอแล้ว ให้ขนาดพอดีตัวอักษร */
+    display: block;            /* หรือ inline-block แล้วแต่ชอบ */
+    margin: 0 auto 10px auto;  /* จัดกึ่งกลาง */
+    background: linear-gradient(to bottom, #c0392b, #922b21);
+    border: 1px solid #e74c3c;
     color: white;
-    padding: 8px;
-    border-radius: 5px;
-    font-weight: bold;
+    padding: 5px 15px;         /* 2. ลด Padding (เดิม 8px) */
+    font-size: 12px;           /* 3. ลดขนาดตัวอักษร */
+    border-radius: 4px;
     cursor: pointer;
-    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
-.sell-all-btn:hover { box-shadow: 0 0 10px #e74c3c; }
+.sell-all-btn:hover {
+    background: linear-gradient(to bottom, #e74c3c, #c0392b);
+    transform: scale(1.05);
+    box-shadow: 0 0 8px #e74c3c;
+}
 
 /* ปุ่ม Buy/Sell เล็ก */
 .buy-btn, .sell-btn {
