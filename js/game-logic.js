@@ -164,5 +164,36 @@ export const GameLogic = {
         newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
 
         return newData;
+    },
+    // 👇 เพิ่มฟังก์ชันนี้: ขายไอเทม 👇
+    sellItem(currentData, itemId) {
+        const newData = { ...currentData };
+        
+        // เช็คว่ามีของที่จะขายไหม
+        if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
+            throw new Error("ไม่มีไอเทมนี้ในกระเป๋า!");
+        }
+
+        const item = items[itemId];
+        if (!item) throw new Error("ข้อมูลไอเทมผิดพลาด");
+
+        // 💰 สูตรราคาขาย: ราคาเต็ม หาร 2 (ปัดเศษลง)
+        // ถ้าไอเทมราคา 0 (เช่นของเควส) จะขายไม่ได้ราคา
+        const sellPrice = Math.floor(item.price / 2);
+
+        if (sellPrice <= 0) {
+             throw new Error("ไอเทมนี้ขายไม่ได้!");
+        }
+
+        // 1. เพิ่มเงิน
+        newData.gold += sellPrice;
+
+        // 2. ลบของออกจากกระเป๋า
+        newData.inventory[itemId]--;
+        if (newData.inventory[itemId] <= 0) {
+            delete newData.inventory[itemId];
+        }
+
+        return newData;
     }
 };

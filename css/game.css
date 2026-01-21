@@ -88,19 +88,28 @@
     border-radius: 6px; border: 1px solid rgba(93, 64, 55, 0.2);
 }
 .stat-controls { display: flex; align-items: center; gap: 8px; }
+.stat-row {
+    display: flex; justify-content: space-between; align-items: center; margin: 8px 0;
+    font-size: 16px; background: rgba(93, 64, 55, 0.1); padding: 8px 12px;
+    border-radius: 6px; border: 1px solid rgba(93, 64, 55, 0.2);
+}
+/* ปุ่มบวก (+) แก้ไขใหม่ */
 .plus-btn { 
     background: linear-gradient(to bottom, #27ae60, #1e8449); 
     border: 1px solid #2ecc71; 
     width: 28px; height: 28px; 
     border-radius: 50%; 
     font-size: 18px; font-weight: bold; 
+    
+    /* 👇 เพิ่มส่วนนี้: ล้างค่า Padding เดิม และจัดกึ่งกลาง */
     padding: 0; 
     margin: 0;
-    display: flex;
+    display: flex; 
     justify-content: center; 
     align-items: center;
-    line-height: normal; /* ล้างค่า line-height เดิม */
 }
+
+/* ปุ่มลบ (-) แก้ไขใหม่ */
 .minus-btn { 
     background: linear-gradient(to bottom, #c0392b, #922b21); 
     border: 1px solid #e74c3c; 
@@ -108,7 +117,90 @@
     border-radius: 50%; 
     font-size: 18px; font-weight: bold; 
     color: white; cursor: pointer; 
-    display: none; /* ซ่อนไว้ก่อน (JS จะสั่งโชว์เมื่อจำเป็น) */
+    
+    /* 👇 ซ่อนไว้ก่อน (JS จะสั่งโชว์แบบ Flex เอง) */
+    display: none; 
+
+    /* 👇 เพิ่มส่วนนี้: ล้างค่า Padding เดิม */
     padding: 0;
     margin: 0;
+    justify-content: center; 
+    align-items: center;
 }
+
+/* --- Shop Categories --- */
+.shop-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.shop-tab-btn {
+    background: transparent;
+    border: 1px solid #5d4037;
+    color: #5d4037;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: 'Sarabun', sans-serif;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    margin: 0;
+}
+
+.shop-tab-btn:hover {
+    background: rgba(93, 64, 55, 0.1);
+}
+
+/* ปุ่มที่ถูกเลือก (Active) */
+.shop-tab-btn.active {
+    background: #5d4037;
+    color: #f4e4bc;
+    border-color: #5d4037;
+    font-weight: bold;
+}
+
+/* --- Shop Modes (Buy/Sell) --- */
+.shop-mode-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(93, 64, 55, 0.5);
+}
+
+.mode-btn {
+    flex: 1;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid #5d4037;
+    color: #ccc;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.mode-btn:hover {
+    background: rgba(93, 64, 55, 0.3);
+    color: #fff;
+}
+
+/* ปุ่มโหมดที่ถูกเลือก (สีทอง) */
+.mode-btn.active {
+    background: linear-gradient(to bottom, #f1c40f, #f39c12);
+    border-color: #d35400;
+    color: #5d4037;
+    box-shadow: 0 0 10px #f1c40f;
+    transform: scale(1.05);
+}
+
+/* ปุ่มขาย (สีแดง) */
+.sell-btn {
+    background: linear-gradient(to bottom, #c0392b, #922b21);
+    border: 1px solid #e74c3c;
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: 80px;
+}
+.sell-btn:hover { box-shadow: 0 0 5px #e74c3c; }

@@ -85,11 +85,23 @@
                         <h2>🏪 ร้านค้าไอเทม</h2>
                         <button class="close-btn" onclick="closeShop()">✖</button>
                     </div>
+                    
+                    <div class="shop-mode-tabs">
+                        <button id="mode-buy-btn" class="mode-btn active" onclick="setShopMode('buy')">🛒 ซื้อของ</button>
+                        <button id="mode-sell-btn" class="mode-btn" onclick="setShopMode('sell')">💰 ขายของ</button>
+                    </div>
+                    
                     <p>มีเงิน: <span id="shop-gold" style="color: gold;">0</span> G</p>
                     <hr>
-                    
+
+                    <div id="shop-cat-tabs" class="shop-tabs">
+                        <button class="shop-tab-btn active" onclick="switchShopTab('all')">ทั้งหมด</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('potion')">ยา</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('special')">พิเศษ</button>
+                    </div>
+
                     <div id="shop-grid" class="shop-grid">
-                        </div>
+                    </div>
                 </div>
             </div>
 

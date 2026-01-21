@@ -3,10 +3,12 @@
 import { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut } from "./firebase-init.js";
 import { GameLogic } from "./game-logic.js"; // 🧠 นำเข้าสมอง
 import { UI } from "./ui.js";                // 🎨 นำเข้าหน้าตา
+import { items } from "./gameData.js";
 
 let currentUser = null;
 let gameData = {}; 
 let selectedClassKey = null;
+let currentShopMode = 'buy';
 
 // --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
 window.loginGoogle = async () => {
@@ -200,8 +202,27 @@ window.useItem = async (itemId) => {
 // --- ระบบร้านค้า --- (ย้ายออกมาข้างนอกแล้ว)
 
 window.openShop = () => {
-    UI.renderShop(); // วาดสินค้า
-    UI.toggleShop(true); // เปิดหน้าต่าง
+    // เปิดมาให้เป็นหน้าซื้อก่อน
+    setShopMode('buy');
+    UI.toggleShop(true);
+    UI.updateGameScreen(gameData); 
+};
+
+// 👇 ฟังก์ชันสลับโหมด 👇
+window.setShopMode = (mode) => {
+    currentShopMode = mode;
+    UI.toggleShopModeUI(mode);
+
+    if (mode === 'buy') {
+        UI.switchShopTab('all'); // โหลดหน้าซื้อ
+    } else {
+        UI.renderSellShop(gameData.inventory); // โหลดหน้าขาย
+    }
+};
+
+// 👇 เพิ่มฟังก์ชันนี้ 👇
+window.switchShopTab = (category) => {
+    UI.switchShopTab(category);
 };
 
 window.closeShop = () => {
@@ -221,6 +242,28 @@ window.buyItem = async (itemId) => {
         
         // แจ้งเตือนเล็กน้อย (Optional)
         // alert("ซื้อสำเร็จ!"); 
+
+    } catch (e) {
+        alert(e.message);
+    }
+};
+
+// 👇 ฟังก์ชันขายของ 👇
+window.sellItem = async (itemId) => {
+    try {
+        const item = items[itemId]; // ต้อง export items ใน gameData.js ด้วยนะถ้าจะใช้ตรงนี้
+        // หรือดึงชื่อจาก UI เอา แต่วิธีนี้ชัวร์กว่า (ต้อง import items ใน index.js ด้วย)
+        // เพื่อความง่าย ให้ Logic เช็คให้
+        
+        if(!confirm(`ยืนยันการขายไอเทมนี้ใช่หรือไม่?`)) return;
+
+        gameData = GameLogic.sellItem(gameData, itemId);
+
+        // อัปเดตหน้าจอ (รีเฟรชหน้าขายของ)
+        UI.renderSellShop(gameData.inventory);
+        UI.updateGameScreen(gameData);
+        
+        await saveToFirebase();
 
     } catch (e) {
         alert(e.message);
