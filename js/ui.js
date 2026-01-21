@@ -175,24 +175,14 @@ export const UI = {
         if(el) el.style.display = show ? 'flex' : 'none';
     },
 
-    // 👇 2. วาดรายการสินค้า 👇
-// 👇 2. แก้ไข renderShop ให้รองรับหมวดหมู่ 👇
+    // 🛒 หน้าซื้อ (มี Input จำนวน)
     renderShop(filterCategory = 'all') {
         const grid = document.getElementById('shop-grid');
-        if(!grid) return;
         grid.innerHTML = "";
 
-        // วนลูปไอเทมทั้งหมด
         for (const [key, item] of Object.entries(items)) {
-            
-            // 🛑 กฏการคัดกรอง:
-            // 1. ต้องมี inShop = true
-            // 2. ถ้าเลือกหมวด 'all' -> โชว์หมด
-            // 3. ถ้าเลือกหมวดอื่น -> ต้องมี category ตรงกัน
             if (item.inShop === true) {
                 if (filterCategory === 'all' || item.category === filterCategory) {
-                    
-                    // วาดการ์ดสินค้า (โค้ดเดิม)
                     const card = document.createElement('div');
                     card.className = 'shop-item';
                     card.innerHTML = `
@@ -201,19 +191,16 @@ export const UI = {
                             <b>${item.name}</b><br>
                             <small>${item.desc}</small>
                         </div>
-                        <button class="buy-btn" onclick="buyItem('${key}')">
-                            💰 ${item.price} G
-                        </button>
+                        <div class="action-group">
+                            <input type="number" id="buy-qty-${key}" class="qty-input" value="1" min="1">
+                            <button class="buy-btn" onclick="buyItem('${key}')">💰 ${item.price} G</button>
+                        </div>
                     `;
                     grid.appendChild(card);
                 }
             }
         }
-
-        // ถ้าไม่มีสินค้าในหมวดนั้นเลย
-        if (grid.innerHTML === "") {
-            grid.innerHTML = "<p style='color:#999; width:100%;'>- ไม่มีสินค้าในหมวดนี้ -</p>";
-        }
+        if (grid.innerHTML === "") grid.innerHTML = "<p style='color:#ccc;'>(ไม่มีสินค้า)</p>";
     },
     
 
@@ -232,70 +219,83 @@ export const UI = {
         this.renderShop(category);
     },
 
-    renderSellShop(inventory) {
+    // 💰 หน้าขาย (มี Input + ปุ่มขายทั้งหมด)
+    renderSellShop(inventory, filterCategory = 'all') {
         const grid = document.getElementById('shop-grid');
-        if(!grid) return;
         grid.innerHTML = "";
 
-        // 1. ถ้ากระเป๋าว่าง ให้แสดงข้อความแจ้ง
+        // ปุ่มขายทิ้งทั้งหมด (Sell All) - โชว์เมื่อเจาะจงหมวด หรือเลือก Loot
+        if ((filterCategory === 'loot' || filterCategory !== 'all') && inventory) {
+             const sellAllDiv = document.createElement('div');
+             sellAllDiv.style.width = '100%';
+             sellAllDiv.style.marginBottom = '10px';
+             sellAllDiv.innerHTML = `
+                <button class="sell-all-btn" onclick="sellAllLoot('${filterCategory}')">
+                    🗑️ ขายไอเทมหมวด "${filterCategory}" ทั้งหมด
+                </button>
+             `;
+             grid.appendChild(sellAllDiv);
+        }
+
         if (!inventory || Object.keys(inventory).length === 0) {
-            grid.innerHTML = '<p style="color: #ccc; width:100%;">ไม่มีไอเทมที่จะขาย</p>';
+            grid.innerHTML += '<p style="color: #ccc; width:100%;">ไม่มีไอเทมที่จะขาย</p>';
             return;
         }
 
-        // 2. วนลูปของในกระเป๋าเรา
+        let hasItem = false;
         for (const [itemId, count] of Object.entries(inventory)) {
             const item = items[itemId];
             if (!item) continue;
+            
+            // กรองหมวด
+            if (filterCategory !== 'all' && item.category !== filterCategory) continue;
 
-            // 3. คำนวณราคาขาย (เช็คว่ามีราคาขายกำหนดเอง sellPrice ไหม?)
-            let showSellPrice;
-            if (item.sellPrice !== undefined) {
-                showSellPrice = item.sellPrice; // ใช้ราคาที่กำหนดเอง
-            } else {
-                showSellPrice = Math.floor(item.price / 2); // ถ้าไม่มี ให้หาร 2
-            }
-
+            hasItem = true;
+            let showSellPrice = (item.sellPrice !== undefined) ? item.sellPrice : Math.floor(item.price / 2);
+            
             const card = document.createElement('div');
             card.className = 'shop-item';
-            
-            // 4. สร้างปุ่มขาย (เฉพาะถ้าขายได้ราคา > 0)
-            let actionBtn = '';
+
+            let actionPart = '';
             if (showSellPrice > 0) {
-                actionBtn = `
-                <button class="sell-btn" onclick="sellItem('${itemId}')">
-                    ขาย ${showSellPrice} G
-                </button>`;
+                actionPart = `
+                    <div class="action-group">
+                        <input type="number" id="sell-qty-${itemId}" class="qty-input" value="1" min="1" max="${count}">
+                        <button class="sell-btn" onclick="sellItem('${itemId}')">ขาย ${showSellPrice} G</button>
+                    </div>
+                `;
             } else {
-                actionBtn = `<small style="color:red;">ขายไม่ได้</small>`;
+                actionPart = `<small style="color:red;">ขายไม่ได้</small>`;
             }
 
-            // 5. วาด HTML ของการ์ด
             card.innerHTML = `
                 <div class="shop-icon">${item.icon}</div>
                 <div class="shop-info">
                     <b>${item.name} x${count}</b><br>
                     <small>${item.desc}</small>
                 </div>
-                ${actionBtn}
+                ${actionPart}
             `;
             grid.appendChild(card);
         }
+        if (!hasItem) grid.innerHTML += "<p style='color:#ccc;'>(ไม่มีไอเทมในหมวดนี้)</p>";
     },
 
     // 👇 เพิ่มฟังก์ชันสลับโหมด UI 👇
     toggleShopModeUI(mode) {
-        // เปลี่ยนสีปุ่ม
         document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`mode-${mode}-btn`).classList.add('active');
+        // โชว์ Tab หมวดหมู่เสมอ (ใช้ทั้งซื้อและขาย)
+        document.getElementById('shop-cat-tabs').style.display = 'flex';
+    },
 
-        // ซ่อน/โชว์ แถบหมวดหมู่ (โชว์แค่ตอนซื้อ)
-        const catTabs = document.getElementById('shop-cat-tabs');
-        if (mode === 'buy') {
-            catTabs.style.display = 'flex';
-        } else {
-            catTabs.style.display = 'none';
-        }
+    switchShopTabUI(category) {
+        document.querySelectorAll('.shop-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${category}'`)) {
+                btn.classList.add('active');
+            }
+        });
     }
 };
 

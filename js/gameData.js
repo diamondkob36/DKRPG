@@ -42,6 +42,7 @@ export const items = {
         desc: "ฟื้นฟูเลือด 30 หน่วย",
         type: "consumable",
         price: 50,
+        sellPrice: 10,
         effect: { hp: 30 },
         category: "potion", // 👈 หมวดหมู่
         inShop: true        // 👈 ขายในร้าน
@@ -85,5 +86,29 @@ export const items = {
         effect: {},
         category: "material",
         inShop: false       // 👈 ไม่โชว์ในร้าน!
+    },
+    
+    // 👇 เพิ่มหมวด Loot (ของดรอป ไว้ขายอย่างเดียว) 👇
+    slime_gel: {
+        id: "slime_gel",
+        name: "เจลสไลม์",
+        icon: "💧",
+        desc: "ของดรอปจากสไลม์",
+        type: "material",
+        price: 0,       // ไม่ขายในร้าน
+        sellPrice: 15,  // ขายคืนได้ 15 G
+        category: "loot",
+        inShop: false
+    },
+    wolf_fang: {
+        id: "wolf_fang",
+        name: "เขี้ยวหมาป่า",
+        icon: "🐺",
+        desc: "เขี้ยวแหลมคม",
+        type: "material",
+        price: 0,
+        sellPrice: 30,
+        category: "loot",
+        inShop: false
     }
 };

@@ -9,6 +9,7 @@ let currentUser = null;
 let gameData = {}; 
 let selectedClassKey = null;
 let currentShopMode = 'buy';
+let currentCategory = 'all';
 
 // --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
 window.loginGoogle = async () => {
@@ -201,69 +202,76 @@ window.useItem = async (itemId) => {
 
 // --- ระบบร้านค้า --- (ย้ายออกมาข้างนอกแล้ว)
 
+// --- Shop System ---
 window.openShop = () => {
-    // เปิดมาให้เป็นหน้าซื้อก่อน
     setShopMode('buy');
     UI.toggleShop(true);
-    UI.updateGameScreen(gameData); 
 };
 
-// 👇 ฟังก์ชันสลับโหมด 👇
 window.setShopMode = (mode) => {
     currentShopMode = mode;
+    currentCategory = 'all'; // รีเซ็ตหมวด
     UI.toggleShopModeUI(mode);
-
-    if (mode === 'buy') {
-        UI.switchShopTab('all'); // โหลดหน้าซื้อ
-    } else {
-        UI.renderSellShop(gameData.inventory); // โหลดหน้าขาย
-    }
+    UI.switchShopTabUI('all');
+    refreshShopDisplay();
 };
 
-// 👇 เพิ่มฟังก์ชันนี้ 👇
 window.switchShopTab = (category) => {
-    UI.switchShopTab(category);
+    currentCategory = category;
+    UI.switchShopTabUI(category);
+    refreshShopDisplay();
 };
 
-window.closeShop = () => {
-    UI.toggleShop(false);
-};
+function refreshShopDisplay() {
+    if (currentShopMode === 'buy') {
+        UI.renderShop(currentCategory);
+    } else {
+        UI.renderSellShop(gameData.inventory, currentCategory);
+    }
+}
+
+window.closeShop = () => { UI.toggleShop(false); };
 
 window.buyItem = async (itemId) => {
     try {
-        // เรียก Logic ซื้อของ
-        gameData = GameLogic.buyItem(gameData, itemId);
+        const qtyInput = document.getElementById(`buy-qty-${itemId}`);
+        const amount = qtyInput ? parseInt(qtyInput.value) : 1;
+        if(amount < 1) return alert("จำนวนไม่ถูกต้อง");
 
-        // อัปเดตหน้าจอ (เงินลด, ของเพิ่ม)
+        gameData = GameLogic.buyItem(gameData, itemId, amount);
+        if(qtyInput) qtyInput.value = 1;
         UI.updateGameScreen(gameData);
-        
-        // บันทึก
         await saveToFirebase();
-        
-        // แจ้งเตือนเล็กน้อย (Optional)
-        // alert("ซื้อสำเร็จ!"); 
-
-    } catch (e) {
-        alert(e.message);
-    }
+        refreshShopDisplay();
+    } catch (e) { alert(e.message); }
 };
 
-// 👇 ฟังก์ชันขายของ 👇
 window.sellItem = async (itemId) => {
     try {
-        const item = items[itemId]; 
-        
-        if(!confirm(`ยืนยันการขายไอเทมนี้ใช่หรือไม่?`)) return;
+        const qtyInput = document.getElementById(`sell-qty-${itemId}`);
+        const amount = qtyInput ? parseInt(qtyInput.value) : 1;
+        const item = items[itemId];
 
-        gameData = GameLogic.sellItem(gameData, itemId);
+        if(!confirm(`ขาย ${item.name} จำนวน ${amount} ชิ้น?`)) return;
 
-        // อัปเดตหน้าจอ (รีเฟรชหน้าขายของ)
-        UI.renderSellShop(gameData.inventory);
+        gameData = GameLogic.sellItem(gameData, itemId, amount);
         UI.updateGameScreen(gameData);
-        
+        refreshShopDisplay();
         await saveToFirebase();
+    } catch (e) { alert(e.message); }
+};
 
-    } catch (e) {
-        alert(e.message);
-    }
+window.sellAllLoot = async (category) => {
+    try {
+        if(!confirm(`⚠️ ยืนยันขายไอเทมในหมวด "${category}" ทั้งหมดทิ้ง?`)) return;
+        
+        const result = GameLogic.sellAllItemsByCategory(gameData, category);
+        gameData = result.newData;
+        
+        alert(`ขายไอเทม ${result.soldCount} รายการ ได้เงินทั้งหมด ${result.totalGain} G`);
+        
+        UI.updateGameScreen(gameData);
+        refreshShopDisplay();
+        await saveToFirebase();
+    } catch (e) { alert(e.message); }
 };

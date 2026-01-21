@@ -144,62 +144,70 @@ export const GameLogic = {
 
         return newData;
     },
-    // 👇 เพิ่มฟังก์ชันนี้: ซื้อไอเทม 👇
-    buyItem(currentData, itemId) {
+    // 🛠️ อัปเกรด: รับ amount
+    buyItem(currentData, itemId, amount = 1) {
+        if (amount < 1) throw new Error("จำนวนไม่ถูกต้อง");
         const newData = { ...currentData };
         const item = items[itemId];
-
         if (!item) throw new Error("สินค้าไม่ถูกต้อง");
         
-        // 1. เช็คเงิน
-        if (newData.gold < item.price) {
-            throw new Error("เงินไม่พอ! (ขาดอีก " + (item.price - newData.gold) + " G)");
-        }
+        const totalPrice = item.price * amount;
 
-        // 2. หักเงิน
-        newData.gold -= item.price;
+        if (newData.gold < totalPrice) throw new Error(`เงินไม่พอ! (ขาด ${totalPrice - newData.gold} G)`);
 
-        // 3. เพิ่มของเข้ากระเป๋า
+        newData.gold -= totalPrice;
         newData.inventory = newData.inventory || {};
-        newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
+        newData.inventory[itemId] = (newData.inventory[itemId] || 0) + amount;
 
         return newData;
     },
     // 👇 เพิ่มฟังก์ชันนี้: ขายไอเทม 👇
-    sellItem(currentData, itemId) {
+    sellItem(currentData, itemId, amount = 1) {
+        if (amount < 1) throw new Error("จำนวนไม่ถูกต้อง");
         const newData = { ...currentData };
         
-        // 1. เช็คว่ามีของที่จะขายในกระเป๋าไหม
-        if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
-            throw new Error("ไม่มีไอเทมนี้ในกระเป๋า!");
+        if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] < amount) {
+            throw new Error("ไอเทมไม่พอขาย!");
         }
 
-        // 2. ดึงข้อมูลไอเทม
         const item = items[itemId];
-        if (!item) throw new Error("ข้อมูลไอเทมผิดพลาด");
+        let unitPrice = (item.sellPrice !== undefined) ? item.sellPrice : Math.floor(item.price / 2);
+        
+        if (unitPrice <= 0) throw new Error("ไอเทมนี้ขายไม่ได้!");
 
-        // 3. คำนวณราคาขาย (เช็คว่ามีราคาขายกำหนดเองไหม?)
-        let finalSellPrice;
-        if (item.sellPrice !== undefined) {
-            finalSellPrice = item.sellPrice; // ใช้ราคาที่กำหนดเองจาก gameData
-        } else {
-            finalSellPrice = Math.floor(item.price / 2); // ถ้าไม่มี ให้หาร 2 ตามปกติ
-        }
-
-        // 4. ถ้าคำนวณแล้วราคาเป็น 0 หรือน้อยกว่า (เช่น ของเควส)
-        if (finalSellPrice <= 0) {
-             throw new Error("ไอเทมนี้ขายไม่ได้!");
-        }
-
-        // 5. เพิ่มเงิน
-        newData.gold += finalSellPrice;
-
-        // 6. ลบของออกจากกระเป๋า
-        newData.inventory[itemId]--;
-        if (newData.inventory[itemId] <= 0) {
-            delete newData.inventory[itemId];
-        }
+        newData.gold += unitPrice * amount;
+        newData.inventory[itemId] -= amount;
+        
+        if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
         return newData;
+    },
+    // 🆕 ฟังก์ชันขายเหมาหมวด (Sell All)
+    sellAllItemsByCategory(currentData, category) {
+        let newData = { ...currentData };
+        let totalGain = 0;
+        let soldCount = 0;
+
+        if (newData.inventory) {
+            for (const [itemId, count] of Object.entries(newData.inventory)) {
+                const item = items[itemId];
+                if (!item) continue;
+
+                if (item.category === category) {
+                    let unitPrice = (item.sellPrice !== undefined) ? item.sellPrice : Math.floor(item.price / 2);
+                    
+                    if (unitPrice > 0) {
+                        totalGain += unitPrice * count;
+                        delete newData.inventory[itemId];
+                        soldCount++;
+                    }
+                }
+            }
+        }
+
+        if (soldCount === 0) throw new Error("ไม่มีไอเทมในหมวดนี้ให้ขาย");
+        
+        newData.gold += totalGain;
+        return { newData, totalGain, soldCount };
     }
 };
