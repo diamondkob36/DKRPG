@@ -487,3 +487,42 @@ hr {
     padding: 1px 4px;
     border-radius: 4px;
 }
+
+#zone-shop { top: 25%; left: 38%; } /* อยู่กลางๆ ล่างๆ */
+
+/* ตารางสินค้า */
+.shop-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+/* การ์ดสินค้าแต่ละชิ้น */
+.shop-item {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    border: 1px solid #5d4037;
+    border-radius: 5px;
+}
+
+.shop-icon { font-size: 30px; margin-right: 15px; }
+
+.shop-info { flex-grow: 1; }
+.shop-info b { color: #f1c40f; }
+.shop-info small { color: #ccc; font-size: 12px; }
+
+/* ปุ่มซื้อ */
+.buy-btn {
+    background: linear-gradient(to bottom, #f39c12, #d35400);
+    border: 1px solid #e67e22;
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: 80px;
+}
+.buy-btn:hover { box-shadow: 0 0 5px #f1c40f; }
+.buy-btn:active { transform: scale(0.95); }

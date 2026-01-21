@@ -195,4 +195,32 @@ window.useItem = async (itemId) => {
     } catch (e) {
         alert(e.message);
     }
+    
+window.openShop = () => {
+    UI.renderShop(); // วาดสินค้า
+    UI.toggleShop(true); // เปิดหน้าต่าง
+};
+
+window.closeShop = () => {
+    UI.toggleShop(false);
+};
+
+window.buyItem = async (itemId) => {
+    try {
+        // เรียก Logic ซื้อของ
+        gameData = GameLogic.buyItem(gameData, itemId);
+
+        // อัปเดตหน้าจอ (เงินลด, ของเพิ่ม)
+        UI.updateGameScreen(gameData);
+        
+        // บันทึก
+        await saveToFirebase();
+        
+        // แจ้งเตือนเล็กน้อย (Optional)
+        // alert("ซื้อสำเร็จ!"); 
+
+    } catch (e) {
+        alert(e.message);
+    }
+};
 };

@@ -165,6 +165,36 @@ export const UI = {
             `;
             grid.appendChild(slot);
         }
+    },
+    // 👇 1. เปิด/ปิดร้านค้า 👇
+    toggleShop(show) {
+        const el = document.getElementById('shop-modal');
+        if(el) el.style.display = show ? 'flex' : 'none';
+    },
+
+    // 👇 2. วาดรายการสินค้า 👇
+    renderShop() {
+        const grid = document.getElementById('shop-grid');
+        if(!grid) return;
+        grid.innerHTML = ""; // ล้างของเก่า
+
+        // วนลูปไอเทมทั้งหมดที่มีในเกม
+        for (const [key, item] of Object.entries(items)) {
+            const card = document.createElement('div');
+            card.className = 'shop-item';
+            
+            card.innerHTML = `
+                <div class="shop-icon">${item.icon}</div>
+                <div class="shop-info">
+                    <b>${item.name}</b><br>
+                    <small>${item.desc}</small>
+                </div>
+                <button class="buy-btn" onclick="buyItem('${key}')">
+                    💰 ${item.price} G
+                </button>
+            `;
+            grid.appendChild(card);
+        }
     }
 };
 

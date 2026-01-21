@@ -144,4 +144,25 @@ export const GameLogic = {
 
         return newData;
     },
+    // 👇 เพิ่มฟังก์ชันนี้: ซื้อไอเทม 👇
+    buyItem(currentData, itemId) {
+        const newData = { ...currentData };
+        const item = items[itemId];
+
+        if (!item) throw new Error("สินค้าไม่ถูกต้อง");
+        
+        // 1. เช็คเงิน
+        if (newData.gold < item.price) {
+            throw new Error("เงินไม่พอ! (ขาดอีก " + (item.price - newData.gold) + " G)");
+        }
+
+        // 2. หักเงิน
+        newData.gold -= item.price;
+
+        // 3. เพิ่มของเข้ากระเป๋า
+        newData.inventory = newData.inventory || {};
+        newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
+
+        return newData;
+    }
 };

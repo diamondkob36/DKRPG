@@ -31,6 +31,8 @@ export const classStats = {
     }
 };
 
+// js/gameData.js
+
 export const items = {
     potion_s: {
         id: "potion_s",
@@ -38,6 +40,7 @@ export const items = {
         icon: "🍷",
         desc: "ฟื้นฟูเลือด 30 หน่วย",
         type: "consumable",
+        price: 50,  // 💰 เพิ่มราคา (50 Gold)
         effect: { hp: 30 }
     },
     potion_l: {
@@ -46,6 +49,7 @@ export const items = {
         icon: "🏺",
         desc: "ฟื้นฟูเลือด 100 หน่วย",
         type: "consumable",
+        price: 120, // 💰 ราคา 120 Gold
         effect: { hp: 100 }
     },
     elixir: {
@@ -54,6 +58,7 @@ export const items = {
         icon: "🧪",
         desc: "เพิ่ม STR ถาวร +1",
         type: "consumable",
+        price: 500, // 💰 ของเทพต้องแพงหน่อย
         effect: { str: 1 }
     }
 };
