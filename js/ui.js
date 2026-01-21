@@ -192,41 +192,39 @@ export const UI = {
     },
 
     // 👇 2. วาดไอเทมลงในตาราง 👇
-renderInventory(inventory, filterCategory = 'all') {
-        const grid = document.getElementById('inventory-grid');
+    renderEquipment(equipment = {}) {
+        const grid = document.getElementById('equipment-grid');
         grid.innerHTML = "";
 
-        if (!inventory || Object.keys(inventory).length === 0) {
-            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1; padding: 20px;">(กระเป๋าว่างเปล่า)</p>';
-            return;
-        }
+        // วนลูปสร้างช่องตาม equipmentSlots
+        equipmentSlots.forEach(slotDef => {
+            const itemId = equipment[slotDef.id];
+            const item = itemId ? items[itemId] : null;
 
-        for (const [itemId, count] of Object.entries(inventory)) {
-            const item = items[itemId];
-            if (!item) continue;
-
-            // กรองหมวดหมู่
-            if (filterCategory !== 'all' && item.category !== filterCategory) continue;
-
-            const slot = document.createElement('div');
-            slot.className = 'item-slot';
-            slot.title = `${item.name}\n${item.desc}\n(คลิกเพื่อใช้งาน/สวมใส่)`;
+            const slotEl = document.createElement('div');
             
-            // คลิก: เช็คว่าเป็นของสวมใส่ หรือ ยา
-            slot.onclick = () => {
-                if (item.type === 'equipment') {
-                    window.equipItem(itemId);
-                } else if (item.type === 'consumable') {
-                    window.useItem(itemId);
-                }
-            };
+            // ✅ จุดสำคัญที่แก้ไข: ใส่ ID ให้แต่ละช่อง เพื่อนำไปจัดตำแหน่งใน CSS Grid Area
+            slotEl.id = `equip-slot-${slotDef.id}`; 
+            
+            slotEl.className = `equip-slot ${item ? 'occupied' : ''}`;
+            slotEl.title = item ? `${item.name}\n${item.desc}` : slotDef.name;
+            
+            // คลิกเพื่อถอด
+            if (item) {
+                slotEl.onclick = () => window.unequipItem(slotDef.id);
+                slotEl.innerHTML = `
+                    <div class="equipped-item-icon">${item.icon}</div>
+                    <div class="slot-name" style="color:#f1c40f;">${item.name}</div>
+                `;
+            } else {
+                slotEl.innerHTML = `
+                    <div class="slot-placeholder">${slotDef.icon}</div>
+                    <div class="slot-name">${slotDef.name}</div>
+                `;
+            }
 
-            slot.innerHTML = `
-                <span class="item-icon">${item.icon}</span>
-                <span class="item-count">${count}</span>
-            `;
-            grid.appendChild(slot);
-        }
+            grid.appendChild(slotEl);
+        });
     },
 
     // 🆕 Helper สำหรับเปลี่ยนสีปุ่ม Tab Inventory
@@ -240,7 +238,7 @@ renderInventory(inventory, filterCategory = 'all') {
             }
         });
     },
-    
+
     // 👇 1. เปิด/ปิดร้านค้า 👇
     toggleShop(show) {
         const el = document.getElementById('shop-modal');

@@ -21,7 +21,7 @@
 /* ตำแหน่งโซนต่างๆ */
 #zone-train { top: 20%; left: 15%; }
 #zone-quest { top: 38%; right: 28%; }
-#zone-shop { top: 30%; left: 38%; } /* ปรับตำแหน่งร้านค้า */
+#zone-shop { top: 30%; left: 38%; }
 
 /* --- 2. Mini HUD (แถบสถานะมุมซ้ายบน) --- */
 #char-status-panel {
@@ -56,7 +56,7 @@
 }
 @keyframes glow { from { box-shadow: 0 0 5px #8e44ad; } to { box-shadow: 0 0 15px #9b59b6; } }
 
-/* --- 3. Inventory & Shop Basics --- */
+/* --- 3. Inventory & Shop Buttons --- */
 #inventory-btn {
     position: absolute; bottom: 20px; left: 20px; z-index: 100;
     background: linear-gradient(to bottom, #d35400, #a04000); border: 2px solid #e67e22;
@@ -65,81 +65,10 @@
 }
 #inventory-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px #e67e22; }
 
-.inventory-grid, .shop-grid { display: grid; gap: 10px; margin-top: 15px; max-height: 300px; overflow-y: auto; }
-.inventory-grid { grid-template-columns: repeat(4, 1fr); }
+/* Grid พื้นฐาน (สำหรับ Shop) */
+.shop-grid { display: flex; flex-direction: column; text-align: left; max-height: 300px; overflow-y: auto; gap: 10px; }
 
-/* --- Inventory Layout (Split View) --- */
-.inventory-layout {
-    display: flex;
-    gap: 20px;
-    text-align: left;
-}
-
-.equipment-panel {
-    width: 320px; /* ด้านซ้ายกว้างหน่อย */
-    background: rgba(0, 0, 0, 0.2);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #5d4037;
-}
-
-.bag-panel {
-    flex-grow: 1; /* ด้านขวายืดเต็มที่เหลือ */
-}
-
-/* --- Equipment Grid (3x5) --- */
-.equipment-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 คอลัมน์ */
-    grid-template-rows: repeat(5, 70px);   /* 5 แถว แถวละ 70px */
-    gap: 8px;
-    margin-top: 10px;
-}
-
-/* ช่องสวมใส่ (Slot) */
-.equip-slot {
-    background: rgba(0,0,0,0.4);
-    border: 2px dashed #5d4037;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s;
-}
-
-.equip-slot:hover {
-    border-color: #f1c40f;
-    background: rgba(255,255,255,0.05);
-}
-
-.equip-slot.occupied {
-    border-style: solid;
-    background: rgba(93, 64, 55, 0.3);
-}
-
-.slot-placeholder {
-    font-size: 24px;
-    opacity: 0.3;
-}
-.slot-name {
-    font-size: 10px;
-    color: #aaa;
-    margin-top: 2px;
-}
-
-/* ไอเทมที่สวมใส่อยู่ */
-.equipped-item-icon { font-size: 28px; }
-.equipped-item-img { width: 40px; height: 40px; }
-
-.inventory-grid {
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* ปรับให้ยืดหยุ่น */
-}
-
-.shop-grid { display: flex; flex-direction: column; text-align: left; }
-
+/* Item Slot (พื้นฐาน) */
 .item-slot {
     background: rgba(0,0,0,0.3); border: 1px solid #5d4037; border-radius: 5px;
     padding: 5px; text-align: center; cursor: pointer; position: relative; transition: all 0.2s;
@@ -148,19 +77,21 @@
 .item-icon { font-size: 24px; display: block; }
 .item-count { position: absolute; bottom: 2px; right: 2px; background: #000; color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 4px; }
 
+/* Shop Item Card */
 .shop-item { display: flex; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border: 1px solid #5d4037; border-radius: 5px; }
 .shop-icon { font-size: 30px; margin-right: 15px; }
 .shop-info { flex-grow: 1; }
 .shop-info b { color: #f1c40f; }
 .shop-info small { color: #ccc; font-size: 12px; }
 
-/* ปุ่ม Buy/Sell ขนาดเล็ก */
+/* ปุ่ม Buy/Sell */
 .buy-btn, .sell-btn { 
     background: linear-gradient(to bottom, #f39c12, #d35400); 
     border: 1px solid #e67e22; 
     padding: 5px 10px; 
     font-size: 12px; 
     min-width: 80px; 
+    border-radius: 4px; cursor: pointer; color: white;
 }
 .buy-btn:hover { box-shadow: 0 0 5px #f1c40f; }
 .sell-btn { 
@@ -177,7 +108,6 @@
 }
 .stat-controls { display: flex; align-items: center; gap: 8px; }
 
-/* ปุ่มบวก (+) กลมและกลาง */
 .plus-btn { 
     background: linear-gradient(to bottom, #27ae60, #1e8449); 
     border: 1px solid #2ecc71; 
@@ -187,8 +117,6 @@
     padding: 0; margin: 0;
     display: flex; justify-content: center; align-items: center;
 }
-
-/* ปุ่มลบ (-) กลมและกลาง */
 .minus-btn { 
     background: linear-gradient(to bottom, #c0392b, #922b21); 
     border: 1px solid #e74c3c; 
@@ -201,7 +129,7 @@
     justify-content: center; align-items: center;
 }
 
-/* --- 5. Shop Categories (หมวดหมู่สินค้า) --- */
+/* --- 5. Shop Interface (Categories & Modes) --- */
 .shop-tabs {
     display: flex; justify-content: center; gap: 5px; margin-bottom: 10px;
 }
@@ -215,7 +143,6 @@
     background: #5d4037; color: #f4e4bc; border-color: #5d4037; font-weight: bold;
 }
 
-/* --- 6. Shop Modes (โหมดซื้อ/ขาย) --- */
 .shop-mode-tabs {
     display: flex; gap: 10px; margin-bottom: 15px; padding-bottom: 10px;
     border-bottom: 1px dashed rgba(93, 64, 55, 0.5);
@@ -231,35 +158,106 @@
     box-shadow: 0 0 10px #f1c40f; transform: scale(1.05);
 }
 
-/* --- 7. Shop Actions (Input & Sell All) --- */
-/* กลุ่ม Action: ช่องกรอก + ปุ่ม */
-.action-group {
-    display: flex; align-items: center; gap: 5px;
-}
+.action-group { display: flex; align-items: center; gap: 5px; }
 
-/* ช่องกรอกจำนวน */
 .qty-input {
     width: 40px !important; padding: 5px !important; text-align: center;
     background: rgba(0,0,0,0.3); border: 1px solid #5d4037; color: #fff;
     border-radius: 4px; margin: 0;
 }
 
-/* ปุ่มขายทั้งหมด (ขนาดกะทัดรัด) */
 .sell-all-btn {
-    width: auto;               /* พอดีข้อความ */
-    display: block;            
-    margin: 0 auto 10px auto;  /* จัดกึ่งกลาง */
+    width: auto; display: block; margin: 0 auto 10px auto;
     background: linear-gradient(to bottom, #c0392b, #922b21);
-    border: 1px solid #e74c3c;
-    color: white;
-    padding: 5px 15px;         /* ขนาดพอเหมาะ */
-    font-size: 12px;
-    border-radius: 4px;
-    cursor: pointer;
+    border: 1px solid #e74c3c; color: white;
+    padding: 5px 15px; font-size: 12px;
+    border-radius: 4px; cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 .sell-all-btn:hover {
     background: linear-gradient(to bottom, #e74c3c, #c0392b);
-    transform: scale(1.05);
-    box-shadow: 0 0 8px #e74c3c;
+    transform: scale(1.05); box-shadow: 0 0 8px #e74c3c;
 }
+
+/* --- 6. New Inventory Layout (Split View) --- */
+.inventory-layout {
+    display: flex; gap: 20px; text-align: left;
+    align-items: flex-start;
+}
+
+.equipment-panel {
+    width: 300px; background: rgba(0, 0, 0, 0.2);
+    padding: 15px; border-radius: 8px; border: 1px solid #5d4037;
+    flex-shrink: 0;
+}
+
+.bag-panel {
+    flex-grow: 1; display: flex; flex-direction: column;
+}
+
+/* --- 7. Equipment Grid (RPG Style) --- */
+.equipment-grid {
+    display: grid;
+    /* แบ่ง 3 คอลัมน์เท่าๆ กัน */
+    grid-template-columns: 1fr 1fr 1fr; 
+    /* แบ่ง 5 แถว ความสูงแถวละ 70px */
+    grid-template-rows: repeat(5, 70px);
+    gap: 10px; margin-top: 15px;
+    
+    /* 🗺️ แผนผังการจัดวาง (Grid Template Areas) */
+    grid-template-areas:
+        ".      head    ."
+        "main   body    off"
+        ".      legs    ."
+        "acc    feet    ."
+        "ext1   ext2    ext3";
+        
+    justify-items: center; /* จัดให้อยู่กึ่งกลางช่อง */
+}
+
+/* เชื่อมโยง ID จาก JS เข้ากับตำแหน่งใน Grid Area */
+#equip-slot-head { grid-area: head; }
+#equip-slot-main_hand { grid-area: main; }
+#equip-slot-body { grid-area: body; }
+#equip-slot-off_hand { grid-area: off; }
+#equip-slot-legs { grid-area: legs; }
+#equip-slot-feet { grid-area: feet; }
+#equip-slot-accessory { grid-area: acc; }
+#equip-slot-extra_1 { grid-area: ext1; }
+#equip-slot-extra_2 { grid-area: ext2; }
+#equip-slot-extra_3 { grid-area: ext3; }
+
+/* สไตล์ช่องสวมใส่ */
+.equip-slot {
+    width: 70px; height: 70px; /* บังคับขนาด */
+    background: rgba(0,0,0,0.4); border: 2px dashed #5d4037; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; transition: all 0.2s;
+}
+.equip-slot:hover { border-color: #f1c40f; background: rgba(255,255,255,0.05); }
+.equip-slot.occupied { border-style: solid; background: rgba(93, 64, 55, 0.3); }
+.slot-placeholder { font-size: 24px; opacity: 0.3; }
+.slot-name { font-size: 10px; color: #aaa; margin-top: 2px; }
+.equipped-item-icon { font-size: 28px; }
+
+/* --- 8. Inventory Grid (Square Slots) --- */
+#inventory-grid.inventory-grid { 
+    display: grid;
+    /* auto-fill: ใส่คอลัมน์ให้ได้มากที่สุดเท่าที่พื้นที่จะอำนวย (อย่างน้อย 70px) */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+    grid-auto-rows: max-content; /* แถวสูงเท่าเนื้อหา */
+    gap: 10px; padding: 5px;
+    height: 380px; overflow-y: auto;
+    align-content: start; /* เริ่มเรียงจากบนสุด */
+}
+
+/* Override .item-slot in inventory to be square */
+#inventory-grid .item-slot {
+    aspect-ratio: 1 / 1; /* ✅ กว้างเท่ากับสูงเสมอ */
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.3); border: 1px solid #5d4037; border-radius: 5px;
+    padding: 5px; cursor: pointer; position: relative; transition: all 0.2s;
+}
+#inventory-grid .item-slot:hover { background: rgba(255,255,255,0.1); border-color: #f1c40f; }
+#inventory-grid .item-icon { font-size: 28px; display: block; margin-bottom: 5px; }
+#inventory-grid .item-count { position: absolute; bottom: 5px; right: 5px; background: #000; color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;}
