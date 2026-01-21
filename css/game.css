@@ -17,7 +17,7 @@
 .zone-label { font-family: 'Cinzel', serif; color: #f4e4bc; font-weight: bold; font-size: 14px; }
 #zone-train { top: 20%; left: 15%; }
 #zone-quest { top: 38%; right: 28%; }
-#zone-shop { top: 60%; left: 40%; }
+#zone-shop { top: 30%; left: 38%; }
 
 /* --- Mini HUD --- */
 #char-status-panel {
