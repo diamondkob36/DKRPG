@@ -237,38 +237,40 @@ export const UI = {
         if(!grid) return;
         grid.innerHTML = "";
 
-        // ถ้ากระเป๋าว่าง
+        // 1. ถ้ากระเป๋าว่าง ให้แสดงข้อความแจ้ง
         if (!inventory || Object.keys(inventory).length === 0) {
             grid.innerHTML = '<p style="color: #ccc; width:100%;">ไม่มีไอเทมที่จะขาย</p>';
             return;
         }
 
-        // วนลูปของในกระเป๋าเรา
+        // 2. วนลูปของในกระเป๋าเรา
         for (const [itemId, count] of Object.entries(inventory)) {
             const item = items[itemId];
             if (!item) continue;
 
+            // 3. คำนวณราคาขาย (เช็คว่ามีราคาขายกำหนดเอง sellPrice ไหม?)
             let showSellPrice;
             if (item.sellPrice !== undefined) {
-                showSellPrice = item.sellPrice;
+                showSellPrice = item.sellPrice; // ใช้ราคาที่กำหนดเอง
             } else {
-                showSellPrice = Math.floor(item.price / 2);
+                showSellPrice = Math.floor(item.price / 2); // ถ้าไม่มี ให้หาร 2
             }
 
             const card = document.createElement('div');
             card.className = 'shop-item';
             
-            // สร้างปุ่มขาย (ถ้าขายได้ราคา > 0)
+            // 4. สร้างปุ่มขาย (เฉพาะถ้าขายได้ราคา > 0)
             let actionBtn = '';
-            if (sellPrice > 0) {
+            if (showSellPrice > 0) {
                 actionBtn = `
                 <button class="sell-btn" onclick="sellItem('${itemId}')">
-                    ขาย ${sellPrice} G
+                    ขาย ${showSellPrice} G
                 </button>`;
             } else {
                 actionBtn = `<small style="color:red;">ขายไม่ได้</small>`;
             }
 
+            // 5. วาด HTML ของการ์ด
             card.innerHTML = `
                 <div class="shop-icon">${item.icon}</div>
                 <div class="shop-info">
