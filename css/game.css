@@ -25,11 +25,23 @@
 
 /* --- 2. Mini HUD (แถบสถานะมุมซ้ายบน) --- */
 #char-status-panel {
-    position: absolute; top: 20px; left: 20px; width: 220px; height: 50px;
-    padding: 10px; background-color: rgba(30, 20, 15, 0.95);
-    border: 2px solid #d4af37; border-radius: 8px;
+    position: absolute; 
+    top: 20px; 
+    left: 20px; 
+    width: 220px; 
+    
+    /* ✅ แก้ไข: เปลี่ยนจาก 50px เป็น auto เพื่อให้ยืดตามเนื้อหา */
+    height: auto;
+    min-height: 60px; /* เพิ่มความสูงขั้นต่ำกันเหนียวไว้ */
+
+    padding: 10px; 
+    background-color: rgba(30, 20, 15, 0.95);
+    border: 2px solid #d4af37; 
+    border-radius: 8px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    overflow: hidden; cursor: pointer; z-index: 999;
+    overflow: hidden; 
+    cursor: pointer; 
+    z-index: 999;
     box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
 }
 #char-status-panel::before, #char-status-panel::after { display: none !important; }
