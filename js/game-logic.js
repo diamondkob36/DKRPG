@@ -30,8 +30,16 @@ export const GameLogic = {
         if (!newData.statPoints || newData.statPoints <= 0) throw new Error("แต้มไม่พอ!");
         newData.statPoints--;
         
-        if(statType === 'hp') { newData.maxHp += 10; newData.hp += 10; }
-        else { newData[statType]++; }
+        if(statType === 'hp') { 
+            newData.maxHp += 10; 
+            newData.hp += 10; 
+        } else { 
+            newData[statType]++; 
+            // 🆕 ถ้าอัป INT ให้เพิ่ม MaxMP และ MP ด้วย (1 INT = 10 MP)
+            if (statType === 'int') {
+                newData.mp = (newData.mp || 0) + 10;
+            }
+        }
         
         return newData;
     },
@@ -56,19 +64,27 @@ export const GameLogic = {
         return newData;
     },
 
+    // แก้ไข: เพิ่มค่า MP เริ่มต้น
     createCharacter(name, classKey) {
         const base = classStats[classKey];
+        
+        // คำนวณ MP เริ่มต้น (INT * 10)
+        const startMp = base.int * 10;
+
         return {
             name: name, classKey: classKey, className: base.name,
             lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
-            hp: base.hp, maxHp: base.maxHp, str: base.str, int: base.int, agi: base.agi,
+            hp: base.hp, maxHp: base.maxHp, 
+            
+            // 🆕 เพิ่มค่า MP
+            mp: startMp, 
+            
+            str: base.str, int: base.int, agi: base.agi,
             inventory: { "potion_s": 3, "wooden_sword": 1 },
             equipment: {},
-            
-            // 🆕 กำหนดลิมิตเริ่มต้น (ปรับแก้ได้ตามใจชอบ)
             activeBuffs: {},
-            maxSlots: 32, // เก็บได้ 32 ชนิด (Slots)
-            maxWeight: 60 // แบกได้ 60 kg (เดี๋ยวเราบวกเพิ่มตาม STR ได้)
+            maxSlots: 32, 
+            maxWeight: 60 
         };
     },
 
@@ -209,29 +225,32 @@ export const GameLogic = {
         }
         const item = items[itemId];
 
-        // กรณีเป็นยาเพิ่มเลือด/Stat ถาวร (Code เดิม)
+        // กรณีเป็นยาเพิ่มเลือด/Stat/MP
         if (item.effect) {
             if (item.effect.hp) newData.hp = Math.min(newData.hp + item.effect.hp, newData.maxHp);
+            
+            // 🆕 เพิ่มการเช็ค MP
+            if (item.effect.mp) { 
+                const maxMp = newData.int * 10;
+                newData.mp = Math.min((newData.mp || 0) + item.effect.mp, maxMp);
+            }
+            
             if (item.effect.str) newData.str += item.effect.str;
         }
 
-        // 🆕 กรณีเป็นยาบัพ (มีระยะเวลา)
+        // กรณีเป็นยาบัพ (มีระยะเวลา)
         if (item.buff) {
-            // สร้าง Key สำหรับบัพนี้
             const buffKey = `buff_${item.buff.type}`;
             const currentTime = Date.now();
-            const expireTime = currentTime + (item.buff.duration * 1000); // แปลงวิเป็นมิลลิวินาที
+            const expireTime = currentTime + (item.buff.duration * 1000);
 
-            // ถ้ามีบัพเดิมอยู่ ให้ลบผลของเก่าออกก่อน (กันการทับซ้อน)
             newData.activeBuffs = newData.activeBuffs || {};
             if (newData.activeBuffs[buffKey]) {
                 newData[item.buff.type] -= newData.activeBuffs[buffKey].value;
             }
 
-            // เพิ่ม Stat
             newData[item.buff.type] += item.buff.value;
 
-            // บันทึกสถานะบัพ
             newData.activeBuffs[buffKey] = {
                 itemName: item.name,
                 type: item.buff.type,

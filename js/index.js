@@ -107,7 +107,15 @@ window.farm = async () => {
     await saveToFirebase();
 };
 
-window.toggleHUD = () => UI.toggleHUD();
+window.openProfile = () => {
+    // อัปเดตข้อมูลล่าสุดก่อนเปิด
+    UI.updateGameScreen(gameData); 
+    UI.toggleProfile(true);
+};
+
+window.closeProfile = () => {
+    UI.toggleProfile(false);
+};
 
 // ฟังก์ชันสั่งบันทึก (เรียกใช้จาก train, buyItem ฯลฯ)
 async function saveToFirebase(immediate = false) {

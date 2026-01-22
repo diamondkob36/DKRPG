@@ -20,29 +20,52 @@ export const UI = {
 
     // 2. แก้ไข updateGameScreen ให้เรียก renderBuffs
     updateGameScreen(gameData) {
+        // --- 1. HUD มุมซ้ายบน (Compact) ---
+        const maxMp = (gameData.int * 10) || 10; // สูตร MP = INT * 10
+        const currentMp = gameData.mp || maxMp;
+
         setText('display-name', gameData.name);
-        setText('display-class', gameData.className);
+        setText('lvl', gameData.lvl);
+        setText('gold', gameData.gold);
+        
         if(gameData.classKey && classStats[gameData.classKey]) {
-            document.getElementById('hero-img').src = classStats[gameData.classKey].img;
+            const imgSrc = classStats[gameData.classKey].img;
+            document.getElementById('hero-img').src = imgSrc;
+            const profileImg = document.getElementById('profile-img');
+            if(profileImg) profileImg.src = imgSrc;
         }
-        
-        ['gold', 'hp', 'maxHp', 'str', 'int', 'agi'].forEach(key => setText(key, gameData[key]));
-        setText('shop-gold', gameData.gold);
 
-        const currentExp = gameData.exp || 0;
-        const requiredExp = gameData.maxExp || 100;
-        setText('lvl', `${gameData.lvl} (${currentExp}/${requiredExp})`);
-
-        const hpPercent = (gameData.hp / gameData.maxHp) * 100;
+        // หลอดเลือด
+        const hpPercent = Math.min((gameData.hp / gameData.maxHp) * 100, 100);
         document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
+        setText('hp-text', `${gameData.hp}/${gameData.maxHp}`);
 
-        const points = gameData.statPoints || 0;
-        setText('hud-points', points);
-        setText('modal-points', points);
+        // หลอดมานา
+        const mpPercent = Math.min((currentMp / maxMp) * 100, 100);
+        const mpBar = document.getElementById('mp-bar-fill');
+        if(mpBar) mpBar.style.width = mpPercent + "%";
+        setText('mp-text', `${Math.floor(currentMp)}/${maxMp}`);
+
+        // --- 2. Profile Modal (Popup) ---
+        setText('profile-name', gameData.name);
+        setText('profile-class', gameData.className);
+        setText('profile-hp', `${gameData.hp}/${gameData.maxHp}`);
+        setText('profile-mp', `${Math.floor(currentMp)}/${maxMp}`);
+        setText('profile-str', gameData.str);
+        setText('profile-int', gameData.int);
+        setText('profile-agi', gameData.agi);
         
+        const usage = GameLogic.getInventoryUsage(gameData);
+        setText('profile-weight', `${usage.currentWeight.toFixed(1)}/${usage.limitWeight} kg`);
+        
+        const points = gameData.statPoints || 0;
+        setText('profile-points', points);
+        
+        // Upgrade Modal (คงเดิม)
+        setText('modal-points', points);
         ['str', 'int', 'agi', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
 
-        // 🆕 เรียกฟังก์ชันแสดงผลบัพ
+        // --- 3. เรียกวาด Buffs ---
         this.renderBuffs(gameData.activeBuffs);
     },
 
@@ -62,7 +85,10 @@ export const UI = {
         if(el) { el.innerText = msg; el.className = type; }
     },
 
-    toggleHUD() { document.getElementById('char-status-panel').classList.toggle('expanded'); },
+    toggleProfile(show) {
+        const el = document.getElementById('profile-modal');
+        if(el) el.style.display = show ? 'flex' : 'none';
+    },
     
     toggleUpgradeModal(show) {
         const el = document.getElementById('upgrade-modal');
@@ -303,24 +329,15 @@ export const UI = {
 
     // 🆕 1. เพิ่มฟังก์ชันวาด Buff
     renderBuffs(activeBuffs) {
-        // หาตำแหน่งที่จะวาง (วางใน HUD ใต้ Level)
-        const hudDetails = document.querySelector('.hud-details');
-        let buffContainer = document.getElementById('buff-container');
+        const buffContainer = document.getElementById('buff-container');
+        if (!buffContainer) return;
 
-        // ถ้ายังไม่มีกล่องใส่ Buff ให้สร้างใหม่
-        if (!buffContainer) {
-            buffContainer = document.createElement('div');
-            buffContainer.id = 'buff-container';
-            buffContainer.style.display = 'flex';
-            buffContainer.style.gap = '5px';
-            buffContainer.style.marginTop = '10px';
-            buffContainer.style.flexWrap = 'wrap';
-            hudDetails.appendChild(buffContainer);
+        buffContainer.innerHTML = ''; 
+
+        if (!activeBuffs || Object.keys(activeBuffs).length === 0) {
+            buffContainer.innerHTML = '<small style="color:#666;">- ไม่มีบัพ -</small>';
+            return;
         }
-
-        buffContainer.innerHTML = ''; // ล้างค่าเก่า
-
-        if (!activeBuffs) return;
 
         const now = Date.now();
 
@@ -330,15 +347,21 @@ export const UI = {
             if (timeLeft > 0) {
                 const badge = document.createElement('div');
                 badge.className = 'buff-badge';
-                badge.style.background = 'rgba(0,0,0,0.6)';
+                badge.style.background = 'rgba(255, 255, 255, 0.1)';
                 badge.style.border = '1px solid #f1c40f';
                 badge.style.borderRadius = '4px';
-                badge.style.padding = '2px 5px';
+                badge.style.padding = '4px 8px';
                 badge.style.fontSize = '12px';
                 badge.style.color = '#fff';
-                badge.innerHTML = `${buff.icon} ${timeLeft}s`;
-                badge.title = `${buff.itemName}: +${buff.value} ${buff.type.toUpperCase()}`;
+                badge.style.display = 'flex';
+                badge.style.alignItems = 'center';
+                badge.style.gap = '5px';
                 
+                badge.innerHTML = `
+                    <span style="font-size:14px;">${buff.icon}</span> 
+                    <span>${buff.itemName}</span>
+                    <span style="color:#f1c40f; font-weight:bold;">${timeLeft}s</span>
+                `;
                 buffContainer.appendChild(badge);
             }
         }

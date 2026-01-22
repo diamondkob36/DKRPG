@@ -107,18 +107,74 @@
                 </div>
             </div>
 
-            <div id="char-status-panel" class="box" onclick="toggleHUD()">
-                
-                <div class="hud-header">
+            <div id="char-status-panel" class="box" onclick="openProfile()" style="cursor: pointer;">
+                <div class="hud-compact">
                     <img id="hero-img" src="" class="hud-avatar">
-                    <div class="hud-info">
-                        <h2 id="display-name" class="hud-name">Hero</h2>
-                        <div class="hp-bar-bg">
-                            <div id="hp-bar-fill" class="hp-bar-fill" style="width: 100%;"></div>
+                    <div class="hud-info-compact">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong id="display-name" style="font-size:16px;">Hero</strong>
+                            <span style="font-size:12px; color:#f1c40f;">Lv. <span id="lvl">1</span></span>
+                        </div>
+                        
+                        <div class="bar-container">
+                            <div id="hp-bar-fill" class="bar-fill hp"></div>
+                            <span id="hp-text" class="bar-text">0/0</span>
+                        </div>
+
+                        <div class="bar-container" style="margin-top:2px;">
+                            <div id="mp-bar-fill" class="bar-fill mp"></div>
+                            <span id="mp-text" class="bar-text">0/0</span>
+                        </div>
+                        
+                        <div style="text-align:right; font-size:12px; margin-top:2px; color:gold;">
+                            💰 <span id="gold">0</span> G
                         </div>
                     </div>
-                    <div class="toggle-icon">▼</div>
                 </div>
+                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">
+                    (คลิกเพื่อดูข้อมูล)
+                </div>
+            </div> 
+
+            <div id="profile-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box box" style="width: 400px;">
+                    <div class="modal-header">
+                        <h2>📜 ข้อมูลตัวละคร</h2>
+                        <button class="close-btn" onclick="closeProfile()">✖</button>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img id="profile-img" src="" style="width: 80px; height: 80px; border: 2px solid #aaa; border-radius: 50%;">
+                        <h3 id="profile-name" style="margin:5px 0; color:#f1c40f;">Name</h3>
+                        <small id="profile-class" style="color:#ccc;">Class</small>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+                        <div>
+                            <p>❤️ HP: <span id="profile-hp"></span></p>
+                            <p>💧 MP: <span id="profile-mp"></span></p>
+                            <p>⚔️ STR: <span id="profile-str"></span></p>
+                        </div>
+                        <div>
+                            <p>🔥 INT: <span id="profile-int"></span></p>
+                            <p>💨 AGI: <span id="profile-agi"></span></p>
+                            <p>⚖️ นน.: <span id="profile-weight"></span></p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px;">
+                        <button class="upgrade-btn-hud" onclick="closeProfile(); openUpgradeModal();" style="width:100%;">
+                            ✨ อัปเกรดสเตตัส (<span id="profile-points">0</span>)
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
+                        <h4 style="margin: 0 0 5px 0; color:#aaa;">สถานะ (Buffs)</h4>
+                        <div id="buff-container" style="display: flex; gap: 5px; flex-wrap: wrap; min-height: 30px;">
+                            </div>
+                    </div>
+                </div>
+            </div>
 
                 <div class="hud-details">
                     <small>อาชีพ: <span id="display-class">-</span></small>
