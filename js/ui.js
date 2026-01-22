@@ -46,6 +46,20 @@ export const UI = {
         if(mpBar) mpBar.style.width = mpPercent + "%";
         setText('mp-text', `${Math.floor(currentMp)}/${maxMp}`);
 
+        if (gameData.maxExp > 0) {
+        const expPercent = Math.min((gameData.exp / gameData.maxExp) * 100, 100);
+        const expBar = document.getElementById('exp-bar-fill');
+        
+        // อัปเดตความกว้างหลอด
+        if(expBar) expBar.style.width = expPercent + "%";
+        
+        // อัปเดตตัวเลข (แสดงเป็น % หรือ ตัวเลขดิบก็ได้)
+        // แบบตัวเลข: 150/500
+        setText('exp-text', `EXP ${Math.floor(gameData.exp)}/${gameData.maxExp}`);
+        // หรือแบบเปอร์เซ็นต์: EXP 30%
+        // setText('exp-text', `EXP ${Math.floor(expPercent)}%`);
+        }
+
         // --- 2. Profile Modal (Popup) ---
         setText('profile-name', gameData.name);
         setText('profile-class', gameData.className);

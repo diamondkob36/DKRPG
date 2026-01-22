@@ -60,7 +60,7 @@
 .hud-compact {
     display: flex;
     gap: 10px;
-    align-items: center;
+    align-items: center; /* ✅ เพิ่มบรรทัดนี้: จัดรูปกับหลอดเลือดให้อยู่กึ่งกลางกัน */
 }
 .hud-info-compact {
     flex: 1;
@@ -82,6 +82,10 @@
 }
 .bar-fill.hp { background: #e74c3c; } /* สีแดง */
 .bar-fill.mp { background: #3498db; } /* สีฟ้า */
+.bar-fill.exp { 
+    background: linear-gradient(to right, #2ecc71, #27ae60); /* สีเขียว */
+    /* หรือถ้าชอบสีม่วงใช้: background: linear-gradient(to right, #9b59b6, #8e44ad); */
+}
 
 /* ข้อความตัวเลขบนหลอด */
 .bar-text {
@@ -95,6 +99,11 @@
     white-space: nowrap;
     line-height: 14px;
     z-index: 2;
+}
+
+#display-name {
+    color: #f1c40f; /* สีทอง */
+    text-shadow: 1px 1px 2px #000; /* เงาดำเพื่อให้ลอยเด่น */
 }
 
 /* --- 3. Inventory & Shop Buttons --- */

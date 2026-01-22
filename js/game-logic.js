@@ -49,11 +49,19 @@ export const GameLogic = {
         let currentVal = (statType === 'hp') ? newData.maxHp : newData[statType];
         let originalVal = (statType === 'hp') ? originalData.maxHp : originalData[statType];
 
+        // ตรวจสอบว่าค่าปัจจุบันต่ำกว่าค่าเริ่มต้นหรือไม่
         if (currentVal <= originalVal) throw new Error("ลดต่ำกว่าค่าเริ่มต้นไม่ได้!");
         
+        // คืนแต้ม Stat
         newData.statPoints++;
-        if(statType === 'hp') { newData.maxHp -= 10; newData.hp -= 10; }
-        else { newData[statType]--; }
+
+        if(statType === 'hp') { 
+            newData.maxHp -= 10; 
+            // ✅ แก้ไข: ป้องกันเลือดติดลบ โดยให้เหลืออย่างน้อย 1
+            newData.hp = Math.max(1, newData.hp - 10); 
+        } else { 
+            newData[statType]--; 
+        }
         
         return newData;
     },

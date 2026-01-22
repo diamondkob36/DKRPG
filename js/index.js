@@ -377,9 +377,12 @@ function startBuffTimer() {
 // --- Shop System ---
 window.openShop = () => {
     setShopMode('buy');
+    
+    // ✅ เพิ่มบรรทัดนี้: อัปเดตเงินทันทีที่เปิดร้าน
+    document.getElementById('shop-gold').innerText = gameData.gold;
+    
     UI.toggleShop(true);
 };
-
 window.setShopMode = (mode) => {
     currentShopMode = mode;
     currentCategory = 'all'; // รีเซ็ตหมวด
@@ -395,6 +398,11 @@ window.switchShopTab = (category) => {
 };
 
 function refreshShopDisplay() {
+    // ✅ เพิ่มบรรทัดนี้: อัปเดตเงินทุกครั้งที่มีการรีเฟรชหน้าจอร้ายค้า
+    if(document.getElementById('shop-gold')) {
+        document.getElementById('shop-gold').innerText = gameData.gold;
+    }
+
     if (currentShopMode === 'buy') {
         UI.renderShop(currentCategory);
     } else {
