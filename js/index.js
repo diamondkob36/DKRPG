@@ -12,6 +12,9 @@ let currentShopMode = 'buy';
 let currentCategory = 'all';
 let currentInvCategory = 'all';
 let buffInterval = null;
+let saveTimeout = null;
+let isSaving = false;
+let isQuotaExceeded = false;
 
 // --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
 window.loginGoogle = async () => {
@@ -106,16 +109,68 @@ window.farm = async () => {
 
 window.toggleHUD = () => UI.toggleHUD();
 
-// ฟังก์ชันบันทึก
-async function saveToFirebase() {
+// ฟังก์ชันสั่งบันทึก (เรียกใช้จาก train, buyItem ฯลฯ)
+async function saveToFirebase(immediate = false) {
     if(!currentUser) return;
-    UI.setStatus("กำลังบันทึก...", "");
+
+    // ถ้าสั่งให้บันทึกทันที (เช่น ตอนปิดเกม)
+    if (immediate) {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        await performSave();
+        return;
+    }
+
+    // ถ้ามีการรอ Save อยู่แล้ว ให้ยกเลิกอันเก่า (Reset เวลา)
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+
+    UI.setStatus("กำลังซิงค์...", "warning"); // สถานะรอเซฟ
+
+    // ตั้งเวลาว่า "ถ้าไม่มีการกดเพิ่มใน 2 วินาที ให้บันทึกเลย"
+    saveTimeout = setTimeout(async () => {
+        await performSave();
+    }, 2000); 
+}
+
+// ฟังก์ชันทำงานเบื้องหลัง (ตัวบันทึกจริง + เช็คโควตา)
+async function performSave() {
+    // 1. ถ้าโควตาเต็มแล้ว หรือกำลังเซฟอยู่ ไม่ต้องทำซ้ำ
+    if (isSaving || isQuotaExceeded) return; 
+    
+    isSaving = true;
+    
     try {
+        UI.setStatus("กำลังบันทึก...", "");
+        
+        // บันทึกข้อมูล
         await setDoc(doc(db, "players", currentUser.uid), gameData);
+        
         UI.setStatus("✅ บันทึกแล้ว", "success");
         setTimeout(() => UI.setStatus("", ""), 1500);
+        
     } catch(e) {
-        UI.setStatus("Error: " + e.message, "error");
+        console.error("Save Error:", e);
+
+        // 2. เช็คว่าเป็น Error เพราะโควตาเต็มหรือไม่?
+        if (e.code === 'resource-exhausted') {
+            isQuotaExceeded = true; // ล็อกไว้เลยว่าเต็มแล้ว
+            
+            await UI.alert(
+                "⚠️ ระบบบันทึกเต็ม (Quota Exceeded)", 
+                `ขีดจำกัดการใช้งานเซิร์ฟเวอร์ฟรีประจำวันเต็มแล้ว!<br><br>
+                <b>ผลกระทบ:</b> ข้อมูลหลังจากนี้จะไม่ถูกบันทึก<br>
+                <b>คำแนะนำ:</b> เล่นต่อได้ แต่ข้อมูลอาจหายเมื่อรีเฟรช<br>
+                ระบบจะรีเซ็ตโควตาใหม่ในวันพรุ่งนี้`
+            );
+            
+            UI.setStatus("⛔ เซิร์ฟเวอร์เต็ม (ไม่บันทึก)", "error");
+        } else {
+            UI.setStatus("⚠️ บันทึกไม่สำเร็จ: " + e.message, "error");
+        }
+    } finally {
+        isSaving = false;
+        saveTimeout = null;
     }
 }
 
