@@ -216,27 +216,23 @@ window.unequipItem = async (slotId) => {
 // 3. กดใช้ไอเทม
 window.useItem = async (itemId) => {
     try {
-        // 1. ดึงข้อมูลไอเทมมาเพื่อแสดงชื่อใน popup
         const item = items[itemId]; 
         
-        // 🆕 ส่วนแจ้งเตือนยืนยันการใช้ยา/ไอเทม
-        // จะเด้งถามว่า "ต้องการใช้งาน [ชื่อไอเทม] หรือไม่?"
-        if(!confirm(`ต้องการใช้งาน "${item.name}" หรือไม่?`)) return;
+        // 🆕 
+        const isConfirmed = await UI.confirm(
+            "🍷 ใช้ไอเทม", 
+            `ต้องการใช้งาน <b style="color:#f1c40f">${item.name}</b> หรือไม่?`
+        );
+        if(!isConfirmed) return;
 
-        // 2. เรียก Logic ใช้ของ (Logic เดิม)
         gameData = GameLogic.useItem(gameData, itemId);
 
-        // 3. อัปเดตหน้าจอ (เรียก renderInventoryModal เพื่อให้อัปเดตน้ำหนักทันทีตามที่เราแก้ไปรอบก่อน)
         UI.renderInventoryModal(gameData, currentInvCategory); 
-        
-        // อัปเดต HUD (เลือดเพิ่ม)
         UI.updateGameScreen(gameData);
-        
-        // บันทึกลง Firebase
         await saveToFirebase();
 
     } catch (e) {
-        alert(e.message);
+        await UI.alert("แจ้งเตือน", e.message);
     }
 }; // 👈 ปิด useItem ตรงนี้ (ของเดิมหายไป)
 
@@ -246,32 +242,35 @@ window.dropItem = async (itemId) => {
         const item = items[itemId];
         const currentQty = gameData.inventory[itemId] || 0;
 
-        // 1. ถามจำนวนที่จะทิ้ง (ค่าเริ่มต้นคือ 1)
-        const amountStr = prompt(`ต้องการทิ้ง "${item.name}" จำนวนเท่าไหร่? (มีอยู่ ${currentQty})`, "1");
+        // 🆕 ใช้ UI.prompt แทน prompt เดิม
+        const amountStr = await UI.prompt(
+            "🗑️ ทิ้งไอเทม", 
+            `ต้องการทิ้ง <b style="color:#f1c40f">${item.name}</b><br>(มีอยู่ ${currentQty} ชิ้น)`, 
+            1
+        );
         
         if (amountStr === null) return; // กดยกเลิก
         
         const amount = parseInt(amountStr);
         if (isNaN(amount) || amount <= 0 || amount > currentQty) {
-            return alert("จำนวนไม่ถูกต้อง!");
+            return await UI.alert("ข้อผิดพลาด", "จำนวนไม่ถูกต้อง!");
         }
 
-        // 2. แจ้งเตือนยืนยันครั้งสุดท้าย (Confirmation)
-        const confirmMsg = `⚠️ คำเตือน!\nคุณกำลังจะทิ้ง "${item.name}" x${amount}\nไอเทมจะหายไปถาวร ยืนยันหรือไม่?`;
-        if (!confirm(confirmMsg)) return;
+        // 🆕 Confirm ครั้งสุดท้าย
+        const isConfirmed = await UI.confirm(
+            "⚠️ คำเตือน!", 
+            `คุณกำลังจะทิ้ง <b style="color:red">${item.name} x${amount}</b><br>ไอเทมจะหายไปถาวร ยืนยันหรือไม่?`
+        );
+        if (!isConfirmed) return;
 
-        // 3. เรียก Logic ทิ้งของ
         gameData = GameLogic.dropItem(gameData, itemId, amount);
 
-        // 4. อัปเดตหน้าจอทันที (รวมถึงหลอดน้ำหนัก)
         UI.renderInventoryModal(gameData, currentInvCategory);
         UI.updateGameScreen(gameData);
-
-        // 5. บันทึก
         await saveToFirebase();
 
     } catch (e) {
-        alert(e.message);
+        await UI.alert("แจ้งเตือน", e.message);
     }
 };
 
@@ -307,34 +306,37 @@ function refreshShopDisplay() {
 
 window.closeShop = () => { UI.toggleShop(false); };
 
+// 1. แก้ไข buyItem
 window.buyItem = async (itemId) => {
     try {
         const qtyInput = document.getElementById(`buy-qty-${itemId}`);
         const amount = qtyInput ? parseInt(qtyInput.value) : 1;
-        
-        if(amount < 1) return alert("จำนวนไม่ถูกต้อง");
+        if(amount < 1) return await UI.alert("แจ้งเตือน", "จำนวนไม่ถูกต้อง"); // 🆕
 
-        // 👇 1. ดึงข้อมูลไอเทมเพื่อมาโชว์ชื่อและราคา
         const item = items[itemId];
         const totalPrice = item.price * amount;
 
-        // 👇 2. สร้างกล่อง Confirm แจ้งเตือน
-        if(!confirm(`ยืนยันการซื้อ "${item.name}"\nจำนวน: ${amount} ชิ้น\nราคารวม: ${totalPrice} G ใช่หรือไม่?`)) {
-            return; // ถ้ากด Cancel ก็จบฟังก์ชันตรงนี้ ไม่ซื้อ
-        }
+        // 🆕 ใช้ UI.confirm แทน confirm เดิม
+        const isConfirmed = await UI.confirm(
+            "🛒 ยืนยันการซื้อ", 
+            `ต้องการซื้อ <b style="color:#f1c40f">${item.name}</b><br>จำนวน ${amount} ชิ้น<br>รวมเป็นเงิน <b style="color:gold">${totalPrice} G</b> หรือไม่?`
+        );
 
-        // 3. ถ้ากด OK ถึงจะเรียก Logic ซื้อของ
+        if(!isConfirmed) return; 
+
         gameData = GameLogic.buyItem(gameData, itemId, amount);
         
-        // รีเซ็ตช่องกรอกกลับเป็น 1
         if(qtyInput) qtyInput.value = 1;
 
         UI.updateGameScreen(gameData);
         await saveToFirebase();
         refreshShopDisplay();
         
+        // 🆕 (Optional) แจ้งเตือนซื้อสำเร็จ
+        // await UI.alert("สำเร็จ", `ซื้อ ${item.name} เรียบร้อยแล้ว`); 
+        
     } catch (e) { 
-        alert(e.message); 
+        await UI.alert("เกิดข้อผิดพลาด", e.message); // 🆕
     }
 };
 
@@ -343,27 +345,41 @@ window.sellItem = async (itemId) => {
         const qtyInput = document.getElementById(`sell-qty-${itemId}`);
         const amount = qtyInput ? parseInt(qtyInput.value) : 1;
         const item = items[itemId];
-
-        if(!confirm(`ขาย ${item.name} จำนวน ${amount} ชิ้น?`)) return;
+        
+        // 🆕
+        const isConfirmed = await UI.confirm(
+            "💰 ยืนยันการขาย", 
+            `ขาย <b style="color:#f1c40f">${item.name}</b><br>จำนวน ${amount} ชิ้น?`
+        );
+        if(!isConfirmed) return;
 
         gameData = GameLogic.sellItem(gameData, itemId, amount);
         UI.updateGameScreen(gameData);
         refreshShopDisplay();
         await saveToFirebase();
-    } catch (e) { alert(e.message); }
+    } catch (e) { await UI.alert("ผิดพลาด", e.message); }
 };
 
 window.sellAllLoot = async (category) => {
     try {
-        if(!confirm(`⚠️ ยืนยันขายไอเทมในหมวด "${category}" ทั้งหมดทิ้ง?`)) return;
+        // 🆕
+        const isConfirmed = await UI.confirm(
+            "🗑️ ขายขยะทั้งหมด", 
+            `⚠️ ยืนยันขายไอเทมในหมวด <b>"${category}"</b> ทั้งหมดทิ้ง?`
+        );
+        if(!isConfirmed) return;
         
         const result = GameLogic.sellAllItemsByCategory(gameData, category);
         gameData = result.newData;
         
-        alert(`ขายไอเทม ${result.soldCount} รายการ ได้เงินทั้งหมด ${result.totalGain} G`);
+        // 🆕
+        await UI.alert(
+            "ขายเรียบร้อย", 
+            `ขายไอเทมไป ${result.soldCount} รายการ<br>ได้รับเงิน <b style="color:gold">+${result.totalGain} G</b>`
+        );
         
         UI.updateGameScreen(gameData);
         refreshShopDisplay();
         await saveToFirebase();
-    } catch (e) { alert(e.message); }
+    } catch (e) { await UI.alert("แจ้งเตือน", e.message); }
 };

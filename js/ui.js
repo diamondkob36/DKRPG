@@ -397,6 +397,83 @@ export const UI = {
                 btn.classList.add('active');
             }
         });
+    },
+
+    // 🆕 เพิ่มฟังก์ชันจัดการ Custom Popup
+    showPopup(title, message, type = 'alert', defaultValue = 1) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('custom-popup');
+            const titleEl = document.getElementById('popup-title');
+            const msgEl = document.getElementById('popup-message');
+            const inputEl = document.getElementById('popup-input');
+            const btnConfirm = document.getElementById('popup-btn-confirm');
+            const btnCancel = document.getElementById('popup-btn-cancel');
+
+            // ตั้งค่าข้อความ
+            titleEl.innerText = title;
+            msgEl.innerHTML = message; // ใช้ innerHTML เผื่อใส่ตัวหนา/สี
+
+            // รีเซ็ตการแสดงผล
+            inputEl.style.display = 'none';
+            btnCancel.style.display = 'none';
+            btnConfirm.innerText = 'ตกลง';
+
+            // ตั้งค่าตามประเภท
+            if (type === 'confirm') {
+                btnCancel.style.display = 'block';
+                btnConfirm.innerText = 'ยืนยัน';
+            } else if (type === 'prompt') {
+                btnCancel.style.display = 'block';
+                btnConfirm.innerText = 'ยืนยัน';
+                inputEl.style.display = 'block';
+                inputEl.value = defaultValue;
+                inputEl.focus();
+            }
+
+            // แสดง Popup
+            overlay.style.display = 'flex';
+
+            // จัดการ Event (ใช้ once: true เพื่อไม่ให้ Event ซ้อนกัน)
+            const closePopup = () => {
+                overlay.style.display = 'none';
+            };
+
+            // สร้าง Handler ใหม่ทุกครั้งเพื่อผูกกับ resolve ของ Promise รอบนี้
+            const onConfirm = () => {
+                closePopup();
+                if (type === 'prompt') resolve(inputEl.value); // ส่งค่าตัวเลขกลับ
+                else resolve(true); // ตอบ Yes
+                cleanup();
+            };
+
+            const onCancel = () => {
+                closePopup();
+                resolve(null); // ตอบ No หรือ Cancel
+                cleanup();
+            };
+
+            // ฟังก์ชันล้าง Event Listener
+            const cleanup = () => {
+                btnConfirm.removeEventListener('click', onConfirm);
+                btnCancel.removeEventListener('click', onCancel);
+            };
+
+            btnConfirm.addEventListener('click', onConfirm);
+            btnCancel.addEventListener('click', onCancel);
+        });
+    },
+
+    // Wrapper ให้เรียกใช้ง่ายๆ
+    async alert(title, message) {
+        return this.showPopup(title, message, 'alert');
+    },
+
+    async confirm(title, message) {
+        return this.showPopup(title, message, 'confirm');
+    },
+
+    async prompt(title, message, defValue) {
+        return this.showPopup(title, message, 'prompt', defValue);
     }
 };
 
