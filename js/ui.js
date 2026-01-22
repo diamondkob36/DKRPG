@@ -2,6 +2,7 @@
 
 // 👇 1. ต้องมี equipmentSlots ในบรรทัด import นี้!
 import { classStats, items, equipmentSlots } from "./gameData.js";
+import { GameLogic } from "./game-logic.js";
 
 export const UI = {
     // สลับหน้าจอ (Login -> Create -> Game)
