@@ -87,13 +87,62 @@ export const UI = {
         if(el) el.style.display = show ? 'flex' : 'none';
     },
 
+    // 1. ปรับปรุง renderInventoryModal: เพิ่มส่วนแสดงสถานะน้ำหนัก/ช่อง
     renderInventoryModal(gameData, filterCategory = 'all') {
-        // 👇 ป้องกัน Error กรณี equipment เป็น null หรือ undefined
+        // วาด Equipment
         const safeEquipment = gameData.equipment || {}; 
         this.renderEquipment(safeEquipment);
         
         const safeInventory = gameData.inventory || {};
-        this.renderInventory(safeInventory, filterCategory);
+
+        // --- 🆕 ส่วนแสดงสถานะกระเป๋า (Header) ---
+        // คำนวณข้อมูลการใช้งาน
+        const usage = GameLogic.getInventoryUsage(gameData);
+        
+        // หาตำแหน่งที่จะแทรก Header (ใน .bag-panel)
+        const bagPanel = document.querySelector('.bag-panel');
+        
+        // สร้างหรืออัปเดต Header
+        let infoDiv = document.getElementById('bag-status-info');
+        if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.id = 'bag-status-info';
+            // Styling Header
+            infoDiv.style.marginBottom = '10px';
+            infoDiv.style.padding = '10px';
+            infoDiv.style.background = 'rgba(0,0,0,0.3)';
+            infoDiv.style.borderRadius = '5px';
+            infoDiv.style.fontSize = '14px';
+            
+            // แทรกไว้ก่อน Tabs
+            const tabs = bagPanel.querySelector('.shop-tabs');
+            if (tabs) {
+                bagPanel.insertBefore(infoDiv, tabs);
+            } else {
+                bagPanel.prepend(infoDiv);
+            }
+        }
+
+        // คำนวณ % สำหรับหลอด
+        const weightPercent = Math.min((usage.currentWeight / usage.limitWeight) * 100, 100);
+
+        // HTML ภายใน Header
+        infoDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span>🎒 ช่องเก็บของ: <b>${usage.currentSlots}</b> / ${usage.limitSlots}</span>
+                <span>⚖️ น้ำหนัก: <b>${usage.currentWeight.toFixed(1)}</b> / ${usage.limitWeight} kg</span>
+            </div>
+            <div style="width:100%; height:6px; background:#333; border-radius:3px;">
+                <div style="width:${weightPercent}%; height:100%; 
+                     background:${weightPercent > 90 ? '#e74c3c' : '#2ecc71'}; 
+                     border-radius:3px; transition:width 0.3s;">
+                </div>
+            </div>
+        `;
+        // ----------------------------------------
+
+        // เรียกวาด Grid ไอเทม
+        this.renderInventoryGridOnly(safeInventory, filterCategory);
     },
 
     renderEquipment(equipment) {
@@ -177,6 +226,43 @@ export const UI = {
                 btn.classList.add('active');
             }
         });
+    },
+
+    renderInventoryGridOnly(inventory, filterCategory) {
+        const grid = document.getElementById('inventory-grid');
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        if (!inventory || Object.keys(inventory).length === 0) {
+            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1; padding: 20px;">(กระเป๋าว่างเปล่า)</p>';
+            return;
+        }
+
+        for (const [itemId, count] of Object.entries(inventory)) {
+            const item = items[itemId];
+            if (!item) continue;
+
+            if (filterCategory !== 'all' && item.category !== filterCategory) continue;
+
+            const slot = document.createElement('div');
+            slot.className = 'item-slot';
+            // 🆕 เพิ่มน้ำหนักใน Tooltip
+            slot.title = `${item.name}\n⚖️ ${item.weight || 0} kg\n(คลิกเพื่อใช้งาน/สวมใส่)`;
+            
+            slot.onclick = () => {
+                if (item.type === 'equipment') {
+                    window.equipItem(itemId);
+                } else if (item.type === 'consumable') {
+                    window.useItem(itemId);
+                }
+            };
+
+            slot.innerHTML = `
+                <span class="item-icon">${item.icon}</span>
+                <span class="item-count">${count}</span>
+            `;
+            grid.appendChild(slot);
+        }
     },
 
     // --- Shop System ---

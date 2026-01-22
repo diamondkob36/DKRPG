@@ -62,9 +62,37 @@ export const GameLogic = {
             name: name, classKey: classKey, className: base.name,
             lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
             hp: base.hp, maxHp: base.maxHp, str: base.str, int: base.int, agi: base.agi,
-            inventory: { "potion_s": 3, "wooden_sword": 1 }, // แถมดาบ!
-            equipment: {} // 🆕 เพิ่มช่องเก็บข้อมูลของที่ใส่อยู่
+            inventory: { "potion_s": 3, "wooden_sword": 1 },
+            equipment: {},
+            
+            // 🆕 กำหนดลิมิตเริ่มต้น (ปรับแก้ได้ตามใจชอบ)
+            maxSlots: 32, // เก็บได้ 32 ชนิด (Slots)
+            maxWeight: 60 // แบกได้ 60 kg (เดี๋ยวเราบวกเพิ่มตาม STR ได้)
         };
+    },
+
+    // 🆕 Helper: คำนวณการใช้งานกระเป๋า (Slots & Weight)
+    getInventoryUsage(data) {
+        let currentSlots = 0;
+        let currentWeight = 0;
+
+        // คำนวณน้ำหนักรวมในกระเป๋า (ไม่รวมที่ใส่อยู่)
+        if (data.inventory) {
+            currentSlots = Object.keys(data.inventory).length; // จำนวนชนิดไอเทม
+            for (const [itemId, count] of Object.entries(data.inventory)) {
+                const item = items[itemId];
+                if (item && item.weight) {
+                    currentWeight += item.weight * count;
+                }
+            }
+        }
+        
+        // คำนวณ Max Weight (พื้นฐาน + STR * 2)
+        // เช่น STR 10 = 60 + 20 = 80 kg
+        const limitWeight = (data.maxWeight || 60) + (data.str * 2);
+        const limitSlots = data.maxSlots || 32;
+
+        return { currentSlots, currentWeight, limitSlots, limitWeight };
     },
 
     // 🆕 ฟังก์ชันสวมใส่ไอเทม
@@ -124,31 +152,34 @@ export const GameLogic = {
     // 🆕 ฟังก์ชันถอดไอเทม
     unequipItem(currentData, slot) {
         const newData = { ...currentData };
-        newData.equipment = newData.equipment || {};
-
         const itemId = newData.equipment[slot];
-        if (!itemId) throw new Error("ไม่มีไอเทมในช่องนี้");
+        if (!itemId) throw new Error("ไม่มีไอเทม");
 
         const item = items[itemId];
 
-        // 1. ลบออกจากตัว
-        delete newData.equipment[slot];
+        // --- 🆕 เช็คลิมิต ---
+        const usage = this.getInventoryUsage(newData);
+        const itemWeight = item.weight || 0;
 
-        // 2. คืนเข้ากระเป๋า
-        newData.inventory = newData.inventory || {};
+        // 1. เช็คช่อง (ถ้าในกระเป๋ายังไม่มีของชิ้นนี้)
+        if (!newData.inventory[itemId] && usage.currentSlots >= usage.limitSlots) {
+            throw new Error("❌ กระเป๋าเต็ม! ถอดของไม่ได้");
+        }
+        // 2. เช็คน้ำหนัก
+        if (usage.currentWeight + itemWeight > usage.limitWeight) {
+            throw new Error("❌ แบกไม่ไหว! น้ำหนักเกิน");
+        }
+        // ------------------
+
+        delete newData.equipment[slot];
         newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
 
-        // 3. ลบสเตตัสออก
+        // ลบ Stats
         if(item.stats) {
             if(item.stats.str) newData.str -= item.stats.str;
-            if(item.stats.int) newData.int -= item.stats.int;
-            if(item.stats.agi) newData.agi -= item.stats.agi;
             if(item.stats.maxHp) newData.maxHp -= item.stats.maxHp;
         }
-
-        // ปรับเลือดปัจจุบัน
         newData.hp = Math.min(newData.hp, newData.maxHp);
-
         return newData;
     },
 
@@ -173,11 +204,25 @@ export const GameLogic = {
         if (amount < 1) throw new Error("จำนวนไม่ถูกต้อง");
         const newData = { ...currentData };
         const item = items[itemId];
-        if (!item) throw new Error("สินค้าไม่ถูกต้อง");
         
         const totalPrice = item.price * amount;
 
         if (newData.gold < totalPrice) throw new Error(`เงินไม่พอ! (ขาด ${totalPrice - newData.gold} G)`);
+
+        // --- 🆕 ส่วนเช็คลิมิต ---
+        const usage = this.getInventoryUsage(newData);
+        const itemWeight = (item.weight || 0) * amount;
+
+        // เช็คช่อง: ถ้าเป็นไอเทมใหม่ที่ยังไม่มีในตัว และช่องเต็มแล้ว
+        if (!newData.inventory[itemId] && usage.currentSlots >= usage.limitSlots) {
+            throw new Error("❌ กระเป๋าเต็ม! (ช่องไม่พอ)");
+        }
+
+        // เช็คน้ำหนัก: ถ้าน้ำหนักรวมเกินขีดจำกัด
+        if (usage.currentWeight + itemWeight > usage.limitWeight) {
+            throw new Error("❌ แบกไม่ไหว! (น้ำหนักเกิน)");
+        }
+        // ----------------------
 
         newData.gold -= totalPrice;
         newData.inventory = newData.inventory || {};
@@ -188,23 +233,19 @@ export const GameLogic = {
 
     // ✅ แก้ไข: รับ amount เพื่อขายทีละหลายชิ้น
     sellItem(currentData, itemId, amount = 1) {
+        // ... (คงเดิม การขายของทำให้ที่ว่างเพิ่ม ไม่ต้องเช็ค) ...
         if (amount < 1) throw new Error("จำนวนไม่ถูกต้อง");
         const newData = { ...currentData };
-        
         if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] < amount) {
             throw new Error("ไอเทมไม่พอขาย!");
         }
-
         const item = items[itemId];
         let unitPrice = (item.sellPrice !== undefined) ? item.sellPrice : Math.floor(item.price / 2);
-        
         if (unitPrice <= 0) throw new Error("ไอเทมนี้ขายไม่ได้!");
 
         newData.gold += unitPrice * amount;
         newData.inventory[itemId] -= amount;
-        
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
-
         return newData;
     },
 
