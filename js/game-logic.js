@@ -66,6 +66,7 @@ export const GameLogic = {
             equipment: {},
             
             // 🆕 กำหนดลิมิตเริ่มต้น (ปรับแก้ได้ตามใจชอบ)
+            activeBuffs: {},
             maxSlots: 32, // เก็บได้ 32 ชนิด (Slots)
             maxWeight: 60 // แบกได้ 60 kg (เดี๋ยวเราบวกเพิ่มตาม STR ได้)
         };
@@ -206,10 +207,39 @@ export const GameLogic = {
         if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
             throw new Error("ไม่มีไอเทมนี้!");
         }
-        const itemData = items[itemId];
-        
-        if (itemData.effect.hp) newData.hp = Math.min(newData.hp + itemData.effect.hp, newData.maxHp);
-        if (itemData.effect.str) newData.str += itemData.effect.str;
+        const item = items[itemId];
+
+        // กรณีเป็นยาเพิ่มเลือด/Stat ถาวร (Code เดิม)
+        if (item.effect) {
+            if (item.effect.hp) newData.hp = Math.min(newData.hp + item.effect.hp, newData.maxHp);
+            if (item.effect.str) newData.str += item.effect.str;
+        }
+
+        // 🆕 กรณีเป็นยาบัพ (มีระยะเวลา)
+        if (item.buff) {
+            // สร้าง Key สำหรับบัพนี้
+            const buffKey = `buff_${item.buff.type}`;
+            const currentTime = Date.now();
+            const expireTime = currentTime + (item.buff.duration * 1000); // แปลงวิเป็นมิลลิวินาที
+
+            // ถ้ามีบัพเดิมอยู่ ให้ลบผลของเก่าออกก่อน (กันการทับซ้อน)
+            newData.activeBuffs = newData.activeBuffs || {};
+            if (newData.activeBuffs[buffKey]) {
+                newData[item.buff.type] -= newData.activeBuffs[buffKey].value;
+            }
+
+            // เพิ่ม Stat
+            newData[item.buff.type] += item.buff.value;
+
+            // บันทึกสถานะบัพ
+            newData.activeBuffs[buffKey] = {
+                itemName: item.name,
+                type: item.buff.type,
+                value: item.buff.value,
+                expiresAt: expireTime,
+                icon: item.icon
+            };
+        }
 
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
@@ -235,6 +265,32 @@ export const GameLogic = {
         }
 
         return newData;
+    },
+
+    // 🆕 ฟังก์ชันใหม่: เช็คเวลาบัพ (เรียกทุกวินาที หรือตอนโหลดเกม)
+    checkBuffs(currentData) {
+        const newData = { ...currentData };
+        let hasChanged = false; // เช็คว่ามีการเปลี่ยนแปลงไหม (จะได้ไม่ต้อง Save บ่อยๆ)
+
+        if (!newData.activeBuffs) return { newData, hasChanged: false };
+
+        const now = Date.now();
+
+        // วนลูปเช็คบัพทุกตัวที่มี
+        for (const [key, buff] of Object.entries(newData.activeBuffs)) {
+            // ถ้าเวลาปัจจุบัน เลยเวลาหมดอายุ
+            if (now > buff.expiresAt) {
+                // ลบค่า Stat ที่เคยเพิ่มไว้ออก
+                newData[buff.type] -= buff.value;
+                
+                // ลบบัพออกจากรายการ
+                delete newData.activeBuffs[key];
+                
+                hasChanged = true;
+            }
+        }
+
+        return { newData, hasChanged };
     },
 
     // ✅ แก้ไข: รับ amount เพื่อซื้อทีละหลายชิ้น

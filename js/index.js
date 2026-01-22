@@ -11,6 +11,7 @@ let selectedClassKey = null;
 let currentShopMode = 'buy';
 let currentCategory = 'all';
 let currentInvCategory = 'all';
+let buffInterval = null;
 
 // --- 1. ระบบ Auth (เชื่อมต่อ Google) ---
 window.loginGoogle = async () => {
@@ -73,7 +74,18 @@ window.confirmCreate = async () => {
 
 function enterGame() {
     UI.showScreen('game-screen');
+    
+    // 🆕 1. ก่อนเริ่มเกม เช็คว่ามีบัพหมดอายุตอน Offline ไหม
+    const result = GameLogic.checkBuffs(gameData);
+    if (result.hasChanged) {
+        gameData = result.newData;
+        saveToFirebase(); // บันทึกค่าที่ถูกต้อง (ลบบัพออก) ทันที
+    }
+
     UI.updateGameScreen(gameData);
+    
+    // 🆕 2. เริ่มตัวนับเวลา (Game Loop)
+    startBuffTimer();
 }
 
 // --- 3. ระบบเกม (Game Actions) ---
@@ -273,6 +285,29 @@ window.dropItem = async (itemId) => {
         await UI.alert("แจ้งเตือน", e.message);
     }
 };
+
+// 🆕 เพิ่มฟังก์ชันนับเวลา
+function startBuffTimer() {
+    if (buffInterval) clearInterval(buffInterval); // เคลียร์ของเก่าถ้ามี
+
+    buffInterval = setInterval(async () => {
+        if (!gameData.activeBuffs) return;
+
+        // เรียก Logic เช็คเวลา
+        const result = GameLogic.checkBuffs(gameData);
+        
+        // อัปเดตหน้าจอเฉพาะส่วน Buff (เพื่อให้ตัวเลขเวลามันวิ่ง)
+        UI.renderBuffs(gameData.activeBuffs);
+
+        // ถ้าบัพหมดอายุจริง (hasChanged = true) ค่อยอัปเดต Stat และ Save
+        if (result.hasChanged) {
+            gameData = result.newData;
+            UI.updateGameScreen(gameData); // อัปเดต Stat ที่ลดลงกลับมา
+            await saveToFirebase();
+        }
+        
+    }, 1000); // ทำงานทุก 1 วินาที
+}
 
 // --- ระบบร้านค้า --- (ย้ายออกมาข้างนอกแล้ว)
 

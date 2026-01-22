@@ -18,6 +18,7 @@ export const UI = {
         if(el) el.style.display = show ? 'block' : 'none';
     },
 
+    // 2. แก้ไข updateGameScreen ให้เรียก renderBuffs
     updateGameScreen(gameData) {
         setText('display-name', gameData.name);
         setText('display-class', gameData.className);
@@ -40,6 +41,9 @@ export const UI = {
         setText('modal-points', points);
         
         ['str', 'int', 'agi', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
+
+        // 🆕 เรียกฟังก์ชันแสดงผลบัพ
+        this.renderBuffs(gameData.activeBuffs);
     },
 
     selectClass(key) {
@@ -294,6 +298,49 @@ export const UI = {
             slot.appendChild(trashBtn);
             
             grid.appendChild(slot);
+        }
+    },
+
+    // 🆕 1. เพิ่มฟังก์ชันวาด Buff
+    renderBuffs(activeBuffs) {
+        // หาตำแหน่งที่จะวาง (วางใน HUD ใต้ Level)
+        const hudDetails = document.querySelector('.hud-details');
+        let buffContainer = document.getElementById('buff-container');
+
+        // ถ้ายังไม่มีกล่องใส่ Buff ให้สร้างใหม่
+        if (!buffContainer) {
+            buffContainer = document.createElement('div');
+            buffContainer.id = 'buff-container';
+            buffContainer.style.display = 'flex';
+            buffContainer.style.gap = '5px';
+            buffContainer.style.marginTop = '10px';
+            buffContainer.style.flexWrap = 'wrap';
+            hudDetails.appendChild(buffContainer);
+        }
+
+        buffContainer.innerHTML = ''; // ล้างค่าเก่า
+
+        if (!activeBuffs) return;
+
+        const now = Date.now();
+
+        for (const [key, buff] of Object.entries(activeBuffs)) {
+            const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000));
+            
+            if (timeLeft > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'buff-badge';
+                badge.style.background = 'rgba(0,0,0,0.6)';
+                badge.style.border = '1px solid #f1c40f';
+                badge.style.borderRadius = '4px';
+                badge.style.padding = '2px 5px';
+                badge.style.fontSize = '12px';
+                badge.style.color = '#fff';
+                badge.innerHTML = `${buff.icon} ${timeLeft}s`;
+                badge.title = `${buff.itemName}: +${buff.value} ${buff.type.toUpperCase()}`;
+                
+                buffContainer.appendChild(badge);
+            }
         }
     },
 
