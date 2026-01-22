@@ -171,12 +171,9 @@ window.saveUpgrade = async () => {
 
 // 1. เปิดกระเป๋า
 window.openInventory = () => {
-    // รีเซ็ตหมวด
     currentInvCategory = 'all';
     UI.switchInventoryTabUI('all');
-    
-    // วาดทั้ง Equipment และ Inventory
-    UI.renderInventoryModal(gameData, 'all');
+    UI.renderInventoryModal(gameData, 'all'); // เรียกตัวเต็ม
     UI.toggleInventory(true);
 };
 
@@ -189,9 +186,8 @@ window.closeInventory = () => {
 window.switchInventoryTab = (category) => {
     currentInvCategory = category;
     UI.switchInventoryTabUI(category);
-    UI.renderInventory(gameData.inventory, category);
+    UI.renderInventoryGridOnly(gameData.inventory, category); 
 };
-
 // 3. สวมใส่ไอเทม
 window.equipItem = async (itemId) => {
     try {
@@ -220,22 +216,64 @@ window.unequipItem = async (slotId) => {
 // 3. กดใช้ไอเทม
 window.useItem = async (itemId) => {
     try {
-        if(!confirm("ต้องการใช้ไอเทมนี้หรือไม่?")) return;
+        // 1. ดึงข้อมูลไอเทมมาเพื่อแสดงชื่อใน popup
+        const item = items[itemId]; 
+        
+        // 🆕 ส่วนแจ้งเตือนยืนยันการใช้ยา/ไอเทม
+        // จะเด้งถามว่า "ต้องการใช้งาน [ชื่อไอเทม] หรือไม่?"
+        if(!confirm(`ต้องการใช้งาน "${item.name}" หรือไม่?`)) return;
 
-        // เรียก Logic ใช้ของ
+        // 2. เรียก Logic ใช้ของ (Logic เดิม)
         gameData = GameLogic.useItem(gameData, itemId);
 
-        // อัปเดตหน้าจอ (ทั้งกระเป๋า และ HP ที่เพิ่มขึ้น)
-        UI.renderInventory(gameData.inventory);
+        // 3. อัปเดตหน้าจอ (เรียก renderInventoryModal เพื่อให้อัปเดตน้ำหนักทันทีตามที่เราแก้ไปรอบก่อน)
+        UI.renderInventoryModal(gameData, currentInvCategory); 
+        
+        // อัปเดต HUD (เลือดเพิ่ม)
         UI.updateGameScreen(gameData);
         
-        // บันทึก
+        // บันทึกลง Firebase
         await saveToFirebase();
 
     } catch (e) {
         alert(e.message);
     }
 }; // 👈 ปิด useItem ตรงนี้ (ของเดิมหายไป)
+
+// 🆕 เพิ่มฟังก์ชันกดทิ้งของ (เชื่อมกับปุ่มถังขยะ)
+window.dropItem = async (itemId) => {
+    try {
+        const item = items[itemId];
+        const currentQty = gameData.inventory[itemId] || 0;
+
+        // 1. ถามจำนวนที่จะทิ้ง (ค่าเริ่มต้นคือ 1)
+        const amountStr = prompt(`ต้องการทิ้ง "${item.name}" จำนวนเท่าไหร่? (มีอยู่ ${currentQty})`, "1");
+        
+        if (amountStr === null) return; // กดยกเลิก
+        
+        const amount = parseInt(amountStr);
+        if (isNaN(amount) || amount <= 0 || amount > currentQty) {
+            return alert("จำนวนไม่ถูกต้อง!");
+        }
+
+        // 2. แจ้งเตือนยืนยันครั้งสุดท้าย (Confirmation)
+        const confirmMsg = `⚠️ คำเตือน!\nคุณกำลังจะทิ้ง "${item.name}" x${amount}\nไอเทมจะหายไปถาวร ยืนยันหรือไม่?`;
+        if (!confirm(confirmMsg)) return;
+
+        // 3. เรียก Logic ทิ้งของ
+        gameData = GameLogic.dropItem(gameData, itemId, amount);
+
+        // 4. อัปเดตหน้าจอทันที (รวมถึงหลอดน้ำหนัก)
+        UI.renderInventoryModal(gameData, currentInvCategory);
+        UI.updateGameScreen(gameData);
+
+        // 5. บันทึก
+        await saveToFirebase();
+
+    } catch (e) {
+        alert(e.message);
+    }
+};
 
 // --- ระบบร้านค้า --- (ย้ายออกมาข้างนอกแล้ว)
 

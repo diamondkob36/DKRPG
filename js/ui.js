@@ -90,59 +90,63 @@ export const UI = {
 
     // 1. ปรับปรุง renderInventoryModal: เพิ่มส่วนแสดงสถานะน้ำหนัก/ช่อง
     renderInventoryModal(gameData, filterCategory = 'all') {
-        // วาด Equipment
         const safeEquipment = gameData.equipment || {}; 
         this.renderEquipment(safeEquipment);
         
         const safeInventory = gameData.inventory || {};
 
         // --- 🆕 ส่วนแสดงสถานะกระเป๋า (Header) ---
-        // คำนวณข้อมูลการใช้งาน
-        const usage = GameLogic.getInventoryUsage(gameData);
+        const usage = GameLogic.getInventoryUsage(gameData); //
         
-        // หาตำแหน่งที่จะแทรก Header (ใน .bag-panel)
         const bagPanel = document.querySelector('.bag-panel');
-        
-        // สร้างหรืออัปเดต Header
         let infoDiv = document.getElementById('bag-status-info');
+        
         if (!infoDiv) {
             infoDiv = document.createElement('div');
             infoDiv.id = 'bag-status-info';
-            // Styling Header
             infoDiv.style.marginBottom = '10px';
             infoDiv.style.padding = '10px';
             infoDiv.style.background = 'rgba(0,0,0,0.3)';
             infoDiv.style.borderRadius = '5px';
             infoDiv.style.fontSize = '14px';
             
-            // แทรกไว้ก่อน Tabs
             const tabs = bagPanel.querySelector('.shop-tabs');
-            if (tabs) {
-                bagPanel.insertBefore(infoDiv, tabs);
-            } else {
-                bagPanel.prepend(infoDiv);
-            }
+            if (tabs) bagPanel.insertBefore(infoDiv, tabs);
+            else bagPanel.prepend(infoDiv);
         }
 
-        // คำนวณ % สำหรับหลอด
-        const weightPercent = Math.min((usage.currentWeight / usage.limitWeight) * 100, 100);
+        // คำนวณ % สำหรับหลอดแต่ละส่วน
+        // คำนวณความกว้างเทียบกับ Max Weight
+        const equipPercent = Math.min((usage.equippedWeight / usage.limitWeight) * 100, 100);
+        // ส่วน Inventory ให้ต่อจาก Equip แต่ต้องไม่เกิน 100% เมื่อรวมกัน
+        const invPercent = Math.min((usage.inventoryWeight / usage.limitWeight) * 100, (100 - equipPercent));
+        
+        // เช็คสี: ถ้าน้ำหนักรวมเกิน 90% ให้ส่วน Inventory เป็นสีแดง
+        const totalPercent = equipPercent + invPercent;
+        const invColor = totalPercent > 90 ? '#e74c3c' : '#2ecc71'; // แดง หรือ เขียว
 
-        // HTML ภายใน Header
         infoDiv.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <span>🎒 ช่องเก็บของ: <b>${usage.currentSlots}</b> / ${usage.limitSlots}</span>
-                <span>⚖️ น้ำหนัก: <b>${usage.currentWeight.toFixed(1)}</b> / ${usage.limitWeight} kg</span>
+                <span>🎒 ช่อง: <b>${usage.currentSlots}</b> / ${usage.limitSlots}</span>
+                <span>⚖️ นน.รวม: <b>${usage.currentWeight.toFixed(1)}</b> / ${usage.limitWeight} kg</span>
             </div>
-            <div style="width:100%; height:6px; background:#333; border-radius:3px;">
-                <div style="width:${weightPercent}%; height:100%; 
-                     background:${weightPercent > 90 ? '#e74c3c' : '#2ecc71'}; 
-                     border-radius:3px; transition:width 0.3s;">
-                </div>
+            
+            <div style="width:100%; height:8px; background:#333; border-radius:4px; overflow:hidden; display:flex;">
+                
+                <div style="width:${equipPercent}%; height:100%; background:#3498db;" 
+                     title="สวมใส่: ${usage.equippedWeight.toFixed(1)} kg"></div>
+                
+                <div style="width:${invPercent}%; height:100%; background:${invColor}; transition:width 0.3s;"
+                     title="ในกระเป๋า: ${usage.inventoryWeight.toFixed(1)} kg"></div>
+                     
+            </div>
+            <div style="text-align:right; font-size:10px; color:#ccc; margin-top:2px;">
+                <span style="color:#3498db;">■ สวมใส่</span> 
+                <span style="color:${invColor};">■ กระเป๋า</span>
             </div>
         `;
         // ----------------------------------------
 
-        // เรียกวาด Grid ไอเทม
         this.renderInventoryGridOnly(safeInventory, filterCategory);
     },
 
@@ -247,9 +251,11 @@ export const UI = {
 
             const slot = document.createElement('div');
             slot.className = 'item-slot';
-            // 🆕 เพิ่มน้ำหนักใน Tooltip
+            // ปรับ CSS ให้ slot เป็น relative เพื่อวางปุ่มถังขยะได้
+            slot.style.position = 'relative'; 
             slot.title = `${item.name}\n⚖️ ${item.weight || 0} kg\n(คลิกเพื่อใช้งาน/สวมใส่)`;
             
+            // Event คลิกหลัก (ใช้/สวมใส่)
             slot.onclick = () => {
                 if (item.type === 'equipment') {
                     window.equipItem(itemId);
@@ -258,10 +264,35 @@ export const UI = {
                 }
             };
 
-            slot.innerHTML = `
+            // --- 🆕 ปุ่มทิ้งของ (Trash Button) ---
+            const trashBtn = document.createElement('div');
+            trashBtn.innerHTML = '🗑️';
+            trashBtn.style.position = 'absolute';
+            trashBtn.style.top = '2px';
+            trashBtn.style.right = '2px';
+            trashBtn.style.fontSize = '12px';
+            trashBtn.style.cursor = 'pointer';
+            trashBtn.style.background = 'rgba(0,0,0,0.5)';
+            trashBtn.style.borderRadius = '50%';
+            trashBtn.style.padding = '2px';
+            trashBtn.style.lineHeight = '1';
+            trashBtn.style.zIndex = '10'; // ให้ลอยอยู่เหนือสุด
+
+            // เมื่อกดปุ่มถังขยะ
+            trashBtn.onclick = (e) => {
+                e.stopPropagation(); // ⛔ สำคัญ: หยุดไม่ให้มันไปกดปุ่มสวมใส่/ใช้ของซ้อนกัน
+                window.dropItem(itemId);
+            };
+            // ------------------------------------
+
+            slot.innerHTML += `
                 <span class="item-icon">${item.icon}</span>
                 <span class="item-count">${count}</span>
             `;
+            
+            // เพิ่มปุ่มถังขยะเข้าไปใน Slot
+            slot.appendChild(trashBtn);
+            
             grid.appendChild(slot);
         }
     },

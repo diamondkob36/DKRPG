@@ -74,25 +74,43 @@ export const GameLogic = {
     // 🆕 Helper: คำนวณการใช้งานกระเป๋า (Slots & Weight)
     getInventoryUsage(data) {
         let currentSlots = 0;
-        let currentWeight = 0;
+        let inventoryWeight = 0;
+        let equippedWeight = 0;
 
-        // คำนวณน้ำหนักรวมในกระเป๋า (ไม่รวมที่ใส่อยู่)
+        // 1. คำนวณน้ำหนักของในกระเป๋า (Inventory)
         if (data.inventory) {
-            currentSlots = Object.keys(data.inventory).length; // จำนวนชนิดไอเทม
+            currentSlots = Object.keys(data.inventory).length;
             for (const [itemId, count] of Object.entries(data.inventory)) {
                 const item = items[itemId];
+                // ตรวจสอบว่ามีไอเทมและมีค่าน้ำหนัก (แก้เรื่องยาไม่ถูกคำนวณ)
                 if (item && item.weight) {
-                    currentWeight += item.weight * count;
+                    inventoryWeight += item.weight * count;
                 }
             }
         }
-        
-        // คำนวณ Max Weight (พื้นฐาน + STR * 2)
-        // เช่น STR 10 = 60 + 20 = 80 kg
-        const limitWeight = (data.maxWeight || 60) + (data.str * 2);
+        // 2. คำนวณน้ำหนักของที่สวมใส่อยู่ (Equipment) - เพิ่มใหม่
+        if (data.equipment) {
+            for (const itemId of Object.values(data.equipment)) {
+                const item = items[itemId];
+                if (item && item.weight) {
+                    equippedWeight += item.weight;
+                }
+            }
+        }
+        // 3. คำนวณ Max Weight (เอา Logic + STR * 2 ออกไปแล้ว)
+        const limitWeight = data.maxWeight || 60; 
         const limitSlots = data.maxSlots || 32;
 
-        return { currentSlots, currentWeight, limitSlots, limitWeight };
+        const totalWeight = inventoryWeight + equippedWeight;
+
+        return { 
+            currentSlots, 
+            inventoryWeight, 
+            equippedWeight, 
+            currentWeight: totalWeight, // น้ำหนักรวมทั้งหมด
+            limitSlots, 
+            limitWeight 
+        };
     },
 
     // 🆕 ฟังก์ชันสวมใส่ไอเทม
@@ -195,6 +213,26 @@ export const GameLogic = {
 
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
+
+        return newData;
+    },
+
+    dropItem(currentData, itemId, amount = 1) {
+        if (amount < 1) throw new Error("จำนวนไม่ถูกต้อง");
+        
+        const newData = { ...currentData };
+        
+        if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] < amount) {
+            throw new Error("ไอเทมไม่พอที่จะทิ้ง!");
+        }
+
+        // ลดจำนวนไอเทม
+        newData.inventory[itemId] -= amount;
+        
+        // ถ้าเหลือ 0 ให้ลบ key ออกจาก object
+        if (newData.inventory[itemId] <= 0) {
+            delete newData.inventory[itemId];
+        }
 
         return newData;
     },
