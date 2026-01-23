@@ -143,20 +143,25 @@ export const GameLogic = {
 
     // 🆕 ฟังก์ชันสวมใส่ไอเทม
     equipItem(currentData, itemId, targetSlot = null) {
-        const newData = { ...currentData };
-        newData.equipment = newData.equipment || {};
+        // ✅ 1. ทำ Deep Copy เฉพาะส่วนที่จำเป็น (Inventory & Equipment) 
+        // เพื่อไม่ให้กระทบข้อมูลหลักจนกว่าจะเสร็จ
+        const newData = { 
+            ...currentData,
+            inventory: { ...currentData.inventory }, 
+            equipment: { ...currentData.equipment }
+        };
 
-        // 1. เช็คว่ามีของในกระเป๋าไหม
-        if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) throw new Error("ไม่มีไอเทมนี้!");
+        // 2. เช็คว่ามีของในกระเป๋าไหม (เช็คจากตัวใหม่ที่ก๊อปมา)
+        if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
+             throw new Error("ไม่มีไอเทมนี้!");
+        }
 
         const item = items[itemId];
         
-        // 2. เช็คว่าเป็นของสวมใส่ไหม
+        // 3. เช็คเงื่อนไขต่างๆ
         if (item.type !== 'equipment') throw new Error("ไอเทมนี้สวมใส่ไม่ได้!");
 
-        // ✅ 3. (ส่วนที่เพิ่ม) ตรวจสอบว่าอาชีพนี้ใส่ได้ไหม
         if (item.allowedClasses) {
-            // ถ้าอาชีพปัจจุบัน ไม่อยู่ในรายชื่อที่อนุญาต -> ห้ามใส่
             if (!item.allowedClasses.includes(newData.classKey)) {
                 throw new Error(`อาชีพของคุณไม่สามารถสวมใส่ไอเทมนี้ได้!`);
             }
@@ -167,8 +172,10 @@ export const GameLogic = {
         // 4. ถอดของเก่า (ถ้ามี)
         if (newData.equipment[slot]) {
             const oldItemId = newData.equipment[slot];
+            // คืนของเก่าเข้ากระเป๋า
             newData.inventory[oldItemId] = (newData.inventory[oldItemId] || 0) + 1;
             
+            // ลบ Stat ของเก่า
             const oldItem = items[oldItemId];
             if(oldItem.stats) {
                 for (const [key, val] of Object.entries(oldItem.stats)) {
@@ -179,10 +186,12 @@ export const GameLogic = {
 
         // 5. สวมของใหม่
         newData.equipment[slot] = itemId;
+        
+        // ลดจำนวนในกระเป๋า
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
-        // 6. บวกสเตตัสใหม่
+        // 6. บวก Stat ของใหม่
         if(item.stats) {
             for (const [key, val] of Object.entries(item.stats)) {
                 if (newData[key] === undefined) newData[key] = 0;
@@ -198,17 +207,24 @@ export const GameLogic = {
 
     // 🆕 ฟังก์ชันถอดไอเทม
     unequipItem(currentData, slot) {
-        const newData = { ...currentData };
+        // ✅ ทำ Deep Copy
+        const newData = { 
+            ...currentData,
+            inventory: { ...currentData.inventory },
+            equipment: { ...currentData.equipment }
+        };
+
         const itemId = newData.equipment[slot];
         if (!itemId) throw new Error("ไม่มีไอเทม");
         const item = items[itemId];
 
-        // (ข้ามส่วนเช็คน้ำหนักไปก่อน เพื่อความกระชับ) ...
-
+        // ถอดของ
         delete newData.equipment[slot];
+        
+        // คืนของเข้ากระเป๋า
         newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
 
-        // ✅ ลบสเตตัสออกแบบ Dynamic
+        // ลบ Stat
         if(item.stats) {
             for (const [key, val] of Object.entries(item.stats)) {
                 if (newData[key] !== undefined) newData[key] -= val;
