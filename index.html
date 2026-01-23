@@ -318,86 +318,80 @@
     </div>
 
     <div id="battle-screen" class="screen-container" style="display:none;">
-        <div class="battle-layout">
+        
+        <div class="battle-top-bar">
+            <div id="turn-badge" class="turn-badge player">YOUR TURN</div>
             
-            <div class="battle-sidebar">
-                <h3>Battle Log</h3>
-                <div id="battle-log" class="log-container">
-                    <div class="log-entry">เริ่มการต่อสู้...</div>
+            <div class="timer-wrapper">
+                <span>⏳</span>
+                <div class="timer-bg"><div id="battle-timer-bar"></div></div>
+                <span id="battle-timer-text">15</span>
+            </div>
+            
+            <button class="bag-btn" onclick="openInventory()">🎒</button>
+        </div>
+
+        <div class="battle-arena">
+            <div class="fighter-card player" onclick="openProfile()">
+                <div class="fighter-avatar">
+                    <img id="battle-player-img" src="image/knight.png">
+                </div>
+                <div class="fighter-info">
+                    <div class="fighter-name" id="battle-player-name">Hero</div>
+                    <div class="stat-bar-group">
+                        <div class="mini-bar hp">
+                            <div id="battle-player-hp" class="fill"></div>
+                            <span id="battle-player-hp-text">100/100</span>
+                        </div>
+                        <div class="mini-bar mp">
+                            <div id="battle-player-mp" class="fill"></div>
+                            <span id="battle-player-mp-text">50/50</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="battle-main">
-                
-                <div class="battle-top-bar">
-                    <div id="turn-badge" class="turn-badge player">YOUR TURN</div>
-                    <div class="timer-wrapper">
-                        <span>⏳</span>
-                        <div class="timer-bg"><div id="battle-timer-bar"></div></div>
-                        <span id="battle-timer-text">15</span>
-                    </div>
-                    <button class="bag-btn" onclick="openInventory()">🎒</button>
+            <div class="vs-badge">VS</div>
+
+            <div class="fighter-card enemy">
+                <div class="fighter-avatar">
+                    <div id="monster-img" style="font-size:60px;">👾</div>
                 </div>
-
-                <div class="battle-arena">
-                    
-                    <div class="fighter-card player" onclick="openProfile()">
-                        <div class="fighter-avatar">
-                            <img id="battle-player-img" src="image/knight.png"> </div>
-                        <div class="fighter-info">
-                            <div class="fighter-name" id="battle-player-name">Hero</div>
-                            
-                            <div class="stat-bar-group">
-                                <div class="mini-bar hp">
-                                    <div id="battle-player-hp" class="fill"></div>
-                                    <span id="battle-player-hp-text">100/100</span>
-                                </div>
-                                <div class="mini-bar mp">
-                                    <div id="battle-player-mp" class="fill"></div>
-                                    <span id="battle-player-mp-text">50/50</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-badge">VS</div>
-
-                    <div class="fighter-card enemy">
-                        <div class="fighter-avatar">
-                            <div id="monster-img" style="font-size:60px;">👾</div>
-                        </div>
-                        <div class="fighter-info">
-                            <div class="fighter-name" id="battle-monster-name">Monster</div>
-                            <div class="stat-bar-group">
-                                <div class="mini-bar hp">
-                                    <div id="battle-monster-hp" class="fill"></div>
-                                    <span id="battle-monster-hp-text">100/100</span>
-                                </div>
-                            </div>
+                <div class="fighter-info">
+                    <div class="fighter-name" id="battle-monster-name">Monster</div>
+                    <div class="stat-bar-group">
+                        <div class="mini-bar hp">
+                            <div id="battle-monster-hp" class="fill"></div>
+                            <span id="battle-monster-hp-text">100/100</span>
                         </div>
                     </div>
                 </div>
-
-                <div class="battle-controls">
-                    
-                    <div id="battle-buffs" class="buff-row"></div>
-
-                    <div class="action-panel">
-                        <button onclick="battleAction('run')" class="action-btn run-btn">
-                            🏃<br>หนี
-                        </button>
-
-                        <div id="battle-skills-grid" class="skills-grid">
-                            </div>
-
-                        <button onclick="battleAction('attack')" class="action-btn attack-btn">
-                            ⚔️<br>โจมตี
-                        </button>
-                    </div>
-                </div>
-
             </div>
         </div>
+
+        <div class="battle-log-area">
+            <h3>Battle Log</h3>
+            <div id="battle-log" class="log-content">
+                <div class="log-entry">เริ่มการต่อสู้...</div>
+            </div>
+        </div>
+
+        <div class="battle-controls">
+            <div id="battle-buffs" class="buff-row"></div>
+
+            <div class="action-panel">
+                <button onclick="battleAction('attack')" class="action-btn attack-btn">
+                    ⚔️<br>โจมตี
+                </button>
+
+                <div id="battle-skills-grid" class="skills-grid"></div>
+
+                <button onclick="battleAction('run')" class="action-btn run-btn">
+                    🏃<br>หนี
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <div id="custom-popup" class="modal-overlay" style="display: none; z-index: 3000;">
