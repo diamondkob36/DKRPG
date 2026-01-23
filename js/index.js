@@ -197,7 +197,10 @@ window.openUpgradeModal = () => {
 // 2. ปิด Popup (ยกเลิกการทำรายการ)
 window.closeUpgradeModal = () => {
     tempGameData = null; // ล้างค่าทิ้ง
-    UI.toggleUpgradeModal(false);
+    UI.toggleUpgradeModal(false); // ปิดหน้าอัปเกรด
+    
+    // ✅ เพิ่มบรรทัดนี้: เพื่อให้เปิดหน้าข้อมูลตัวละครกลับขึ้นมา
+    openProfile();
 };
 
 // 3. กดปุ่มบวก (+)
@@ -377,9 +380,6 @@ function startBuffTimer() {
 // --- Shop System ---
 window.openShop = () => {
     setShopMode('buy');
-    
-    // ✅ เพิ่มบรรทัดนี้: อัปเดตเงินทันทีที่เปิดร้าน
-    document.getElementById('shop-gold').innerText = gameData.gold;
     
     UI.toggleShop(true);
 };

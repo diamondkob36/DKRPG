@@ -45,9 +45,6 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.8); 
 }
 #char-status-panel::before, #char-status-panel::after { display: none !important; }
-#char-status-panel.expanded { height: auto; background-color: rgba(244, 228, 188, 0.95); }
-#char-status-panel.expanded .hud-name, #char-status-panel.expanded p,
-#char-status-panel.expanded span, #char-status-panel.expanded small { color: #3e2723 !important; }
 
 .hud-header { display: flex; align-items: center; gap: 10px; height: 100%; }
 .hud-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #d4af37; object-fit: cover; background: #000; }
@@ -57,7 +54,6 @@
 .hp-bar-fill { background: linear-gradient(to right, #e74c3c, #c0392b); height: 100%; width: 50%; border-radius: 3px; transition: width 0.3s ease; }
 .toggle-icon { font-size: 10px; color: #bdc3c7; transition: transform 0.3s; }
 #char-status-panel.expanded .toggle-icon { transform: rotate(180deg); color: #5d4037; }
-.hud-details { margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 #char-status-panel.expanded .hud-details { opacity: 1; pointer-events: auto; }
 
 .upgrade-btn-hud {

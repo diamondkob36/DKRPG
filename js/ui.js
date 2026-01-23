@@ -231,42 +231,6 @@ export const UI = {
         });
     },
 
-    renderInventory(inventory, filterCategory = 'all') {
-        const grid = document.getElementById('inventory-grid');
-        if (!grid) return;
-        grid.innerHTML = "";
-
-        if (!inventory || Object.keys(inventory).length === 0) {
-            grid.innerHTML = '<p style="color: #ccc; grid-column: 1/-1; padding: 20px;">(กระเป๋าว่างเปล่า)</p>';
-            return;
-        }
-
-        for (const [itemId, count] of Object.entries(inventory)) {
-            const item = items[itemId];
-            if (!item) continue;
-
-            if (filterCategory !== 'all' && item.category !== filterCategory) continue;
-
-            const slot = document.createElement('div');
-            slot.className = 'item-slot';
-            slot.title = `${item.name}\n${item.desc}\n(คลิกเพื่อใช้งาน/สวมใส่)`;
-            
-            slot.onclick = () => {
-                if (item.type === 'equipment') {
-                    window.equipItem(itemId);
-                } else if (item.type === 'consumable') {
-                    window.useItem(itemId);
-                }
-            };
-
-            slot.innerHTML = `
-                <span class="item-icon">${item.icon}</span>
-                <span class="item-count">${count}</span>
-            `;
-            grid.appendChild(slot);
-        }
-    },
-
     switchInventoryTabUI(category) {
         const tabs = document.querySelectorAll('.bag-panel .shop-tab-btn');
         tabs.forEach(btn => {
