@@ -146,36 +146,45 @@ export const GameLogic = {
         const newData = { ...currentData };
         newData.equipment = newData.equipment || {};
 
+        // 1. เช็คว่ามีของในกระเป๋าไหม
         if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) throw new Error("ไม่มีไอเทมนี้!");
 
         const item = items[itemId];
+        
+        // 2. เช็คว่าเป็นของสวมใส่ไหม
         if (item.type !== 'equipment') throw new Error("ไอเทมนี้สวมใส่ไม่ได้!");
+
+        // ✅ 3. (ส่วนที่เพิ่ม) ตรวจสอบว่าอาชีพนี้ใส่ได้ไหม
+        if (item.allowedClasses) {
+            // ถ้าอาชีพปัจจุบัน ไม่อยู่ในรายชื่อที่อนุญาต -> ห้ามใส่
+            if (!item.allowedClasses.includes(newData.classKey)) {
+                throw new Error(`อาชีพของคุณไม่สามารถสวมใส่ไอเทมนี้ได้!`);
+            }
+        }
 
         const slot = targetSlot || item.slot;
 
-        // ถอดของเก่า (และลบสเตตัสเก่า)
+        // 4. ถอดของเก่า (ถ้ามี)
         if (newData.equipment[slot]) {
             const oldItemId = newData.equipment[slot];
             newData.inventory[oldItemId] = (newData.inventory[oldItemId] || 0) + 1;
             
             const oldItem = items[oldItemId];
             if(oldItem.stats) {
-                // วนลูปเพื่อลบค่าทุกอย่างที่ไอเทมให้มา
                 for (const [key, val] of Object.entries(oldItem.stats)) {
                     if (newData[key] !== undefined) newData[key] -= val;
                 }
             }
         }
 
-        // สวมของใหม่
+        // 5. สวมของใหม่
         newData.equipment[slot] = itemId;
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
-        // ✅ บวกสเตตัสใหม่ (แบบอัตโนมัติ ไม่ต้อง if ทีละอัน)
+        // 6. บวกสเตตัสใหม่
         if(item.stats) {
             for (const [key, val] of Object.entries(item.stats)) {
-                // ถ้ายังไม่มีค่านั้นในตัวละคร ให้เริ่มที่ 0
                 if (newData[key] === undefined) newData[key] = 0;
                 newData[key] += val;
             }
@@ -183,6 +192,7 @@ export const GameLogic = {
 
         // ป้องกันเลือดเกิน Max
         newData.hp = Math.min(newData.hp, newData.maxHp);
+        
         return newData;
     },
 

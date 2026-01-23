@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Sarabun:wght@400;700&display=swap');
 
 /* --- Global Layout --- */
+/* --- Global Layout --- */
 body {
     background-color: #1a0f0a;
     background-image: radial-gradient(circle, #2e1e16 0%, #0d0604 100%);
@@ -12,6 +13,20 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+
+    /* ✅ เพิ่มส่วนนี้: ป้องกันการลากคลุมตัวหนังสือทั้งหน้า */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE10+/Edge */
+    user-select: none;         /* Standard */
+}
+
+/* ✅ เพิ่มส่วนนี้: เพื่อให้ช่องกรอกข้อความ (เช่น ชื่อตัวละคร, จำนวนเงิน) ยังพิมพ์ได้ */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 /* --- Top Bar --- */

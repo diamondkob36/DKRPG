@@ -594,12 +594,12 @@ export const UI = {
         const tooltip = document.getElementById('item-tooltip');
         if (!tooltip) return;
 
-        // 1. สร้าง HTML สำหรับ Stats
+        // --- 1. สร้าง HTML สำหรับ Stats (ค่าพลัง) ---
         let statsHTML = '';
         if (item.stats || item.effect || item.buff) {
             statsHTML += '<div class="tooltip-stats">';
             
-            // Stats จากอุปกรณ์
+            // Stats อุปกรณ์
             if (item.stats) {
                 if(item.stats.str) statsHTML += `<span class="stat-str">⚔️ STR +${item.stats.str}</span>`;
                 if(item.stats.int) statsHTML += `<span class="stat-int">🔥 INT +${item.stats.int}</span>`;
@@ -612,7 +612,7 @@ export const UI = {
                 if(item.stats.maxHp) statsHTML += `<span class="stat-str">❤️ HP +${item.stats.maxHp}</span>`;
             }
 
-            // Effect จากยา
+            // Effect ยา
             if (item.effect) {
                 if(item.effect.hp) statsHTML += `<span class="stat-str">❤️ ฟื้นฟู HP ${item.effect.hp}</span>`;
                 if(item.effect.mp) statsHTML += `<span class="stat-int">💧 ฟื้นฟู MP ${item.effect.mp}</span>`;
@@ -627,13 +627,36 @@ export const UI = {
             statsHTML += '</div>';
         }
 
-        // 2. ประกอบร่าง HTML
+        // --- 2. ส่วนแสดงตำแหน่งสวมใส่ (Slot) ---
+        let slotDisplay = '';
+        if (item.type === 'equipment' && item.slot) {
+            // ค้นหาชื่อภาษาไทยจาก equipmentSlots
+            const slotDef = (typeof equipmentSlots !== 'undefined') ? equipmentSlots.find(s => s.id === item.slot) : null;
+            const slotName = slotDef ? slotDef.name : item.slot;
+            
+            slotDisplay = `<div style="font-size:11px; color:#f39c12; margin-top:-2px; margin-bottom: 2px;">📍 สวมใส่: ${slotName}</div>`;
+        }
+
+        // --- 3. (ส่วนที่เพิ่ม) แสดงเงื่อนไขอาชีพ ---
+        let classReqDisplay = '';
+        if (item.allowedClasses) {
+            // แปลง key เป็นชื่อไทย (เช่น 'knight' -> 'อัศวิน')
+            // ต้องมั่นใจว่าตัวแปร classStats ถูก import มาแล้ว
+            const classNames = item.allowedClasses.map(key => {
+                return (typeof classStats !== 'undefined' && classStats[key]) ? classStats[key].name : key;
+            }).join(', ');
+            
+            classReqDisplay = `<div style="font-size:11px; color:#e74c3c; margin-top:2px;">⚠️ เฉพาะ: ${classNames}</div>`;
+        }
+
+        // --- 4. ประกอบร่าง HTML ---
         tooltip.innerHTML = `
             <div class="tooltip-header">
                 <div class="tooltip-icon">${item.icon}</div>
                 <div>
                     <div class="tooltip-title">${item.name}</div>
-                    <div class="tooltip-type">${item.category || item.type}</div>
+                    ${slotDisplay}
+                    ${classReqDisplay} <div class="tooltip-type">${item.category || item.type}</div>
                 </div>
             </div>
             ${statsHTML}
