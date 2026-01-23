@@ -376,21 +376,19 @@ export const UI = {
             const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000));
             
             if (timeLeft > 0) {
-                // --- 🕒 ส่วนคำนวณการแสดงผลเวลา ---
+                // คำนวณเวลา (นาที/วินาที)
                 let timeString = "";
                 if (timeLeft >= 60) {
                     const m = Math.floor(timeLeft / 60);
                     const s = timeLeft % 60;
-                    // ถ้าเหลือ 0 วินาทีท้าย ให้โชว์แค่นาที (เช่น "5m") 
-                    // แต่ถ้ามีเศษวิ ให้โชว์คู่กัน (เช่น "4m 44s")
                     timeString = (s === 0) ? `${m}m` : `${m}m ${s}s`;
                 } else {
                     timeString = `${timeLeft}s`;
                 }
-                // --------------------------------
 
                 const badge = document.createElement('div');
                 badge.className = 'buff-badge';
+                // Style ของกล่องบัพ
                 badge.style.background = 'rgba(255, 255, 255, 0.1)';
                 badge.style.border = '1px solid #f1c40f';
                 badge.style.borderRadius = '4px';
@@ -400,7 +398,40 @@ export const UI = {
                 badge.style.display = 'flex';
                 badge.style.alignItems = 'center';
                 badge.style.gap = '5px';
+                badge.style.cursor = 'help'; // เปลี่ยนเมาส์เป็นเครื่องหมาย ?
                 
+                // ✅ เพิ่ม Custom Tooltip Events ตรงนี้
+                badge.onmouseenter = () => {
+                    const tooltip = document.getElementById('item-tooltip');
+                    if (!tooltip) return;
+                    
+                    // จัดรูปแบบตัวอักษร (เช่น str -> STR)
+                    const typeDisplay = buff.type.toUpperCase();
+                    
+                    // สร้าง HTML สำหรับ Tooltip (ใช้สไตล์เดียวกับไอเทม)
+                    tooltip.innerHTML = `
+                        <div class="tooltip-header">
+                            <div class="tooltip-icon">${buff.icon}</div>
+                            <div>
+                                <div class="tooltip-title">${buff.itemName}</div>
+                                <div class="tooltip-type">สถานะ (Buff)</div>
+                            </div>
+                        </div>
+                        <div class="tooltip-stats">
+                            <span class="stat-special">✨ ${typeDisplay} +${buff.value}</span>
+                        </div>
+                        <div class="tooltip-footer" style="color:#f1c40f;">
+                            ⏳ เหลือเวลา ${timeString}
+                        </div>
+                    `;
+                    tooltip.style.display = 'block';
+                };
+                
+                // สั่งให้ Tooltip ขยับตามเมาส์ และซ่อนเมื่อเมาส์ออก
+                badge.onmousemove = (e) => this.moveTooltip(e);
+                badge.onmouseleave = () => this.hideTooltip();
+
+                // เนื้อหาภายในกล่องบัพ (แสดงแค่นี้พอ)
                 badge.innerHTML = `
                     <span style="font-size:14px;">${buff.icon}</span> 
                     <span>${buff.itemName}</span>
