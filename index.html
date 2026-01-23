@@ -154,17 +154,20 @@
                         <small id="profile-class" style="color:#ccc;">Class</small>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
-                        <div>
-                            <p>❤️ HP: <span id="profile-hp"></span></p>
-                            <p>💧 MP: <span id="profile-mp"></span></p>
-                            <p>⚔️ STR: <span id="profile-str"></span></p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 8px; font-size: 14px;">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span>❤️ HP: <span id="profile-hp" style="color:#fff;">-</span></span>
+                            <span>💧 MP: <span id="profile-mp" style="color:#fff;">-</span></span>
+                            <span>⚔️ STR: <span id="profile-str" style="color:#fff;">-</span></span>
+                            <span>🛡️ DEF: <span id="profile-def" style="color:#fff;">-</span></span> </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span>🔥 INT: <span id="profile-int" style="color:#fff;">-</span></span>
+                            <span>💨 AGI: <span id="profile-agi" style="color:#fff;">-</span></span>
+                            <span>⚖️ นน.: <span id="profile-weight" style="color:#fff;">-</span></span>
                         </div>
-                        <div>
-                            <p>🔥 INT: <span id="profile-int"></span></p>
-                            <p>💨 AGI: <span id="profile-agi"></span></p>
-                            <p>⚖️ นน.: <span id="profile-weight"></span></p>
-                        </div>
+
                     </div>
 
                     <div style="margin-top: 15px;">
@@ -211,7 +214,7 @@
                 <div class="modal-box box">
                     <div class="modal-header">
                         <h2>⚡ อัปเกรดตัวละคร</h2>
-                        <button class="close-btn" onclick="closeUpgradeModal()">✖</button>
+                        <button class="close-btn" onclick="closeUpgradeModal()">✖</button> 
                     </div>
                     
                     <p>แต้มคงเหลือ: <span id="modal-points" style="color: #f1c40f; font-size: 20px; font-weight: bold;">0</span></p>
@@ -245,6 +248,15 @@
                     </div>
 
                     <div class="stat-row">
+                        <span>🛡️ DEF (ป้องกัน)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-def" class="minus-btn" onclick="removeTempStat('def')">-</button>
+                            <b id="modal-def">0</b>
+                            <button id="btn-plus-def" class="plus-btn" onclick="addTempStat('def')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
                         <span>❤️ Max HP (+10)</span>
                         <div class="stat-controls">
                             <button id="btn-minus-hp" class="minus-btn" onclick="removeTempStat('hp')">-</button>
@@ -257,7 +269,9 @@
                         <button class="reset-btn" onclick="resetTempStats()">🔄 รีเซ็ต</button>
                         <button class="confirm-btn" onclick="saveUpgrade()">💾 ยืนยัน</button>
                     </div>
-                </div> </div> <button id="inventory-btn" onclick="openInventory()">
+                </div> 
+            </div>
+            <button id="inventory-btn" onclick="openInventory()">
                 🎒 กระเป๋า
             </button>
 

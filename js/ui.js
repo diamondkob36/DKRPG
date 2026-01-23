@@ -21,13 +21,16 @@ export const UI = {
     // 2. แก้ไข updateGameScreen ให้เรียก renderBuffs
     updateGameScreen(gameData) {
         // --- 1. HUD มุมซ้ายบน (Compact) ---
-        const maxMp = (gameData.int * 10) || 10; // สูตร MP = INT * 10
-        const currentMp = gameData.mp || maxMp;
+        // คำนวณ Max MP (INT * 10)
+        const maxMp = (gameData.int * 10) || 10;
+        const currentMp = gameData.mp || 0; 
 
+        // อัปเดตข้อความทั่วไป
         setText('display-name', gameData.name);
         setText('lvl', gameData.lvl);
         setText('gold', gameData.gold);
         
+        // อัปเดตรูปอาชีพ
         if(gameData.classKey && classStats[gameData.classKey]) {
             const imgSrc = classStats[gameData.classKey].img;
             document.getElementById('hero-img').src = imgSrc;
@@ -35,51 +38,88 @@ export const UI = {
             if(profileImg) profileImg.src = imgSrc;
         }
 
-        // หลอดเลือด
+        // อัปเดตหลอดเลือด (HP)
         const hpPercent = Math.min((gameData.hp / gameData.maxHp) * 100, 100);
         document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
         setText('hp-text', `${gameData.hp}/${gameData.maxHp}`);
 
-        // หลอดมานา
+        // อัปเดตหลอดมานา (MP)
         const mpPercent = Math.min((currentMp / maxMp) * 100, 100);
         const mpBar = document.getElementById('mp-bar-fill');
         if(mpBar) mpBar.style.width = mpPercent + "%";
         setText('mp-text', `${Math.floor(currentMp)}/${maxMp}`);
 
+        // อัปเดตหลอด EXP
         if (gameData.maxExp > 0) {
-        const expPercent = Math.min((gameData.exp / gameData.maxExp) * 100, 100);
-        const expBar = document.getElementById('exp-bar-fill');
-        
-        // อัปเดตความกว้างหลอด
-        if(expBar) expBar.style.width = expPercent + "%";
-        
-        // อัปเดตตัวเลข (แสดงเป็น % หรือ ตัวเลขดิบก็ได้)
-        // แบบตัวเลข: 150/500
-        setText('exp-text', `EXP ${Math.floor(gameData.exp)}/${gameData.maxExp}`);
-        // หรือแบบเปอร์เซ็นต์: EXP 30%
-        // setText('exp-text', `EXP ${Math.floor(expPercent)}%`);
+            const expPercent = Math.min((gameData.exp / gameData.maxExp) * 100, 100);
+            const expBar = document.getElementById('exp-bar-fill');
+            if(expBar) expBar.style.width = expPercent + "%";
+            setText('exp-text', `EXP ${Math.floor(gameData.exp)}/${gameData.maxExp}`);
         }
 
-        // --- 2. Profile Modal (Popup) ---
+        // --- 2. Profile Modal (หน้าข้อมูลตัวละคร) ---
         setText('profile-name', gameData.name);
         setText('profile-class', gameData.className);
+        
+        // Stats หลัก (ในกล่องสีเทา)
         setText('profile-hp', `${gameData.hp}/${gameData.maxHp}`);
         setText('profile-mp', `${Math.floor(currentMp)}/${maxMp}`);
         setText('profile-str', gameData.str);
         setText('profile-int', gameData.int);
         setText('profile-agi', gameData.agi);
         
+        // ✅ ค่าป้องกัน (DEF) ย้ายมาอยู่ตรงนี้
+        setText('profile-def', gameData.def || 0); 
+        
+        // ข้อมูลอื่นๆ
         const usage = GameLogic.getInventoryUsage(gameData);
         setText('profile-weight', `${usage.currentWeight.toFixed(1)}/${usage.limitWeight} kg`);
         
         const points = gameData.statPoints || 0;
         setText('profile-points', points);
         
-        // Upgrade Modal (คงเดิม)
+        // --- 3. อัปเดตหน้าต่าง Upgrade Modal (เผื่อเปิดอยู่) ---
         setText('modal-points', points);
-        ['str', 'int', 'agi', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
+        // ✅ เพิ่ม 'def' ในรายการอัปเดตตัวเลขหน้าอัปเกรด
+        ['str', 'int', 'agi', 'def', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
 
-        // --- 3. เรียกวาด Buffs ---
+        // --- 4. ส่วนแสดงสเตตัสเสริม (Extra Stats) ด้านล่าง ---
+        // ปรับแต่งระยะห่าง (Spacing) ให้สวยงาม
+        const extraStatsHTML = `
+            <div style="grid-column: 1 / -1; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #5d4037; font-size: 13px;">
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                    <span>🛡️ บล็อก (Block): <b style="color:#fff">${gameData.block || 0}%</b></span>
+                    <span>💨 หลบหลีก (Dodge): <b style="color:#2ecc71">${gameData.dodge || 0}%</b></span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                    <span>⚡ คริเรท (Crit): <b style="color:#f1c40f">${gameData.critRate || 0}%</b></span>
+                    <span>💥 คริแรง (Dmg): <b style="color:#e74c3c">${gameData.critDmg || 0}%</b></span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between;">
+                    <span>💢 เจาะเกราะ (Pierce): <b style="color:#9b59b6">${gameData.ignoreBlock || 0}%</b></span>
+                </div>
+            </div>
+        `;
+
+        // Logic แทรก HTML ลงไปต่อท้ายตารางสเตตัสหลัก
+        const statsContainer = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
+        if(statsContainer) {
+             let extraDiv = document.getElementById('extra-stats-display');
+             // ถ้ายังไม่มี div นี้ ให้สร้างใหม่
+             if (!extraDiv) {
+                 extraDiv = document.createElement('div');
+                 extraDiv.id = 'extra-stats-display';
+                 // แทรกต่อจาก Grid เดิม
+                 statsContainer.parentNode.insertBefore(extraDiv, statsContainer.nextSibling);
+             }
+             // อัปเดตเนื้อหา HTML
+             extraDiv.innerHTML = extraStatsHTML;
+        }
+
+        // --- 5. เรียกวาด Buffs ---
         this.renderBuffs(gameData.activeBuffs);
     },
 
@@ -111,17 +151,25 @@ export const UI = {
 
     updateModalOnly(tempData, originalData) {
         setText('modal-points', tempData.statPoints);
-        ['str', 'int', 'agi', 'maxHp'].forEach(k => setText('modal-'+k, tempData[k]));
+        
+        // ✅ 1. เพิ่ม 'def' ในรายการอัปเดตตัวเลข
+        ['str', 'int', 'agi', 'def', 'maxHp'].forEach(k => setText('modal-'+k, tempData[k]));
 
-        const stats = ['str', 'int', 'agi', 'hp'];
+        // ✅ 2. เพิ่ม 'def' ในรายการเช็คปุ่ม
+        const stats = ['str', 'int', 'agi', 'def', 'hp']; 
+        
         stats.forEach(stat => {
             const btnPlus = document.getElementById('btn-plus-' + stat);
             const btnMinus = document.getElementById('btn-minus-' + stat);
             
+            // ปุ่มบวก: โชว์เมื่อมีแต้มเหลือ
             btnPlus.style.display = (tempData.statPoints > 0) ? 'flex' : 'none';
             
+            // เช็คค่าปัจจุบัน vs ค่าตั้งต้น (ถ้า stat เป็น hp ต้องเช็ค maxHp)
             let currentVal = (stat === 'hp') ? tempData.maxHp : tempData[stat];
             let originalVal = (stat === 'hp') ? originalData.maxHp : originalData[stat];
+            
+            // ปุ่มลบ: โชว์เมื่อค่าปัจจุบันมากกว่าค่าตั้งต้น
             btnMinus.style.display = (currentVal > originalVal) ? 'flex' : 'none';
         });
     },

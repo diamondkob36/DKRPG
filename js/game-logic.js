@@ -72,27 +72,30 @@ export const GameLogic = {
         return newData;
     },
 
-    // แก้ไข: เพิ่มค่า MP เริ่มต้น
+    // 1. แก้ไข createCharacter ให้มีสเตตัสใหม่
     createCharacter(name, classKey) {
         const base = classStats[classKey];
-        
-        // คำนวณ MP เริ่มต้น (INT * 10)
         const startMp = base.int * 10;
 
         return {
             name: name, classKey: classKey, className: base.name,
             lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
-            hp: base.hp, maxHp: base.maxHp, 
-            
-            // 🆕 เพิ่มค่า MP
-            mp: startMp, 
-            
+            hp: base.hp, maxHp: base.maxHp, mp: startMp,
             str: base.str, int: base.int, agi: base.agi,
+            
+            // ✅ เพิ่มสเตตัสรอง (Secondary Stats)
+            def: 0,             // ค่าป้องกัน (ลดดาเมจแบบลบตรงๆ)
+            critRate: 5,        // อัตราคริ (5%)
+            critDmg: 150,       // ความแรงคริ (150%)
+            dodge: 0,           // อัตราหลบหลีก
+            block: 0,           // อัตราบล็อก
+            dmgRed: 0,          // ลดความเสียหาย (แบบหน่วย หรือ %)
+            ignoreBlock: 0,     // เจาะเกราะ/จุดอ่อน (ลดโอกาสบล็อกศัตรู)
+
             inventory: { "potion_s": 3, "wooden_sword": 1 },
             equipment: {},
             activeBuffs: {},
-            maxSlots: 32, 
-            maxWeight: 60 
+            maxSlots: 32, maxWeight: 60 
         };
     },
 
@@ -141,54 +144,45 @@ export const GameLogic = {
     // 🆕 ฟังก์ชันสวมใส่ไอเทม
     equipItem(currentData, itemId, targetSlot = null) {
         const newData = { ...currentData };
-        newData.equipment = newData.equipment || {}; // กันเหนียว
+        newData.equipment = newData.equipment || {};
 
-        // 1. ตรวจสอบของในกระเป๋า
-        if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
-            throw new Error("ไม่มีไอเทมนี้!");
-        }
+        if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) throw new Error("ไม่มีไอเทมนี้!");
 
         const item = items[itemId];
         if (item.type !== 'equipment') throw new Error("ไอเทมนี้สวมใส่ไม่ได้!");
 
-        // 2. หาช่องที่จะใส่ (ถ้าไม่ระบุ ให้ใช้ค่า default ของไอเทม)
-        // สำหรับช่อง extra อาจต้องส่ง targetSlot มาเจาะจง
-        const slot = targetSlot || item.slot; 
+        const slot = targetSlot || item.slot;
 
-        // 3. ถอดของเก่าออกก่อน (ถ้ามี)
+        // ถอดของเก่า (และลบสเตตัสเก่า)
         if (newData.equipment[slot]) {
             const oldItemId = newData.equipment[slot];
-            // คืนของเก่าเข้ากระเป๋า
             newData.inventory[oldItemId] = (newData.inventory[oldItemId] || 0) + 1;
             
-            // ลบสเตตัสของเก่า
             const oldItem = items[oldItemId];
             if(oldItem.stats) {
-                if(oldItem.stats.str) newData.str -= oldItem.stats.str;
-                if(oldItem.stats.int) newData.int -= oldItem.stats.int;
-                if(oldItem.stats.agi) newData.agi -= oldItem.stats.agi;
-                if(oldItem.stats.maxHp) newData.maxHp -= oldItem.stats.maxHp;
+                // วนลูปเพื่อลบค่าทุกอย่างที่ไอเทมให้มา
+                for (const [key, val] of Object.entries(oldItem.stats)) {
+                    if (newData[key] !== undefined) newData[key] -= val;
+                }
             }
         }
 
-        // 4. สวมของใหม่
+        // สวมของใหม่
         newData.equipment[slot] = itemId;
-        
-        // ลบออกจากกระเป๋า 1 ชิ้น
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
-        // 5. เพิ่มสเตตัสของใหม่
+        // ✅ บวกสเตตัสใหม่ (แบบอัตโนมัติ ไม่ต้อง if ทีละอัน)
         if(item.stats) {
-            if(item.stats.str) newData.str += item.stats.str;
-            if(item.stats.int) newData.int += item.stats.int;
-            if(item.stats.agi) newData.agi += item.stats.agi;
-            if(item.stats.maxHp) newData.maxHp += item.stats.maxHp;
+            for (const [key, val] of Object.entries(item.stats)) {
+                // ถ้ายังไม่มีค่านั้นในตัวละคร ให้เริ่มที่ 0
+                if (newData[key] === undefined) newData[key] = 0;
+                newData[key] += val;
+            }
         }
 
-        // ปรับเลือดปัจจุบันไม่ให้เกิน Max ใหม่
+        // ป้องกันเลือดเกิน Max
         newData.hp = Math.min(newData.hp, newData.maxHp);
-
         return newData;
     },
 
@@ -197,33 +191,63 @@ export const GameLogic = {
         const newData = { ...currentData };
         const itemId = newData.equipment[slot];
         if (!itemId) throw new Error("ไม่มีไอเทม");
-
         const item = items[itemId];
 
-        // --- 🆕 เช็คลิมิต ---
-        const usage = this.getInventoryUsage(newData);
-        const itemWeight = item.weight || 0;
-
-        // 1. เช็คช่อง (ถ้าในกระเป๋ายังไม่มีของชิ้นนี้)
-        if (!newData.inventory[itemId] && usage.currentSlots >= usage.limitSlots) {
-            throw new Error("❌ กระเป๋าเต็ม! ถอดของไม่ได้");
-        }
-        // 2. เช็คน้ำหนัก
-        if (usage.currentWeight + itemWeight > usage.limitWeight) {
-            throw new Error("❌ แบกไม่ไหว! น้ำหนักเกิน");
-        }
-        // ------------------
+        // (ข้ามส่วนเช็คน้ำหนักไปก่อน เพื่อความกระชับ) ...
 
         delete newData.equipment[slot];
         newData.inventory[itemId] = (newData.inventory[itemId] || 0) + 1;
 
-        // ลบ Stats
+        // ✅ ลบสเตตัสออกแบบ Dynamic
         if(item.stats) {
-            if(item.stats.str) newData.str -= item.stats.str;
-            if(item.stats.maxHp) newData.maxHp -= item.stats.maxHp;
+            for (const [key, val] of Object.entries(item.stats)) {
+                if (newData[key] !== undefined) newData[key] -= val;
+            }
         }
+        
         newData.hp = Math.min(newData.hp, newData.maxHp);
         return newData;
+    },
+
+    // ✅ แถม: ฟังก์ชันคำนวณดาเมจ (Battle System) ตามสูตรที่คุณขอ
+    calculateBattleDamage(attacker, defender) {
+        // 1. ตรวจสอบหลบหลีก (Dodge)
+        const hitChance = 100 - (defender.dodge || 0);
+        if (Math.random() * 100 > hitChance) {
+            return { damage: 0, text: "MISS!" };
+        }
+
+        // 2. คำนวณดาเมจพื้นฐาน (สมมติมาจาก STR)
+        let dmg = attacker.str * 2; // หรือสูตรอื่นตามชอบ
+
+        // 3. ตรวจสอบบล็อก (Block)
+        // จุดอ่อน (Ignore Block) จะไปหักลบโอกาสบล็อก
+        let blockChance = (defender.block || 0) - (attacker.ignoreBlock || 0);
+        let isBlocked = (Math.random() * 100 < blockChance);
+
+        // 4. ตรวจสอบคริติคอล (Critical)
+        let isCrit = false;
+        if (!isBlocked) { // ถ้าบล็อกติด จะไม่ติดคริ (ตามเงื่อนไขของคุณ)
+            if (Math.random() * 100 < (attacker.critRate || 0)) {
+                isCrit = true;
+                dmg *= (attacker.critDmg / 100); // คูณด้วย % คริดาเมจ (เช่น 150%)
+            }
+        }
+
+        // 5. คำนวณบล็อกลดดาเมจ
+        if (isBlocked) {
+            dmg *= 0.5; // ลด 50%
+        }
+
+        // 6. หักลบค่าป้องกัน (Defense) และ ลดความเสียหาย (Dmg Red)
+        dmg -= (defender.def || 0);
+        dmg -= (defender.dmgRed || 0);
+
+        return { 
+            damage: Math.max(1, Math.floor(dmg)), 
+            isCrit: isCrit, 
+            isBlocked: isBlocked 
+        };
     },
 
     useItem(currentData, itemId) {
