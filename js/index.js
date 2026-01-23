@@ -267,16 +267,41 @@ window.switchInventoryTab = (category) => {
     UI.renderInventoryGridOnly(gameData.inventory, category); 
 };
 // 3. สวมใส่ไอเทม
-window.equipItem = async (itemId) => {
+window.equipItem = (itemId) => {
+    // ✅ แก้ไข 1: เช็คก่อนเลยว่ามีของไหม? (ป้องกันการกดเบิ้ลแล้ว error)
+    if (!gameData.inventory[itemId] || gameData.inventory[itemId] <= 0) {
+        return; // ถ้าไม่มีของ (เช่น เพิ่งใส่ไปตะกี้) ให้จบเงียบๆ ไม่ต้อง error
+    }
+
     try {
+        // พยายามสวมใส่
         gameData = GameLogic.equipItem(gameData, itemId);
+        saveGame();
         
-        // อัปเดตหน้าจอทั้งหมด
-        UI.renderInventoryModal(gameData, currentInvCategory); // รีเฟรช Modal
-        UI.updateGameScreen(gameData); // รีเฟรช HUD สเตตัส
-        await saveToFirebase();
+        // อัปเดตหน้าจอ
+        UI.updateGameScreen(gameData);
         
-    } catch (e) { alert(e.message); }
+        // รีเฟรชหน้ากระเป๋า (ถ้าเปิดอยู่)
+        if(document.getElementById('inventory-modal') && document.getElementById('inventory-modal').style.display !== 'none') {
+            // เช็คว่าอยู่แท็บไหน เพื่อรีเฟรชให้ถูกหน้า
+            let currentTab = 'all';
+            const activeBtn = document.querySelector('.shop-tab-btn.active');
+            if (activeBtn) {
+                if (activeBtn.innerText.includes('อาวุธ')) currentTab = 'weapon';
+                else if (activeBtn.innerText.includes('เกราะ')) currentTab = 'armor';
+                else if (activeBtn.innerText.includes('ยา')) currentTab = 'potion';
+            }
+            UI.renderInventoryModal(gameData, currentTab);
+        }
+
+    } catch (err) {
+        // ✅ แก้ไข 2: ใช้ Popup แจ้งเตือนสวยๆ (ถ้าใส่โค้ด Popup ไปแล้ว)
+        if (typeof UI.alert === 'function') {
+            UI.alert("🚫 สวมใส่ไม่ได้", `<span style="color:#e74c3c;">${err.message}</span>`);
+        } else {
+            alert(err.message); // ถ้ายังไม่มีระบบ Popup ใช้ alert ธรรมดาไปก่อน
+        }
+    }
 };
 
 // 4. ถอดไอเทม

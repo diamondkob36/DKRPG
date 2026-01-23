@@ -381,3 +381,20 @@
     border-top: 1px dashed #444;
     padding-top: 5px;
 }
+
+/* เพิ่ม Animation ให้ Modal ตอนเด้งขึ้นมา */
+@keyframes modalPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* นำ Animation ไปใช้กับกล่อง Modal */
+.modal-box {
+    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* เด้งดึ๋งเล็กน้อย */
+}
+
+/* จัดสไตล์ข้อความ Error ใน Popup ให้เด่น */
+#popup-message span {
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
