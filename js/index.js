@@ -698,33 +698,77 @@ function checkWinCondition() {
 function updateBattleUI() {
     if (!battleState) return;
 
-    // เวลา & เทิร์น
-    const turnText = document.getElementById('turn-indicator');
-    if(turnText) {
-        turnText.innerText = (battleState.turn === 'player') ? "YOUR TURN" : "ENEMY TURN";
-        turnText.style.color = (battleState.turn === 'player') ? "#2ecc71" : "#e74c3c";
+    // --- 1. Header & Timer ---
+    const turnBadge = document.getElementById('turn-badge');
+    if(turnBadge) {
+        turnBadge.innerText = (battleState.turn === 'player') ? "YOUR TURN" : "ENEMY TURN";
+        turnBadge.className = `turn-badge ${battleState.turn}`;
     }
     
-    const timerText = document.getElementById('battle-timer-text');
-    if(timerText) timerText.innerText = battleState.timeLeft;
-    
-    const timerBar = document.getElementById('battle-timer-bar');
-    if(timerBar) timerBar.style.width = (battleState.timeLeft / 15 * 100) + "%";
+    document.getElementById('battle-timer-text').innerText = battleState.timeLeft;
+    document.getElementById('battle-timer-bar').style.width = (battleState.timeLeft / 15 * 100) + "%";
 
-    // ฝั่งผู้เล่น
+    // --- 2. Player Status ---
     document.getElementById('battle-player-name').innerText = gameData.name;
-    document.getElementById('battle-player-hp').style.width = Math.max(0, (gameData.hp / gameData.maxHp * 100)) + "%";
+    
+    // HP
+    const pHpPct = Math.max(0, (gameData.hp / gameData.maxHp * 100));
+    document.getElementById('battle-player-hp').style.width = pHpPct + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    const mpBar = document.getElementById('battle-player-mp');
-    if(mpBar) mpBar.style.width = Math.max(0, (gameData.mp / (gameData.int * 10) * 100)) + "%"; // สมมติ MaxMP = Int*10
+    // ✅ MP (เพิ่มมาใหม่)
+    const maxMp = (gameData.int * 10) || 10;
+    const pMpPct = Math.max(0, (gameData.mp / maxMp * 100));
+    document.getElementById('battle-player-mp').style.width = pMpPct + "%";
+    document.getElementById('battle-player-mp-text').innerText = `${Math.floor(gameData.mp)}/${maxMp}`;
 
-    // ฝั่งมอนสเตอร์
+    // ✅ Render รูปตัวละคร (ถ้ามี classStats)
+    // (ต้อง import classStats มาใช้ด้วย หรือดึงจาก UI ถ้ามี)
+    // document.getElementById('battle-player-img').src = ... 
+
+    // --- 3. Monster Status ---
     const mon = battleState.monster;
     document.getElementById('battle-monster-name').innerText = mon.name;
     document.getElementById('monster-img').innerText = (mon.id === 'dummy') ? '🪵' : '👾';
-    document.getElementById('battle-monster-hp').style.width = Math.max(0, (mon.hp / mon.maxHp * 100)) + "%";
+    
+    const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
+    document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
     document.getElementById('battle-monster-hp-text').innerText = `${mon.hp}/${mon.maxHp}`;
+
+    // --- 4. Cooldown Check ---
+    const now = Date.now();
+    const cooldowns = gameData.skillCooldowns || {};
+    
+    for (const [id, skill] of Object.entries(skills)) {
+        const btn = document.getElementById(`btn-skill-${id}`);
+        if (btn) {
+            const readyTime = cooldowns[id] || 0;
+            if (now < readyTime) {
+                btn.classList.add('cooldown');
+            } else {
+                btn.classList.remove('cooldown');
+            }
+        }
+    }
+
+    // --- 5. Render Buffs (เรียก UI.renderBuffs แต่เปลี่ยน container) ---
+    // สร้างฟังก์ชัน renderBattleBuffs แยก หรือใช้ของเดิมแต่ชี้ไปที่ #battle-buffs
+    // เพื่อความง่าย เดี๋ยวเขียน logic วาด buff แบบย่อตรงนี้เลย
+    const buffDiv = document.getElementById('battle-buffs');
+    if (buffDiv) {
+        buffDiv.innerHTML = '';
+        if (gameData.activeBuffs) {
+            for (const [k, buff] of Object.entries(gameData.activeBuffs)) {
+                if (buff.expiresAt > now) {
+                    const icon = document.createElement('div');
+                    icon.innerHTML = buff.icon;
+                    icon.title = `${buff.itemName} (${Math.ceil((buff.expiresAt - now)/1000)}s)`;
+                    icon.style.cssText = "background:rgba(0,0,0,0.5); border:1px solid gold; border-radius:4px; width:24px; height:24px; display:flex; justify-content:center; align-items:center; font-size:14px; cursor:help;";
+                    buffDiv.appendChild(icon);
+                }
+            }
+        }
+    }
 }
 
 // Helper: Log
@@ -761,3 +805,72 @@ window.openSkillMenu = () => {
         }
     }
 };
+
+window.startBattle = (monsterId, bgImage = null) => {
+    // ต้องมี monsters import เข้ามาแล้วถึงจะทำงานได้
+    const monsterTemplate = monsters[monsterId];
+    if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
+
+    // ✅ ตั้งค่าพื้นหลัง (ถ้ามีส่งมา) หรือใช้ค่า Default
+    const battleScreen = document.getElementById('battle-screen');
+    if (bgImage) {
+        battleScreen.style.backgroundImage = `url('${bgImage}')`;
+    } else {
+        // Default Background (เช่น ลานฝึก)
+        battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
+    }
+
+    // สร้าง State การต่อสู้
+    battleState = {
+        turn: 'player', 
+        timeLeft: 15,
+        monster: { ...monsterTemplate }, 
+        logs: []
+    };
+
+    UI.showScreen('battle-screen');
+    
+    // ✅ เรียกฟังก์ชันวาดสกิลครั้งแรก (เตรียมไว้ก่อน)
+    renderBattleSkills();
+    
+    updateBattleUI();
+    runBattleTimer();
+};
+
+function renderBattleSkills() {
+    const grid = document.getElementById('battle-skills-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    // วนลูปสกิลทั้งหมด (จริงๆ ควรเช็คว่าผู้เล่นเรียนรึยัง)
+    for (const [id, skill] of Object.entries(skills)) {
+        if (!skill.classReq || skill.classReq === gameData.classKey) {
+            
+            const slot = document.createElement('div');
+            slot.className = 'battle-skill-slot';
+            slot.innerHTML = `
+                <div>${skill.icon}</div>
+                <div class="skill-cost">${skill.mpCost}</div>
+            `;
+            
+            // ใช้ Tooltip เดิมที่มีอยู่
+            UI.bindTooltip(slot, {
+                name: skill.name,
+                desc: skill.desc,
+                type: "Skill",
+                icon: skill.icon,
+                price: "0",
+                buff: skill.buff,
+                effect: skill.effect
+            });
+
+            // กดใช้สกิล
+            slot.onclick = () => window.battleAction('skill', id);
+            
+            // เช็ค ID เพื่อใช้สำหรับ update state (cooldown) ทีหลัง
+            slot.id = `btn-skill-${id}`;
+
+            grid.appendChild(slot);
+        }
+    }
+}
