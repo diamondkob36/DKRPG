@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/battle_screen.css">
 </head>
 <body>
 
@@ -65,7 +66,7 @@
         <div id="game-map-container">
             <img src="image/world_map.png" alt="World Map" id="world-map-img">
 
-            <div class="map-zone" id="zone-train" onclick="train()">
+            <div class="map-zone" id="zone-train" onclick="startBattle('dummy')">
                 <span class="zone-icon">⚔️</span>
                 <span class="zone-label">ลานฝึกฝน</span>
             </div>
@@ -314,7 +315,56 @@
                 </div>
             </div>
         </div> 
-    </div> 
+    </div>
+    
+    <div id="battle-screen" class="screen-container" style="display:none; background-color: #000;">
+        <div class="box" style="width: 100%; max-width: 600px; padding: 10px;">
+            
+            <div id="battle-header">
+                <h2 id="turn-indicator" style="color: #f1c40f;">TURN: PLAYER</h2>
+                <div class="timer-bar-bg">
+                    <div id="battle-timer-bar"></div>
+                </div>
+                <p>เวลาเหลือ: <span id="battle-timer-text">15</span> วินาที</p>
+            </div>
+
+            <hr>
+
+            <div class="battle-arena">
+                <div class="fighter-box">
+                    <span style="font-size:50px;">🛡️</span> <p id="battle-player-name">Player</p>
+                    <div class="bar-container"><div id="battle-player-hp" class="bar-fill hp"></div></div>
+                    <small id="battle-player-hp-text">100/100</small>
+                    <div class="bar-container" style="margin-top:2px;"><div id="battle-player-mp" class="bar-fill mp"></div></div>
+                </div>
+
+                <div style="font-size:30px;">VS</div>
+
+                <div class="fighter-box">
+                    <span id="monster-img" style="font-size:50px;">🪵</span> <p id="battle-monster-name">Dummy</p>
+                    <div class="bar-container"><div id="battle-monster-hp" class="bar-fill hp"></div></div>
+                    <small id="battle-monster-hp-text">500/500</small>
+                </div>
+            </div>
+
+            <hr>
+
+            <div id="battle-actions">
+                <button onclick="battleAction('attack')" class="battle-btn">⚔️ โจมตี</button>
+                <button onclick="openSkillMenu()" class="battle-btn">✨ สกิล</button>
+                <button onclick="battleAction('run')" class="battle-btn" style="background: #c0392b;">🏃 หนี</button>
+            </div>
+
+            <div id="battle-skill-panel" style="display:none; margin-top:10px;">
+                </div>
+            
+            <div id="battle-log" style="height: 60px; overflow-y: auto; background: rgba(0,0,0,0.3); font-size: 12px; padding: 5px; text-align: left; margin-top: 10px;">
+                เริ่มการต่อสู้...
+            </div>
+
+        </div>
+    </div>
+
     <div id="custom-popup" class="modal-overlay" style="display: none; z-index: 3000;">
         <div class="modal-box box" style="width: 350px;">
             <h2 id="popup-title">แจ้งเตือน</h2>

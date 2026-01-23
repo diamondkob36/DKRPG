@@ -1,7 +1,7 @@
 // js/ui.js (ฉบับแก้ไข: แก้บั๊กเปิดกระเป๋าไม่ได้ + ป้องกันข้อมูล Null)
 
 // 👇 1. ต้องมี equipmentSlots ในบรรทัด import นี้!
-import { classStats, items, equipmentSlots } from "./gameData.js";
+import { classStats, items, equipmentSlots, skills } from "./gameData.js";
 import { GameLogic } from "./game-logic.js";
 
 export const UI = {
@@ -743,6 +743,60 @@ export const UI = {
     hideTooltip() {
         const tooltip = document.getElementById('item-tooltip');
         if (tooltip) tooltip.style.display = 'none';
+    },
+
+    // 🆕 ฟังก์ชันวาดปุ่มสกิล
+    renderSkillBar(gameData) {
+        const container = document.getElementById('skill-bar');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const now = Date.now();
+        const cooldowns = gameData.skillCooldowns || {};
+
+        // วนลูปหาเฉพาะสกิลของอาชีพเรา
+        for (const [skillId, skill] of Object.entries(skills)) {
+            if (skill.classReq === gameData.classKey) {
+                
+                const btn = document.createElement('div');
+                btn.className = 'skill-btn';
+                
+                // เช็ค Cooldown
+                const readyTime = cooldowns[skillId] || 0;
+                const isCooldown = now < readyTime;
+                const timeLeft = isCooldown ? Math.ceil((readyTime - now) / 1000) : 0;
+
+                // HTML ภายในปุ่ม
+                let content = `<span class="skill-icon">${skill.icon}</span>`;
+                content += `<div class="mp-cost-badge">${skill.mpCost} MP</div>`;
+
+                if (isCooldown) {
+                    btn.classList.add('cooldown');
+                    // คำนวณความสูงของ Overlay ตามเวลาที่เหลือ (ลูกเล่นกราฟิก)
+                    const totalCd = skill.cooldown;
+                    const percent = (timeLeft / totalCd) * 100;
+                    content += `<div class="cooldown-overlay" style="height:${percent}%">${timeLeft}</div>`;
+                } else {
+                    btn.onclick = () => window.useSkill(skillId); // เรียกใช้ฟังก์ชัน Global
+                }
+
+                btn.innerHTML = content;
+
+                // เพิ่ม Tooltip
+                this.bindTooltip(btn, {
+                    name: skill.name,
+                    desc: skill.desc,
+                    type: "Skill",
+                    icon: skill.icon,
+                    price: "0", // ไม่แสดงราคา
+                    weight: null,
+                    effect: skill.effect, 
+                    buff: skill.buff
+                });
+
+                container.appendChild(btn);
+            }
+        }
     },
 };
 

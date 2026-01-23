@@ -1,5 +1,5 @@
 // js/game-logic.js (ฉบับแก้ไขสมบูรณ์)
-import { classStats, items } from "./gameData.js";
+import { classStats, items, skills } from "./gameData.js";
 
 export const GameLogic = {
     calculateMaxExp(lvl) {
@@ -482,5 +482,73 @@ export const GameLogic = {
         
         newData.gold += totalGain;
         return { newData, totalGain, soldCount };
-    }
+    },
+    // 🆕 ฟังก์ชันกดใช้สกิล
+    useSkill(currentData, skillId) {
+        const newData = { ...currentData };
+        const skill = skills[skillId];
+        
+        if (!skill) throw new Error("ไม่พบสกิล!");
+
+        // 1. เช็คอาชีพ
+        if (skill.classReq && skill.classReq !== newData.classKey) {
+            throw new Error(`อาชีพของคุณใช้สกิลนี้ไม่ได้ (ต้องการ ${skill.classReq})`);
+        }
+
+        // 2. เช็ค MP
+        if ((newData.mp || 0) < skill.mpCost) {
+            throw new Error("MP ไม่พอ!");
+        }
+
+        // 3. เช็ค Cooldown
+        const now = Date.now();
+        newData.skillCooldowns = newData.skillCooldowns || {}; // สร้างถังเก็บ Cooldown ถ้ายังไม่มี
+        const readyTime = newData.skillCooldowns[skillId] || 0;
+
+        if (now < readyTime) {
+            const waitSec = Math.ceil((readyTime - now) / 1000);
+            throw new Error(`สกิลยังไม่พร้อม (เหลือ ${waitSec} วิ)`);
+        }
+
+        // --- ผ่านทุกเงื่อนไข เริ่มร่ายสกิล ---
+        
+        // หัก MP
+        newData.mp -= skill.mpCost;
+
+        // ตั้ง Cooldown ใหม่
+        newData.skillCooldowns[skillId] = now + (skill.cooldown * 1000);
+
+        // แสดงผลสกิล (Effect: ฟื้นฟูทันที)
+        if (skill.effect) {
+            if (skill.effect.hp) newData.hp = Math.min(newData.hp + skill.effect.hp, newData.maxHp);
+            if (skill.effect.mp) newData.mp = Math.min(newData.mp + skill.effect.mp, (newData.int * 10));
+        }
+
+        // แสดงผลสกิล (Buff: เพิ่มสถานะชั่วคราว)
+        if (skill.buff) {
+            const buffKey = `skill_${skill.id}`;
+            const expireTime = now + (skill.buff.duration * 1000);
+
+            newData.activeBuffs = newData.activeBuffs || {};
+            
+            // ถ้ามีบัพเดิมอยู่ ให้ลบค่าเก่าออกก่อน (กันทับซ้อน)
+            if (newData.activeBuffs[buffKey]) {
+                newData[skill.buff.type] -= newData.activeBuffs[buffKey].value;
+            }
+
+            // บวกค่าใหม่เข้าไป
+            newData[skill.buff.type] = (newData[skill.buff.type] || 0) + skill.buff.value;
+
+            // บันทึกลงรายการ Active Buffs
+            newData.activeBuffs[buffKey] = {
+                itemName: skill.name,
+                type: skill.buff.type,
+                value: skill.buff.value,
+                expiresAt: expireTime,
+                icon: skill.icon
+            };
+        }
+
+        return newData;
+    },
 };

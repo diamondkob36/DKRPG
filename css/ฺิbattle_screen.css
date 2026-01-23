@@ -1,0 +1,28 @@
+/* --- Battle Screen --- */
+.battle-arena {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px 0;
+}
+.fighter-box {
+    width: 40%;
+    text-align: center;
+}
+.timer-bar-bg {
+    width: 100%; height: 10px; background: #333;
+    border-radius: 5px; overflow: hidden; margin: 5px 0;
+}
+#battle-timer-bar {
+    width: 100%; height: 100%; background: #f1c40f;
+    transition: width 1s linear; /* ให้หลอดลดลงแบบสมูท */
+}
+.battle-btn {
+    width: 30%; padding: 15px 0; font-size: 16px;
+}
+
+/* Animation แจ้งเตือนเทิร์น */
+.turn-alert {
+    animation: blink 0.5s alternate infinite;
+}
+@keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }

@@ -103,7 +103,8 @@ export const items = {
         name: "ดาบไม้", icon: "🗡️", desc: "ดาบฝึกหัด (Atk +2)",
         type: "equipment", category: "weapon", slot: "main_hand", 
         price: 100, sellPrice: 20, weight: 2.0, inShop: true,
-        stats: { str: 2 }
+        stats: { str: 2 },
+        allowedClasses: ['knight'] 
     },
     novice_dagger: {
         id: "novice_dagger",
@@ -191,6 +192,69 @@ export const items = {
         name: "เขี้ยวหมาป่า", icon: "🐺", desc: "เขี้ยวแหลมคม",
         type: "material", category: "loot", 
         price: 0, sellPrice: 30, weight: 0.1, inShop: false
+    }
+};
+
+export const skills = {
+    // --- 🛡️ สกิลของ Knight ---
+    knight_bash: {
+        id: "knight_bash", name: "Heavy Bash", icon: "💥",
+        desc: "เพิ่มพลังโจมตี (STR +10) นาน 30 วิ",
+        mpCost: 10, cooldown: 60,
+        classReq: "knight",
+        buff: { type: "str", value: 10, duration: 30 }
+    },
+    knight_fortify: {
+        id: "knight_fortify", name: "Iron Skin", icon: "🛡️",
+        desc: "ผิวเหล็กไหล (DEF +5) นาน 45 วิ",
+        mpCost: 15, cooldown: 90,
+        classReq: "knight",
+        buff: { type: "def", value: 5, duration: 45 }
+    },
+
+    // --- 🔮 สกิลของ Mage ---
+    mage_heal: {
+        id: "mage_heal", name: "Minor Heal", icon: "✨",
+        desc: "ฟื้นฟู HP 50 หน่วย",
+        mpCost: 20, cooldown: 30,
+        classReq: "mage",
+        effect: { hp: 50 } // ผลทันที (Instant)
+    },
+    mage_meditate: {
+        id: "mage_meditate", name: "Focus", icon: "🧘",
+        desc: "รวบรวมสมาธิ (INT +15) นาน 20 วิ",
+        mpCost: 0, cooldown: 120,
+        classReq: "mage",
+        buff: { type: "int", value: 15, duration: 20 }
+    },
+
+    // --- 🗡️ สกิลของ Rogue ---
+    rogue_sprint: {
+        id: "rogue_sprint", name: "Sprint", icon: "💨",
+        desc: "เร่งความเร็ว (AGI +10) นาน 30 วิ",
+        mpCost: 10, cooldown: 45,
+        classReq: "rogue",
+        buff: { type: "agi", value: 10, duration: 30 }
+    },
+    rogue_sharpen: {
+        id: "rogue_sharpen", name: "Sharpen", icon: "🔪",
+        desc: "ลับมีด (Crit +10%) นาน 60 วิ",
+        mpCost: 15, cooldown: 90,
+        classReq: "rogue",
+        buff: { type: "critRate", value: 10, duration: 60 }
+    }
+};
+
+export const monsters = {
+    dummy: {
+        id: "dummy", name: "หุ่นซ้อม", img: "image/dummy.png", // หาภาพมาใส่ หรือใช้ Emoji แทนได้
+        hp: 500, maxHp: 500,
+        atk: 5, def: 0, exp: 50, gold: 10
+    },
+    slime: {
+        id: "slime", name: "สไลม์", img: "image/slime.png",
+        hp: 100, maxHp: 100,
+        atk: 10, def: 2, exp: 20, gold: 15
     }
 };
 
