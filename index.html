@@ -316,34 +316,35 @@
             </div>
         </div> 
     </div>
-    
-    <div id="battle-screen" class="screen-container" style="display:none; background-color: #000;">
+
+    <div id="battle-screen" class="screen-container" style="display:none; background-color: #000; color: #fff;">
         <div class="box" style="width: 100%; max-width: 600px; padding: 10px;">
             
             <div id="battle-header">
                 <h2 id="turn-indicator" style="color: #f1c40f;">TURN: PLAYER</h2>
-                <div class="timer-bar-bg">
-                    <div id="battle-timer-bar"></div>
+                <div class="timer-bar-bg" style="width: 100%; height: 10px; background: #333; margin: 5px 0;">
+                    <div id="battle-timer-bar" style="width: 100%; height: 100%; background: #f1c40f;"></div>
                 </div>
                 <p>เวลาเหลือ: <span id="battle-timer-text">15</span> วินาที</p>
             </div>
 
             <hr>
 
-            <div class="battle-arena">
-                <div class="fighter-box">
-                    <span style="font-size:50px;">🛡️</span> <p id="battle-player-name">Player</p>
+            <div class="battle-arena" style="display: flex; justify-content: space-around; align-items: center; margin: 20px 0;">
+                <div class="fighter-box" style="text-align: center;">
+                    <span style="font-size:50px;">🛡️</span>
+                    <p id="battle-player-name">Player</p>
                     <div class="bar-container"><div id="battle-player-hp" class="bar-fill hp"></div></div>
                     <small id="battle-player-hp-text">100/100</small>
-                    <div class="bar-container" style="margin-top:2px;"><div id="battle-player-mp" class="bar-fill mp"></div></div>
                 </div>
 
                 <div style="font-size:30px;">VS</div>
 
-                <div class="fighter-box">
-                    <span id="monster-img" style="font-size:50px;">🪵</span> <p id="battle-monster-name">Dummy</p>
+                <div class="fighter-box" style="text-align: center;">
+                    <span id="monster-img" style="font-size:50px;">👾</span>
+                    <p id="battle-monster-name">Monster</p>
                     <div class="bar-container"><div id="battle-monster-hp" class="bar-fill hp"></div></div>
-                    <small id="battle-monster-hp-text">500/500</small>
+                    <small id="battle-monster-hp-text">100/100</small>
                 </div>
             </div>
 
@@ -355,13 +356,10 @@
                 <button onclick="battleAction('run')" class="battle-btn" style="background: #c0392b;">🏃 หนี</button>
             </div>
 
-            <div id="battle-skill-panel" style="display:none; margin-top:10px;">
-                </div>
-            
+            <div id="battle-skill-panel" style="display:none; margin-top:10px;"></div>
             <div id="battle-log" style="height: 60px; overflow-y: auto; background: rgba(0,0,0,0.3); font-size: 12px; padding: 5px; text-align: left; margin-top: 10px;">
                 เริ่มการต่อสู้...
             </div>
-
         </div>
     </div>
 

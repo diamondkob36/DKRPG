@@ -3,7 +3,7 @@
 import { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut } from "./firebase-init.js";
 import { GameLogic } from "./game-logic.js"; // 🧠 นำเข้าสมอง
 import { UI } from "./ui.js";                // 🎨 นำเข้าหน้าตา
-import { items } from "./gameData.js";
+import { items, monsters, skills } from "./gameData.js";
 
 let currentUser = null;
 let gameData = {}; 
@@ -539,38 +539,34 @@ window.useSkill = async (skillId) => {
     }
 };
 
-// 1. เริ่มการต่อสู้ (กดจากลานฝึก)
+// 1. เริ่มการต่อสู้
 window.startBattle = (monsterId) => {
+    // ต้องมี monsters import เข้ามาแล้วถึงจะทำงานได้
     const monsterTemplate = monsters[monsterId];
-    if (!monsterTemplate) return alert("ไม่พบมอนสเตอร์");
+    if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
 
-    // สร้างข้อมูลการต่อสู้ชั่วคราว
+    // สร้าง State การต่อสู้
     battleState = {
-        turn: 'player', // player หรือ enemy
+        turn: 'player', 
         timeLeft: 15,
-        monster: { ...monsterTemplate }, // Copy ข้อมูลมอนสเตอร์มา
+        monster: { ...monsterTemplate }, // Copy ข้อมูลมากันค่าเพี้ยน
         logs: []
     };
 
-    // เปิดหน้าจอ
     UI.showScreen('battle-screen');
     updateBattleUI();
-    
-    // เริ่มนับเวลา
     runBattleTimer();
 };
 
-// 2. ตัวนับเวลา (Loop)
+// 2. ตัวนับเวลา
 function runBattleTimer() {
     if (battleTimer) clearInterval(battleTimer);
-
     battleTimer = setInterval(() => {
         if (!battleState) return clearInterval(battleTimer);
 
         battleState.timeLeft--;
         updateBattleUI();
 
-        // หมดเวลาเทิร์น
         if (battleState.timeLeft <= 0) {
             switchTurn();
         }
@@ -581,47 +577,46 @@ function runBattleTimer() {
 function switchTurn() {
     if (!battleState) return;
 
-    // เปลี่ยนฝั่ง
     battleState.turn = (battleState.turn === 'player') ? 'enemy' : 'player';
-    battleState.timeLeft = 15; // รีเซ็ตเวลา
+    battleState.timeLeft = 15;
 
-    // แจ้งเตือน
     const turnName = (battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!";
     logBattle(`⏳ เปลี่ยนเทิร์น: ${turnName}`);
     
-    // ถ้าเป็นตา ศัตรู ให้มันโจมตีอัตโนมัติ (หน่วงเวลานิดนึงให้เหมือนคิด)
+    // ถ้าเป็นตา AI ให้มันตีเรา
     if (battleState.turn === 'enemy') {
         setTimeout(monsterAttack, 1000);
     }
-
     updateBattleUI();
 }
 
-// 4. การกระทำของผู้เล่น
+// 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
 window.battleAction = async (action, skillId = null) => {
-    // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
     if (!battleState || battleState.turn !== 'player') return;
 
     if (action === 'attack') {
-        // คำนวณดาเมจพื้นฐาน (STR * 2)
+        // โจมตีปกติ
         const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
         battleState.monster.hp -= dmg;
         logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
         checkWinCondition();
-        switchTurn(); // จบเทิร์นเรา
+        switchTurn(); 
 
     } else if (action === 'skill') {
-        // Logic ใช้สกิล (แบบย่อ)
+        // ใช้สกิล (ต้องมี skills import เข้ามา)
         const skill = skills[skillId];
+        if (!skill) return;
+
         if (gameData.mp < skill.mpCost) return alert("MP ไม่พอ!");
         
         gameData.mp -= skill.mpCost;
-        // ตัวอย่าง: ถ้าเป็นสกิลโจมตี
+
+        // ตัวอย่างสกิลโจมตี
         if (skill.effect && skill.effect.damage) {
             battleState.monster.hp -= skill.effect.damage;
             logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
         }
-        // ... (ใส่ Logic บัพตรงนี้เพิ่มได้) ...
+        // (สามารถเพิ่ม Logic สกิลบัพตรงนี้ได้)
         
         checkWinCondition();
         switchTurn();
@@ -630,11 +625,11 @@ window.battleAction = async (action, skillId = null) => {
         clearInterval(battleTimer);
         battleState = null;
         logBattle("🏃 คุณหนีจากการต่อสู้!");
-        setTimeout(() => UI.showScreen('game-screen'), 1000);
+        setTimeout(() => UI.showScreen('game-screen'), 500);
     }
 };
 
-// 5. มอนสเตอร์โจมตี
+// 5. มอนสเตอร์โจมตีคืน
 function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
@@ -646,32 +641,29 @@ function monsterAttack() {
         gameData.hp = 0;
         clearInterval(battleTimer);
         alert("💀 คุณพ่ายแพ้...");
-        // รีเซ็ตเลือด หรือวาร์ปกลับเมือง
-        gameData.hp = gameData.maxHp * 0.5; // ฟื้นให้ครึ่งนึง
+        gameData.hp = Math.floor(gameData.maxHp * 0.5); // ฟื้นครึ่งหลอด
         battleState = null;
         UI.showScreen('game-screen');
     } else {
-        switchTurn(); // จบเทิร์นศัตรู -> กลับมาตาเรา
+        switchTurn();
     }
     
-    // อัปเดต UI และบันทึกเลือดที่ลดลง
     updateBattleUI();
     saveToFirebase(); 
 }
 
-// 6. เช็คผลแพ้ชนะ
+// 6. เช็คชนะ
 function checkWinCondition() {
     if (battleState.monster.hp <= 0) {
         battleState.monster.hp = 0;
         clearInterval(battleTimer);
         
-        // รับรางวัล
         const goldGain = battleState.monster.gold;
         const expGain = battleState.monster.exp;
         gameData.gold += goldGain;
         gameData = GameLogic.addExp(gameData, expGain);
 
-        alert(`🎉 ชนะแล้ว!\nได้รับ ${expGain} EXP และ ${goldGain} G`);
+        alert(`🎉 ชนะแล้ว! ได้รับ ${expGain} EXP และ ${goldGain} G`);
         
         battleState = null;
         UI.showScreen('game-screen');
@@ -680,55 +672,70 @@ function checkWinCondition() {
     }
 }
 
-// 7. อัปเดตหน้าจอ Battle UI
+// 7. อัปเดต UI หน้าจอต่อสู้
 function updateBattleUI() {
     if (!battleState) return;
 
-    // Header
+    // เวลา & เทิร์น
     const turnText = document.getElementById('turn-indicator');
-    turnText.innerText = (battleState.turn === 'player') ? "YOUR TURN" : "ENEMY TURN";
-    turnText.style.color = (battleState.turn === 'player') ? "#2ecc71" : "#e74c3c";
+    if(turnText) {
+        turnText.innerText = (battleState.turn === 'player') ? "YOUR TURN" : "ENEMY TURN";
+        turnText.style.color = (battleState.turn === 'player') ? "#2ecc71" : "#e74c3c";
+    }
     
-    document.getElementById('battle-timer-text').innerText = battleState.timeLeft;
-    document.getElementById('battle-timer-bar').style.width = (battleState.timeLeft / 15 * 100) + "%";
+    const timerText = document.getElementById('battle-timer-text');
+    if(timerText) timerText.innerText = battleState.timeLeft;
+    
+    const timerBar = document.getElementById('battle-timer-bar');
+    if(timerBar) timerBar.style.width = (battleState.timeLeft / 15 * 100) + "%";
 
-    // Player Status
+    // ฝั่งผู้เล่น
     document.getElementById('battle-player-name').innerText = gameData.name;
-    document.getElementById('battle-player-hp').style.width = (gameData.hp / gameData.maxHp * 100) + "%";
+    document.getElementById('battle-player-hp').style.width = Math.max(0, (gameData.hp / gameData.maxHp * 100)) + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    // Monster Status
+    const mpBar = document.getElementById('battle-player-mp');
+    if(mpBar) mpBar.style.width = Math.max(0, (gameData.mp / (gameData.int * 10) * 100)) + "%"; // สมมติ MaxMP = Int*10
+
+    // ฝั่งมอนสเตอร์
     const mon = battleState.monster;
     document.getElementById('battle-monster-name').innerText = mon.name;
-    document.getElementById('monster-img').innerText = (mon.id === 'dummy') ? '🪵' : '👾'; // เปลี่ยนรูปตาม ID
-    document.getElementById('battle-monster-hp').style.width = (mon.hp / mon.maxHp * 100) + "%";
+    document.getElementById('monster-img').innerText = (mon.id === 'dummy') ? '🪵' : '👾';
+    document.getElementById('battle-monster-hp').style.width = Math.max(0, (mon.hp / mon.maxHp * 100)) + "%";
     document.getElementById('battle-monster-hp-text').innerText = `${mon.hp}/${mon.maxHp}`;
 }
 
-// Helper: บันทึก Log
+// Helper: Log
 function logBattle(msg) {
     const logBox = document.getElementById('battle-log');
-    const p = document.createElement('div');
-    p.innerText = msg;
-    logBox.prepend(p); // ข้อความใหม่ขึ้นบนสุด
+    if(logBox) {
+        const p = document.createElement('div');
+        p.innerText = msg;
+        logBox.prepend(p);
+    }
 }
 
-// Helper: เปิดเมนูสกิล
+// Helper: เมนูสกิล
 window.openSkillMenu = () => {
     const panel = document.getElementById('battle-skill-panel');
-    panel.innerHTML = ''; // เคลียร์เก่า
+    if(!panel) return;
+    
+    panel.innerHTML = ''; 
     panel.style.display = 'block';
 
-    // วนลูปหาสกิลที่มี
-    // (ตัวอย่างนี้ดึงจาก GameData เลย แต่จริงๆ ควรเช็คว่าผู้เล่นเรียนสกิลรึยัง)
+    // วนลูปสกิลทั้งหมด (จริงๆ ควรเช็คว่าเรียนรึยัง)
     for (const [id, skill] of Object.entries(skills)) {
-        const btn = document.createElement('button');
-        btn.className = 'battle-btn'; // ใช้ style ปุ่มเดิม
-        btn.style.width = '100%';
-        btn.style.marginTop = '5px';
-        btn.style.fontSize = '12px';
-        btn.innerHTML = `${skill.icon} ${skill.name} (${skill.mpCost} MP)`;
-        btn.onclick = () => window.battleAction('skill', id);
-        panel.appendChild(btn);
+        // กรองเอาเฉพาะสกิลอาชีพเรา (หรือสกิลทั่วไป)
+        // ถ้าอยากให้โชว์หมดก็เอา if ออก
+        if (!skill.classReq || skill.classReq === gameData.classKey) {
+            const btn = document.createElement('button');
+            btn.className = 'battle-btn'; 
+            btn.style.width = '100%';
+            btn.style.marginTop = '5px';
+            btn.style.fontSize = '12px';
+            btn.innerHTML = `${skill.icon} ${skill.name} (${skill.mpCost} MP)`;
+            btn.onclick = () => window.battleAction('skill', id);
+            panel.appendChild(btn);
+        }
     }
 };
