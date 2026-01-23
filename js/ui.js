@@ -244,13 +244,11 @@ export const UI = {
 
     renderEquipment(equipment) {
         const grid = document.getElementById('equipment-grid');
-        if (!grid) return; // ป้องกัน Error ถ้าหา element ไม่เจอ
+        if (!grid) return;
         grid.innerHTML = "";
 
-        // ถ้า equipmentSlots ไม่ถูก import มา จะ Error ตรงนี้
         if (typeof equipmentSlots === 'undefined') {
-            console.error("❌ ลืม import equipmentSlots ใน js/ui.js หรือยังไม่มีใน js/gameData.js");
-            grid.innerHTML = "<p style='color:red'>Error: Missing equipmentSlots</p>";
+            console.error("❌ ลืม import equipmentSlots");
             return;
         }
 
@@ -259,17 +257,21 @@ export const UI = {
             const item = itemId ? items[itemId] : null;
 
             const slotEl = document.createElement('div');
-            slotEl.id = `equip-slot-${slotDef.id}`; // ✅ ใส่ ID เพื่อจัด Layout
+            slotEl.id = `equip-slot-${slotDef.id}`;
             slotEl.className = `equip-slot ${item ? 'occupied' : ''}`;
-            slotEl.title = item ? `${item.name}\n${item.desc}` : slotDef.name;
 
             if (item) {
+                // ✅ ใช้ Tooltip แบบใหม่ (เอาเมาส์ชี้แล้วขึ้นกล่องสวยๆ)
+                this.bindTooltip(slotEl, item);
+
                 slotEl.onclick = () => window.unequipItem(slotDef.id);
                 slotEl.innerHTML = `
                     <div class="equipped-item-icon">${item.icon}</div>
                     <div class="slot-name" style="color:#f1c40f;">${item.name}</div>
                 `;
             } else {
+                // ถ้าไม่มีของใส่ ให้แสดงชื่อช่องปกติ
+                slotEl.title = slotDef.name; 
                 slotEl.innerHTML = `
                     <div class="slot-placeholder">${slotDef.icon}</div>
                     <div class="slot-name">${slotDef.name}</div>
@@ -307,10 +309,11 @@ export const UI = {
 
             const slot = document.createElement('div');
             slot.className = 'item-slot';
-            // ปรับ CSS ให้ slot เป็น relative เพื่อวางปุ่มถังขยะได้
             slot.style.position = 'relative'; 
-            slot.title = `${item.name}\n⚖️ ${item.weight || 0} kg\n(คลิกเพื่อใช้งาน/สวมใส่)`;
             
+            // ✅ ใช้ Tooltip แบบใหม่
+            this.bindTooltip(slot, item);
+
             // Event คลิกหลัก (ใช้/สวมใส่)
             slot.onclick = () => {
                 if (item.type === 'equipment') {
@@ -320,7 +323,7 @@ export const UI = {
                 }
             };
 
-            // --- 🆕 ปุ่มทิ้งของ (Trash Button) ---
+            // ปุ่มทิ้งของ (Trash Button)
             const trashBtn = document.createElement('div');
             trashBtn.innerHTML = '🗑️';
             trashBtn.style.position = 'absolute';
@@ -332,23 +335,19 @@ export const UI = {
             trashBtn.style.borderRadius = '50%';
             trashBtn.style.padding = '2px';
             trashBtn.style.lineHeight = '1';
-            trashBtn.style.zIndex = '10'; // ให้ลอยอยู่เหนือสุด
+            trashBtn.style.zIndex = '10';
 
-            // เมื่อกดปุ่มถังขยะ
             trashBtn.onclick = (e) => {
-                e.stopPropagation(); // ⛔ สำคัญ: หยุดไม่ให้มันไปกดปุ่มสวมใส่/ใช้ของซ้อนกัน
+                e.stopPropagation(); 
                 window.dropItem(itemId);
             };
-            // ------------------------------------
 
             slot.innerHTML += `
                 <span class="item-icon">${item.icon}</span>
                 <span class="item-count">${count}</span>
             `;
             
-            // เพิ่มปุ่มถังขยะเข้าไปใน Slot
             slot.appendChild(trashBtn);
-            
             grid.appendChild(slot);
         }
     },
@@ -408,6 +407,10 @@ export const UI = {
                 if (filterCategory === 'all' || item.category === filterCategory) {
                     const card = document.createElement('div');
                     card.className = 'shop-item';
+                    
+                    // ✅ เพิ่ม Tooltip ให้สินค้าในร้านค้า
+                    this.bindTooltip(card, item);
+
                     card.innerHTML = `
                         <div class="shop-icon">${item.icon}</div>
                         <div class="shop-info">
@@ -456,6 +459,10 @@ export const UI = {
             
             const card = document.createElement('div');
             card.className = 'shop-item';
+
+            // ✅ เพิ่ม Tooltip เวลาจะขายของ
+            this.bindTooltip(card, item);
+
             let actionPart = '';
             if (showSellPrice > 0) {
                 actionPart = `
@@ -570,7 +577,100 @@ export const UI = {
 
     async prompt(title, message, defValue) {
         return this.showPopup(title, message, 'prompt', defValue);
-    }
+    },
+    // 🆕 ฟังก์ชันจัดการ Custom Tooltip
+    bindTooltip(element, item) {
+        if (!element || !item) return;
+
+        // ลบ title เดิมของ browser ออก
+        element.removeAttribute('title');
+
+        element.onmouseenter = () => this.showTooltip(item);
+        element.onmousemove = (e) => this.moveTooltip(e);
+        element.onmouseleave = () => this.hideTooltip();
+    },
+
+    showTooltip(item) {
+        const tooltip = document.getElementById('item-tooltip');
+        if (!tooltip) return;
+
+        // 1. สร้าง HTML สำหรับ Stats
+        let statsHTML = '';
+        if (item.stats || item.effect || item.buff) {
+            statsHTML += '<div class="tooltip-stats">';
+            
+            // Stats จากอุปกรณ์
+            if (item.stats) {
+                if(item.stats.str) statsHTML += `<span class="stat-str">⚔️ STR +${item.stats.str}</span>`;
+                if(item.stats.int) statsHTML += `<span class="stat-int">🔥 INT +${item.stats.int}</span>`;
+                if(item.stats.agi) statsHTML += `<span class="stat-agi">💨 AGI +${item.stats.agi}</span>`;
+                if(item.stats.def) statsHTML += `<span class="stat-def">🛡️ DEF +${item.stats.def}</span>`;
+                if(item.stats.block) statsHTML += `<span class="stat-def">🛡️ Block +${item.stats.block}%</span>`;
+                if(item.stats.critRate) statsHTML += `<span class="stat-special">⚡ Crit Rate +${item.stats.critRate}%</span>`;
+                if(item.stats.critDmg) statsHTML += `<span class="stat-special">💥 Crit Dmg +${item.stats.critDmg}%</span>`;
+                if(item.stats.dodge) statsHTML += `<span class="stat-agi">🍃 Dodge +${item.stats.dodge}%</span>`;
+                if(item.stats.maxHp) statsHTML += `<span class="stat-str">❤️ HP +${item.stats.maxHp}</span>`;
+            }
+
+            // Effect จากยา
+            if (item.effect) {
+                if(item.effect.hp) statsHTML += `<span class="stat-str">❤️ ฟื้นฟู HP ${item.effect.hp}</span>`;
+                if(item.effect.mp) statsHTML += `<span class="stat-int">💧 ฟื้นฟู MP ${item.effect.mp}</span>`;
+                if(item.effect.str) statsHTML += `<span class="stat-special">💪 เพิ่ม STR ถาวร +${item.effect.str}</span>`;
+            }
+
+            // Buff
+            if (item.buff) {
+                statsHTML += `<span class="stat-special">⏳ ${item.buff.type.toUpperCase()} +${item.buff.value} (${item.buff.duration}วิ)</span>`;
+            }
+            
+            statsHTML += '</div>';
+        }
+
+        // 2. ประกอบร่าง HTML
+        tooltip.innerHTML = `
+            <div class="tooltip-header">
+                <div class="tooltip-icon">${item.icon}</div>
+                <div>
+                    <div class="tooltip-title">${item.name}</div>
+                    <div class="tooltip-type">${item.category || item.type}</div>
+                </div>
+            </div>
+            ${statsHTML}
+            <div class="tooltip-desc">${item.desc}</div>
+            <div class="tooltip-footer">
+                ⚖️ ${item.weight || 0} kg | 💰 ราคา: ${item.price} G
+            </div>
+        `;
+
+        tooltip.style.display = 'block';
+    },
+
+    moveTooltip(e) {
+        const tooltip = document.getElementById('item-tooltip');
+        if (!tooltip) return;
+        
+        // คำนวณตำแหน่งไม่ให้ตกขอบจอ
+        let x = e.clientX + 15;
+        let y = e.clientY + 15;
+        
+        // ถ้าชิดขวาเกินไป ให้เด้งมาทางซ้าย
+        if (x + tooltip.offsetWidth > window.innerWidth) {
+            x = e.clientX - tooltip.offsetWidth - 10;
+        }
+        // ถ้าชิดล่างเกินไป ให้เด้งขึ้นบน
+        if (y + tooltip.offsetHeight > window.innerHeight) {
+            y = e.clientY - tooltip.offsetHeight - 10;
+        }
+
+        tooltip.style.top = y + 'px';
+        tooltip.style.left = x + 'px';
+    },
+
+    hideTooltip() {
+        const tooltip = document.getElementById('item-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
+    },
 };
 
 function setText(id, text) {

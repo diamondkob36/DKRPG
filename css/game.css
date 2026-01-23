@@ -319,3 +319,65 @@
 #inventory-grid .item-slot:hover { background: rgba(255,255,255,0.1); border-color: #f1c40f; }
 #inventory-grid .item-icon { font-size: 28px; display: block; margin-bottom: 5px; }
 #inventory-grid .item-count { position: absolute; bottom: 5px; right: 5px; background: #000; color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 10px; font-weight: bold;}
+
+/* --- Custom Tooltip Styling --- */
+.custom-tooltip {
+    position: fixed; /* ให้ลอยอยู่หน้าจอ */
+    z-index: 10000;  /* อยู่บนสุดเสมอ (เหนือ Modal) */
+    background: rgba(15, 10, 5, 0.95); /* สีดำน้ำตาลเข้ม โปร่งแสงนิดๆ */
+    border: 2px solid #d4af37; /* ขอบสีทอง */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 200px;
+    max-width: 250px;
+    pointer-events: none; /* ⛔ สำคัญ: ให้เมาส์ทะลุผ่านได้ ไม่บังการคลิก */
+    font-family: 'Sarabun', sans-serif;
+    color: #ecf0f1;
+    text-align: left;
+    transform: translate(15px, 15px); /* ขยับหนีเมาส์นิดนึง */
+}
+
+.tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #5d4037;
+}
+
+.tooltip-icon { font-size: 24px; }
+.tooltip-title { font-size: 16px; font-weight: bold; color: #f1c40f; } /* ชื่อสีทอง */
+.tooltip-type { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
+.tooltip-stats {
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* สีของค่าพลังต่างๆ */
+.stat-str { color: #e74c3c; } /* แดง */
+.stat-int { color: #3498db; } /* ฟ้า */
+.stat-agi { color: #2ecc71; } /* เขียว */
+.stat-def { color: #95a5a6; } /* เทา */
+.stat-special { color: #9b59b6; } /* ม่วง */
+
+.tooltip-desc {
+    font-size: 12px;
+    color: #bdc3c7;
+    font-style: italic;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.tooltip-footer {
+    font-size: 11px;
+    color: #7f8c8d;
+    text-align: right;
+    border-top: 1px dashed #444;
+    padding-top: 5px;
+}

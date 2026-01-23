@@ -211,38 +211,63 @@ export const GameLogic = {
 
     // ✅ แถม: ฟังก์ชันคำนวณดาเมจ (Battle System) ตามสูตรที่คุณขอ
     calculateBattleDamage(attacker, defender) {
-        // 1. ตรวจสอบหลบหลีก (Dodge)
-        const hitChance = 100 - (defender.dodge || 0);
-        if (Math.random() * 100 > hitChance) {
-            return { damage: 0, text: "MISS!" };
+        // --- 1. คำนวณดาเมจพื้นฐานตามอาชีพ (Base Damage) ---
+        let baseStat = 0;
+        
+        // ถ้าเป็นนักเวทย์ ใช้ INT, อาชีพอื่นใช้ STR
+        if (attacker.classKey === 'mage') {
+            baseStat = attacker.int;
+        } else {
+            baseStat = attacker.str;
         }
 
-        // 2. คำนวณดาเมจพื้นฐาน (สมมติมาจาก STR)
-        let dmg = attacker.str * 2; // หรือสูตรอื่นตามชอบ
+        // สูตร: สเตตัสหลัก * 2 (ปรับตัวคูณได้ถ้าอยากให้ตีแรงขึ้น)
+        let dmg = baseStat * 2; 
 
-        // 3. ตรวจสอบบล็อก (Block)
-        // จุดอ่อน (Ignore Block) จะไปหักลบโอกาสบล็อก
+        // --- 2. คำนวณผลของ AGI (Dodge) ---
+        // สูตร: ทุกๆ 4 AGI เพิ่มโอกาสหลบ 1%
+        const agiPerDodge = 4; 
+        const defenderAgiBonus = Math.floor((defender.agi || 0) / agiPerDodge);
+        
+        // โอกาสหลบรวม = ค่าพื้นฐาน(จากของ/อาชีพ) + โบนัสจาก AGI
+        const totalDodge = (defender.dodge || 0) + defenderAgiBonus;
+
+        // --- 3. เริ่มคำนวณการปะทะ ---
+
+        // 3.1 ตรวจสอบการหลบ (Hit/Miss)
+        const hitChance = 100 - totalDodge;
+        // Cap โอกาสโดนต่ำสุดที่ 5% (เพื่อให้ยังมีความเสี่ยงเสมอ ไม่ใช่หลบ 100%)
+        if (Math.random() * 100 > Math.max(5, hitChance)) {
+            return { damage: 0, text: "MISS!", isCrit: false, isBlocked: false };
+        }
+
+        // 3.2 ตรวจสอบบล็อก (Block)
+        // เอาค่าเจาะเกราะ (Ignore Block) มาหักลบโอกาสบล็อก
         let blockChance = (defender.block || 0) - (attacker.ignoreBlock || 0);
         let isBlocked = (Math.random() * 100 < blockChance);
 
-        // 4. ตรวจสอบคริติคอล (Critical)
+        // 3.3 ตรวจสอบคริติคอล (Critical)
+        // (ถ้าติดบล็อก จะไม่ติดคริ)
         let isCrit = false;
-        if (!isBlocked) { // ถ้าบล็อกติด จะไม่ติดคริ (ตามเงื่อนไขของคุณ)
+        if (!isBlocked) { 
+            // อาจจะเพิ่มสูตร AGI เพิ่มคริด้วยก็ได้ แต่ตอนนี้เอาแค่ Dodge ตามโจทย์
             if (Math.random() * 100 < (attacker.critRate || 0)) {
                 isCrit = true;
-                dmg *= (attacker.critDmg / 100); // คูณด้วย % คริดาเมจ (เช่น 150%)
+                dmg *= (attacker.critDmg / 100); 
             }
         }
 
-        // 5. คำนวณบล็อกลดดาเมจ
+        // 3.4 คำนวณผลของการบล็อก (ลดดาเมจ 50%)
         if (isBlocked) {
-            dmg *= 0.5; // ลด 50%
+            dmg *= 0.5; 
         }
 
-        // 6. หักลบค่าป้องกัน (Defense) และ ลดความเสียหาย (Dmg Red)
+        // --- 4. คำนวณเกราะป้องกัน (DEF) ---
+        // หักลบค่าป้องกัน (Defense) และ การลดความเสียหาย (Dmg Red)
         dmg -= (defender.def || 0);
         dmg -= (defender.dmgRed || 0);
 
+        // ✅ สำคัญ: ดาเมจต้องไม่ต่ำกว่า 1 (ตียังไงก็ต้องเข้าเนื้อนิดนึง)
         return { 
             damage: Math.max(1, Math.floor(dmg)), 
             isCrit: isCrit, 
