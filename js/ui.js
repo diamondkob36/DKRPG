@@ -7,9 +7,14 @@ import { GameLogic } from "./game-logic.js";
 export const UI = {
     // สลับหน้าจอ (Login -> Create -> Game)
     showScreen(screenId) {
-        ['login-screen', 'create-screen', 'game-screen'].forEach(id => {
+        // ✅ เพิ่ม 'battle-screen' เข้าไปในรายการนี้ครับ (สำคัญมาก!)
+        ['login-screen', 'create-screen', 'game-screen', 'battle-screen'].forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.style.display = (id === screenId) ? 'block' : 'none';
+            if(el) {
+                // ถ้า ID ตรงกับที่เรียกมา ให้ show (block/flex)
+                // ถ้าไม่ตรง ให้ hide (none)
+                el.style.display = (id === screenId) ? 'block' : 'none';
+            }
         });
     },
 

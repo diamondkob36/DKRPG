@@ -591,37 +591,59 @@ function switchTurn() {
 }
 
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
+// 4. การกระทำของผู้เล่น
 window.battleAction = async (action, skillId = null) => {
+    // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
     if (!battleState || battleState.turn !== 'player') return;
 
     if (action === 'attack') {
-        // โจมตีปกติ
+        // --- ⚔️ โจมตีปกติ ---
         const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
         battleState.monster.hp -= dmg;
+        
         logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
         checkWinCondition();
-        switchTurn(); 
+        switchTurn(); // จบเทิร์นเรา
 
     } else if (action === 'skill') {
-        // ใช้สกิล (ต้องมี skills import เข้ามา)
+        // --- ✨ ใช้สกิล ---
         const skill = skills[skillId];
         if (!skill) return;
 
-        if (gameData.mp < skill.mpCost) return alert("MP ไม่พอ!");
-        
-        gameData.mp -= skill.mpCost;
+        try {
+            // ✅ เรียกใช้ Logic หลัก (เพื่อให้ได้ Buff, หัก MP, และติด Cooldown จริงๆ)
+            gameData = GameLogic.useSkill(gameData, skillId);
 
-        // ตัวอย่างสกิลโจมตี
-        if (skill.effect && skill.effect.damage) {
-            battleState.monster.hp -= skill.effect.damage;
-            logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
+            // --- จัดการผลลัพธ์ในหน้า Battle ---
+            
+            // 1. กรณีเป็นสกิลโจมตี (Damage Skill)
+            if (skill.effect && skill.effect.damage) {
+                // หักเลือดมอนสเตอร์ (เพราะ GameLogic ไม่รู้จักมอนสเตอร์)
+                battleState.monster.hp -= skill.effect.damage;
+                logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
+            } 
+            // 2. กรณีเป็นสกิลบัพ (Buff Skill)
+            else if (skill.buff) {
+                logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
+            }
+            // 3. กรณีฮีล (Heal Skill)
+            else if (skill.effect && skill.effect.hp) {
+                logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
+            }
+
+            // อัปเดต UI ทันที (เพื่อให้เห็น MP ลด / เลือดเพิ่ม / บัพขึ้น)
+            updateBattleUI(); 
+            
+            checkWinCondition();
+            switchTurn();
+
+        } catch (e) {
+            // กรณี MP หมด หรือติด Cooldown ให้แจ้งเตือนและไม่เสียเทิร์น
+            alert(e.message); 
         }
-        // (สามารถเพิ่ม Logic สกิลบัพตรงนี้ได้)
-        
-        checkWinCondition();
-        switchTurn();
 
     } else if (action === 'run') {
+        // --- 🏃 หนี ---
         clearInterval(battleTimer);
         battleState = null;
         logBattle("🏃 คุณหนีจากการต่อสู้!");
