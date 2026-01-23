@@ -82,10 +82,10 @@ export const items = {
     },
     potion_str_time: {
         id: "potion_str_time", 
-        name: "ยาพลังฮึดสู้", icon: "💪", desc: "เพิ่ม STR +5 (60 วิ)",
+        name: "ยาพลังฮึดสู้", icon: "💪", desc: "เพิ่ม STR +5 (3 นาที)",
         type: "consumable", category: "potion", 
-        price: 300, weight: 0.5, inShop: true,
-        buff: { type: "str", value: 5, duration: 60 }
+        price: 2000, weight: 0.5, inShop: true,
+        buff: { type: "str", value: 5, duration: 300 }
     },
 
     // --- 🧪 หมวดยาพิเศษ (Consumables: Special) ---
@@ -93,7 +93,7 @@ export const items = {
         id: "elixir", 
         name: "ยาเพิ่มพลัง", icon: "🧪", desc: "เพิ่ม STR ถาวร +1",
         type: "consumable", category: "special", 
-        price: 500, sellPrice: 200, weight: 0.2, inShop: true,
+        price: 0, sellPrice: 2000, weight: 0.2, inShop: false,
         effect: { str: 1 }
     },
 
@@ -105,6 +105,23 @@ export const items = {
         price: 100, sellPrice: 20, weight: 2.0, inShop: true,
         stats: { str: 2 }
     },
+    novice_dagger: {
+        id: "novice_dagger",
+        name: "มีดสั้นฝึกหัด", icon: "🗡️", desc: "เบาและคล่องตัว (Atk +2, Crit +2%)",
+        type: "equipment", category: "weapon", slot: "main_hand",
+        price: 100, sellPrice: 20, weight: 1.0, inShop: true,
+        stats: { str: 2, critRate: 2 },
+        allowedClasses: ['rogue']
+    },
+    novice_staff: {
+        id: "novice_staff",
+        name: "คทาไม้เก่าๆ", icon: "🪄", desc: "ไม้เท้าฝึกหัดเวทย์ (Int +3)",
+        type: "equipment", category: "weapon", slot: "main_hand",
+        price: 100, sellPrice: 20, weight: 1.5, inShop: true,
+        stats: { int: 3 }, // นักเวทย์ต้องการ INT
+        allowedClasses: ['mage']
+    },
+
     iron_sword: {
         id: "iron_sword", 
         name: "ดาบเหล็ก", icon: "⚔️", desc: "ดาบมาตรฐาน (Atk +5)",

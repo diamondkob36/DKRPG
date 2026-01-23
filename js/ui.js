@@ -182,17 +182,22 @@ export const UI = {
 
     // 1. ปรับปรุง renderInventoryModal: เพิ่มส่วนแสดงสถานะน้ำหนัก/ช่อง
     renderInventoryModal(gameData, filterCategory = 'all') {
+        // ✅ สั่งปิด Tooltip เก่าทิ้งทันที เพื่อแก้ปัญหา Popup ค้างเวลา Refresh หน้ากระเป๋า
+        this.hideTooltip();
+
         const safeEquipment = gameData.equipment || {}; 
         this.renderEquipment(safeEquipment);
         
         const safeInventory = gameData.inventory || {};
 
         // --- 🆕 ส่วนแสดงสถานะกระเป๋า (Header) ---
-        const usage = GameLogic.getInventoryUsage(gameData); //
+        // คำนวณการใช้งานกระเป๋า (ต้องมี GameLogic import เข้ามาแล้วในไฟล์นี้)
+        const usage = GameLogic.getInventoryUsage(gameData); 
         
         const bagPanel = document.querySelector('.bag-panel');
         let infoDiv = document.getElementById('bag-status-info');
         
+        // ถ้ายังไม่มีส่วนแสดงสถานะ ให้สร้างใหม่
         if (!infoDiv) {
             infoDiv = document.createElement('div');
             infoDiv.id = 'bag-status-info';
@@ -208,7 +213,6 @@ export const UI = {
         }
 
         // คำนวณ % สำหรับหลอดแต่ละส่วน
-        // คำนวณความกว้างเทียบกับ Max Weight
         const equipPercent = Math.min((usage.equippedWeight / usage.limitWeight) * 100, 100);
         // ส่วน Inventory ให้ต่อจาก Equip แต่ต้องไม่เกิน 100% เมื่อรวมกัน
         const invPercent = Math.min((usage.inventoryWeight / usage.limitWeight) * 100, (100 - equipPercent));
@@ -217,6 +221,7 @@ export const UI = {
         const totalPercent = equipPercent + invPercent;
         const invColor = totalPercent > 90 ? '#e74c3c' : '#2ecc71'; // แดง หรือ เขียว
 
+        // อัปเดต HTML ของหลอดสถานะ
         infoDiv.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                 <span>🎒 ช่อง: <b>${usage.currentSlots}</b> / ${usage.limitSlots}</span>
@@ -239,6 +244,7 @@ export const UI = {
         `;
         // ----------------------------------------
 
+        // เรียกวาดรายการไอเทมในกระเป๋า
         this.renderInventoryGridOnly(safeInventory, filterCategory);
     },
 
@@ -370,6 +376,19 @@ export const UI = {
             const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000));
             
             if (timeLeft > 0) {
+                // --- 🕒 ส่วนคำนวณการแสดงผลเวลา ---
+                let timeString = "";
+                if (timeLeft >= 60) {
+                    const m = Math.floor(timeLeft / 60);
+                    const s = timeLeft % 60;
+                    // ถ้าเหลือ 0 วินาทีท้าย ให้โชว์แค่นาที (เช่น "5m") 
+                    // แต่ถ้ามีเศษวิ ให้โชว์คู่กัน (เช่น "4m 44s")
+                    timeString = (s === 0) ? `${m}m` : `${m}m ${s}s`;
+                } else {
+                    timeString = `${timeLeft}s`;
+                }
+                // --------------------------------
+
                 const badge = document.createElement('div');
                 badge.className = 'buff-badge';
                 badge.style.background = 'rgba(255, 255, 255, 0.1)';
@@ -385,7 +404,7 @@ export const UI = {
                 badge.innerHTML = `
                     <span style="font-size:14px;">${buff.icon}</span> 
                     <span>${buff.itemName}</span>
-                    <span style="color:#f1c40f; font-weight:bold;">${timeLeft}s</span>
+                    <span style="color:#f1c40f; font-weight:bold;">${timeString}</span>
                 `;
                 buffContainer.appendChild(badge);
             }

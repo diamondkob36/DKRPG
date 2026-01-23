@@ -77,22 +77,30 @@ export const GameLogic = {
         const base = classStats[classKey];
         const startMp = base.int * 10;
 
+        // ✅ 1. เลือกอาวุธเริ่มต้นให้ตรงสายอาชีพ
+        let startWeaponId = 'wooden_sword'; // ค่า Default สำหรับ Knight
+
+        if (classKey === 'mage') {
+            startWeaponId = 'novice_staff'; // นักเวทย์ได้คทา
+        } else if (classKey === 'rogue') {
+            startWeaponId = 'novice_dagger'; // โจรได้มีดสั้น
+        }
+
         return {
             name: name, classKey: classKey, className: base.name,
             lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
             hp: base.hp, maxHp: base.maxHp, mp: startMp,
             str: base.str, int: base.int, agi: base.agi,
             
-            // ✅ เพิ่มสเตตัสรอง (Secondary Stats)
-            def: 0,             // ค่าป้องกัน (ลดดาเมจแบบลบตรงๆ)
-            critRate: 5,        // อัตราคริ (5%)
-            critDmg: 150,       // ความแรงคริ (150%)
-            dodge: 0,           // อัตราหลบหลีก
-            block: 0,           // อัตราบล็อก
-            dmgRed: 0,          // ลดความเสียหาย (แบบหน่วย หรือ %)
-            ignoreBlock: 0,     // เจาะเกราะ/จุดอ่อน (ลดโอกาสบล็อกศัตรู)
+            def: 0, critRate: 5, critDmg: 150, 
+            dodge: 0, block: 0, dmgRed: 0, ignoreBlock: 0,
 
-            inventory: { "potion_s": 3, "wooden_sword": 1 },
+            // ✅ 2. ยัดอาวุธที่เลือกใส่กระเป๋าเริ่มต้น
+            inventory: { 
+                "potion_s": 3, 
+                [startWeaponId]: 1 
+            },
+            
             equipment: {},
             activeBuffs: {},
             maxSlots: 32, maxWeight: 60 
@@ -143,15 +151,14 @@ export const GameLogic = {
 
     // 🆕 ฟังก์ชันสวมใส่ไอเทม
     equipItem(currentData, itemId, targetSlot = null) {
-        // ✅ 1. ทำ Deep Copy เฉพาะส่วนที่จำเป็น (Inventory & Equipment) 
-        // เพื่อไม่ให้กระทบข้อมูลหลักจนกว่าจะเสร็จ
+        // ✅ 1. ทำ Deep Copy (สร้างกระเป๋าและช่องสวมใส่ใบใหม่ แยกจากของเดิมขาดจากกัน)
         const newData = { 
             ...currentData,
             inventory: { ...currentData.inventory }, 
             equipment: { ...currentData.equipment }
         };
 
-        // 2. เช็คว่ามีของในกระเป๋าไหม (เช็คจากตัวใหม่ที่ก๊อปมา)
+        // 2. เช็คว่ามีของในกระเป๋าไหม (เช็คจากกระเป๋าใบใหม่)
         if (!newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
              throw new Error("ไม่มีไอเทมนี้!");
         }
@@ -172,7 +179,8 @@ export const GameLogic = {
         // 4. ถอดของเก่า (ถ้ามี)
         if (newData.equipment[slot]) {
             const oldItemId = newData.equipment[slot];
-            // คืนของเก่าเข้ากระเป๋า
+            
+            // คืนของเก่าเข้ากระเป๋า (ปลอดภัยแล้ว เพราะเป็นกระเป๋าใบใหม่)
             newData.inventory[oldItemId] = (newData.inventory[oldItemId] || 0) + 1;
             
             // ลบ Stat ของเก่า
@@ -189,6 +197,8 @@ export const GameLogic = {
         
         // ลดจำนวนในกระเป๋า
         newData.inventory[itemId]--;
+        
+        // ถ้าเหลือ 0 ให้ลบ key ทิ้ง
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
         // 6. บวก Stat ของใหม่
@@ -207,7 +217,7 @@ export const GameLogic = {
 
     // 🆕 ฟังก์ชันถอดไอเทม
     unequipItem(currentData, slot) {
-        // ✅ ทำ Deep Copy
+        // ✅ ทำ Deep Copy เหมือนกัน
         const newData = { 
             ...currentData,
             inventory: { ...currentData.inventory },
