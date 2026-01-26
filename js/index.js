@@ -729,7 +729,11 @@ function updateBattleUI() {
     // --- 3. Monster Status ---
     const mon = battleState.monster;
     document.getElementById('battle-monster-name').innerText = mon.name;
-    document.getElementById('monster-img').innerText = (mon.id === 'dummy') ? '🪵' : '👾';
+    const monImg = document.getElementById('battle-monster-img');
+    if (monImg) {
+        // ดึง path รูปจากข้อมูลมอนสเตอร์ (ถ้าไม่มีให้ใช้ dummy)
+        monImg.src = battleState.monster.img || 'image/dummy.png';
+    }
     
     const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
     document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
@@ -842,35 +846,55 @@ function renderBattleSkills() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // วนลูปสกิลทั้งหมด (จริงๆ ควรเช็คว่าผู้เล่นเรียนรึยัง)
+    // 1. ดึงสกิลที่ใช้ได้ออกมาใส่ Array ก่อน
+    const availableSkills = [];
     for (const [id, skill] of Object.entries(skills)) {
+        // เช็คอาชีพ (ถ้าไม่มี classReq หรือตรงกับอาชีพเรา)
         if (!skill.classReq || skill.classReq === gameData.classKey) {
+            availableSkills.push({ id, ...skill });
+        }
+    }
+
+    // 2. วนลูปสร้างช่องให้ครบ 6 ช่อง (Fixed Slots)
+    const maxSlots = 6;
+    
+    for (let i = 0; i < maxSlots; i++) {
+        const slot = document.createElement('div');
+        
+        // กรณีมีสกิลในลำดับนี้
+        if (i < availableSkills.length) {
+            const skill = availableSkills[i];
             
-            const slot = document.createElement('div');
             slot.className = 'battle-skill-slot';
+            slot.id = `btn-skill-${skill.id}`; // ไอดีสำหรับเช็ค Cooldown
+            
             slot.innerHTML = `
                 <div>${skill.icon}</div>
                 <div class="skill-cost">${skill.mpCost}</div>
             `;
             
-            // ใช้ Tooltip เดิมที่มีอยู่
-            UI.bindTooltip(slot, {
-                name: skill.name,
-                desc: skill.desc,
-                type: "Skill",
-                icon: skill.icon,
-                price: "0",
-                buff: skill.buff,
-                effect: skill.effect
-            });
+            // ใส่ Tooltip
+            if(typeof UI.bindTooltip === 'function') {
+                UI.bindTooltip(slot, {
+                    name: skill.name,
+                    desc: skill.desc,
+                    type: "Skill",
+                    icon: skill.icon,
+                    price: "0",
+                    buff: skill.buff,
+                    effect: skill.effect
+                });
+            }
 
             // กดใช้สกิล
-            slot.onclick = () => window.battleAction('skill', id);
-            
-            // เช็ค ID เพื่อใช้สำหรับ update state (cooldown) ทีหลัง
-            slot.id = `btn-skill-${id}`;
+            slot.onclick = () => window.battleAction('skill', skill.id);
 
-            grid.appendChild(slot);
+        } else {
+            // กรณีช่องว่าง (Empty Slot)
+            slot.className = 'battle-skill-slot empty';
+            // ไม่ต้องใส่อะไรข้างใน หรือใส่ icon จางๆ ก็ได้
         }
+
+        grid.appendChild(slot);
     }
 }

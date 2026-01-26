@@ -55,17 +55,56 @@
     justify-content: space-around;
     align-items: center;
 }
-.fighter-card { text-align: center; width: 140px; cursor: pointer; transition: transform 0.2s; position: relative; }
+.fighter-card { 
+    text-align: center; 
+    width: 200px; /* ✅ ขยายความกว้างการ์ด */
+    cursor: pointer; 
+    transition: transform 0.2s; 
+    position: relative; 
+    z-index: 1002;
+}
+
+.fighter-avatar img { 
+    width: 200px; /* ✅ ขยายรูปให้ใหญ่สะใจ (จากเดิม 100px) */
+    height: 200px; 
+    object-fit: contain; 
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); /* เพิ่มเงาให้ดูลอยเด่น */
+}
 .fighter-card:hover { transform: scale(1.1); }
-.fighter-avatar img { width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.7)); }
 .fighter-info { background: rgba(0,0,0,0.7); padding: 5px; border-radius: 8px; margin-top: 10px; border: 1px solid #444; }
 
 .stat-bar-group { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
-.mini-bar { width: 100%; height: 8px; background: #222; border-radius: 4px; position: relative; overflow: hidden; }
-.mini-bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.mini-bar { 
+    width: 100%; 
+    height: 18px; /* ✅ เพิ่มความสูงหลอดให้ใส่ตัวเลขได้ */
+    background: #222; 
+    border-radius: 9px; 
+    position: relative; 
+    overflow: hidden; 
+    border: 1px solid #444;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.mini-bar .fill { 
+    height: 100%; 
+    border-radius: 9px; 
+    transition: width 0.3s; 
+}
+
+/* ตัวเลขในหลอด */
+.mini-bar span { 
+    position: absolute; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); /* ✅ จัดกึ่งกลางเป๊ะๆ */
+    font-size: 11px; 
+    font-weight: bold;
+    color: #fff; 
+    text-shadow: 1px 1px 2px black; /* ขอบตัวหนังสือดำ */
+    z-index: 2;
+    white-space: nowrap;
+}
 .mini-bar.hp .fill { background: #e74c3c; }
 .mini-bar.mp .fill { background: #3498db; }
-.mini-bar span { position: absolute; top: -11px; right: 2px; font-size: 9px; color: #fff; text-shadow: 1px 1px 1px black; }
 
 .vs-badge { font-size: 40px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px red; font-style: italic; }
 
@@ -145,20 +184,38 @@
 
 /* Skill Grid */
 .skills-grid {
-    display: flex; gap: 10px;
-    background: rgba(255,255,255,0.05);
-    padding: 10px; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; 
+    gap: 8px;
+    background: rgba(0,0,0,0.6);
+    padding: 8px; 
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
 }
+
 .battle-skill-slot {
-    width: 60px; height: 60px;
-    background: #2c3e50; border: 2px solid #34495e; border-radius: 8px;
+    width: 55px; height: 55px;
+    background: #2c3e50; 
+    border: 2px solid #34495e; 
+    border-radius: 8px;
     display: flex; justify-content: center; align-items: center;
-    font-size: 28px; cursor: pointer; position: relative;
+    font-size: 24px; 
+    position: relative;
     transition: all 0.2s;
 }
 .battle-skill-slot:hover { border-color: #f1c40f; transform: translateY(-3px); }
 .battle-skill-slot.cooldown { opacity: 0.5; filter: grayscale(100%); cursor: default; }
+.battle-skill-slot.empty {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed #555;
+    cursor: default;
+}
+
+.battle-skill-slot:not(.empty):hover { 
+    border-color: #f1c40f; 
+    transform: translateY(-3px); 
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+    cursor: pointer;
+}
 .skill-cost {
     position: absolute; bottom: -8px; right: -5px;
     font-size: 10px; background: #2980b9; color: #fff;
