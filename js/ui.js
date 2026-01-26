@@ -29,7 +29,6 @@ export const UI = {
         // คำนวณ Max MP (INT * 10)
         const maxMp = (gameData.int * 10) || 10;
         const currentMp = gameData.mp || 0; 
-
         // อัปเดตข้อความทั่วไป
         setText('display-name', gameData.name);
         setText('lvl', gameData.lvl);
@@ -73,10 +72,10 @@ export const UI = {
         setText('profile-int', gameData.int);
         setText('profile-agi', gameData.agi);
         
-        // ✅ ค่าป้องกัน (DEF) ย้ายมาอยู่ตรงนี้
+        // ค่าป้องกัน (DEF)
         setText('profile-def', gameData.def || 0); 
         
-        // ข้อมูลอื่นๆ
+        // ข้อมูลอื่นๆ (น้ำหนัก/แต้มอัปเกรด)
         const usage = GameLogic.getInventoryUsage(gameData);
         setText('profile-weight', `${usage.currentWeight.toFixed(1)}/${usage.limitWeight} kg`);
         
@@ -85,14 +84,23 @@ export const UI = {
         
         // --- 3. อัปเดตหน้าต่าง Upgrade Modal (เผื่อเปิดอยู่) ---
         setText('modal-points', points);
-        // ✅ เพิ่ม 'def' ในรายการอัปเดตตัวเลขหน้าอัปเกรด
         ['str', 'int', 'agi', 'def', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
 
         // --- 4. ส่วนแสดงสเตตัสเสริม (Extra Stats) ด้านล่าง ---
-        // ปรับแต่งระยะห่าง (Spacing) ให้สวยงาม
+        
+        // ✅ [ใหม่] 1. เตรียมค่า Regen (ถ้าไม่มีใน Data ให้คำนวณสด)
+        const hpRegen = gameData.hpRegen || Math.floor(gameData.maxHp * 0.05) || 1;
+        const mpRegen = gameData.mpRegen || Math.floor((gameData.int * 10) * 0.05) || 1;
+
+        // ✅ [ใหม่] 2. สร้าง HTML สำหรับแสดง Regen และ Stats อื่นๆ
         const extraStatsHTML = `
             <div style="grid-column: 1 / -1; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #5d4037; font-size: 13px;">
                 
+                <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                    <span>🌱 รีเลือด (HP): <b style="color:#2ecc71">+${hpRegen}</b><small style="color:#aaa;">/3T</small></span>
+                    <span>💧 รีมานา (MP): <b style="color:#3498db">+${mpRegen}</b><small style="color:#aaa;">/3T</small></span>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
                     <span>🛡️ บล็อก (Block): <b style="color:#fff">${gameData.block || 0}%</b></span>
                     <span>💨 หลบหลีก (Dodge): <b style="color:#2ecc71">${gameData.dodge || 0}%</b></span>
@@ -109,15 +117,14 @@ export const UI = {
             </div>
         `;
 
-        // Logic แทรก HTML ลงไปต่อท้ายตารางสเตตัสหลัก
+        // Logic แทรก HTML ลงไปต่อท้ายตารางสเตตัสหลักใน Modal
         const statsContainer = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
         if(statsContainer) {
              let extraDiv = document.getElementById('extra-stats-display');
-             // ถ้ายังไม่มี div นี้ ให้สร้างใหม่
+             // ถ้ายังไม่มี div นี้ ให้สร้างใหม่และแทรกต่อท้าย
              if (!extraDiv) {
                  extraDiv = document.createElement('div');
                  extraDiv.id = 'extra-stats-display';
-                 // แทรกต่อจาก Grid เดิม
                  statsContainer.parentNode.insertBefore(extraDiv, statsContainer.nextSibling);
              }
              // อัปเดตเนื้อหา HTML

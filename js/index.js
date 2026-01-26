@@ -544,7 +544,6 @@ window.startBattle = (monsterId, bgImage = null) => {
     const monsterTemplate = monsters[monsterId];
     if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
 
-    // ตั้งค่าพื้นหลัง
     const battleScreen = document.getElementById('battle-screen');
     if (bgImage) {
         battleScreen.style.backgroundImage = `url('${bgImage}')`;
@@ -552,19 +551,18 @@ window.startBattle = (monsterId, bgImage = null) => {
         battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
     }
 
-    // สร้าง State การต่อสู้
     battleState = {
         turn: 'player', 
         timeLeft: 15,
         monster: { ...monsterTemplate }, 
         logs: [],
         
-        // ✅ [ใหม่] เพิ่มตัวแปรนับเทิร์นของผู้เล่น (เริ่มที่ 0)
-        playerTurnCount: 0 
+        // ✅ แก้ไข: เริ่มนับที่ 1 (เดิม 0) เพื่อให้รอบที่ 3 ตรงกับความรู้สึกผู้เล่น
+        playerTurnCount: 1 
     };
 
     UI.showScreen('battle-screen');
-    renderBattleSkills(); // (ถ้ามีฟังก์ชันนี้)
+    renderBattleSkills(); 
     updateBattleUI();
     runBattleTimer();
 };
@@ -594,16 +592,15 @@ function switchTurn() {
     const turnName = (battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!";
     logBattle(`⏳ เปลี่ยนเทิร์น: ${turnName}`);
     
-    // ✅ เช็คเงื่อนไขเฉพาะ "ตาของผู้เล่น"
+    // ✅ Logic รีเจ้นท์ (ทำงานเฉพาะเมื่อวนกลับมาตาเรา)
     if (battleState.turn === 'player') {
         
-        // 1. บวกจำนวนเทิร์นเพิ่ม
+        // บวกเทิร์นเพิ่ม (จาก 1 -> 2 -> 3...)
         battleState.playerTurnCount++;
 
-        // 2. เช็คว่าครบ 3 เทิร์นหรือยัง (3, 6, 9, ...)
-        if (battleState.playerTurnCount > 0 && battleState.playerTurnCount % 3 === 0) {
+        // เช็คว่าหาร 3 ลงตัวไหม (เช่นเทิร์น 3, 6, 9)
+        if (battleState.playerTurnCount % 3 === 0) {
             
-            // ดึงค่า Regen จากสเตตัสตัวละคร
             const hpRegen = gameData.hpRegen || 1;
             const mpRegen = gameData.mpRegen || 1;
             const maxMp = (gameData.int * 10) || 10;
@@ -611,26 +608,22 @@ function switchTurn() {
             let msg = `✨ ครบ 3 เทิร์น: `;
             let hasRegen = false;
 
-            // ฟื้นฟู HP (ไม่เกิน Max)
             if (gameData.hp < gameData.maxHp) {
                 gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
                 msg += `+${hpRegen} HP `;
                 hasRegen = true;
             }
             
-            // ฟื้นฟู MP (ไม่เกิน Max)
             if (gameData.mp < maxMp) {
                 gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
                 msg += `+${mpRegen} MP`;
                 hasRegen = true;
             }
 
-            // ถ้ามีการฟื้นฟู ให้แจ้งเตือนใน Log
             if (hasRegen) logBattle(msg);
         }
     }
     
-    // ถ้าเป็นตา AI ให้มันโจมตีเรา
     if (battleState.turn === 'enemy') {
         setTimeout(monsterAttack, 1000);
     }
@@ -638,27 +631,20 @@ function switchTurn() {
 }
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
 window.battleAction = async (action, skillId = null) => {
-    // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
     if (!battleState || battleState.turn !== 'player') return;
 
     if (action === 'attack') {
-        // --- ⚔️ โจมตีปกติ ---
         const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
         battleState.monster.hp -= dmg;
-        
         logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
-        
         checkWinCondition(); 
         switchTurn(); 
 
     } else if (action === 'skill') {
-        // --- ✨ ใช้สกิล ---
         const skill = skills[skillId];
         if (!skill) return;
-
         try {
             gameData = GameLogic.useSkill(gameData, skillId);
-
             if (skill.effect && skill.effect.damage) {
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
@@ -667,11 +653,9 @@ window.battleAction = async (action, skillId = null) => {
             } else if (skill.effect && skill.effect.hp) {
                 logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
             }
-
             updateBattleUI(); 
             checkWinCondition(); 
             switchTurn(); 
-
         } catch (e) {
             alert(e.message); 
         }
@@ -683,10 +667,10 @@ window.battleAction = async (action, skillId = null) => {
         
         let msg = "🏃 คุณหนีจากการต่อสู้!";
 
-        // ✅ [ใหม่] สุ่ม 10% (ถ้า random < 0.1)
+        // สุ่ม 10% สะดุดล้ม
         if (Math.random() < 0.1) {
-            const damagePenalty = Math.floor(gameData.maxHp * 0.10); // ลด 10% ของ MaxHP
-            gameData.hp = Math.max(1, gameData.hp - damagePenalty); // เหลืออย่างน้อย 1
+            const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
+            gameData.hp = Math.max(1, gameData.hp - damagePenalty);
             msg += `\n💥 แต่สะดุดล้ม! เสียเลือด ${damagePenalty} หน่วย`;
         }
         
@@ -694,7 +678,11 @@ window.battleAction = async (action, skillId = null) => {
         
         setTimeout(() => {
             UI.showScreen('game-screen');
-            saveToFirebase(); // บันทึก (เผื่อเลือดลด)
+            
+            // ✅ เพิ่มบรรทัดนี้: อัปเดตหน้าจอหลักทันที เพื่อให้หลอดเลือดลดลง
+            UI.updateGameScreen(gameData); 
+            
+            saveToFirebase(); 
         }, 1000);
     }
 };
