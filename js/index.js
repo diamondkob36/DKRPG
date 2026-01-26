@@ -524,18 +524,18 @@ window.sellAllLoot = async (category) => {
 // 🆕 ฟังก์ชันกดใช้สกิล (เชื่อมกับปุ่ม)
 window.useSkill = async (skillId) => {
     try {
-        // เรียก Logic ใช้สกิล
         gameData = GameLogic.useSkill(gameData, skillId);
-        
-        // Save และ Update UI
         UI.updateGameScreen(gameData);
         await saveToFirebase();
-
     } catch (e) {
-        // แจ้งเตือนถ้าใช้ไม่ได้ (เช่น MP หมด, ติด Cooldown)
-        // ถ้ามี UI.alert ให้ใช้ UI.alert ถ้าไม่มีให้ใช้ alert ธรรมดา
-        if(typeof UI.alert === 'function') UI.alert("ร่ายเวทย์ล้มเหลว", e.message);
-        else alert(e.message);
+        // ✅ Popup แจ้งเตือนเมื่อกดใช้สกิลไม่ได้
+        await UI.alert(
+            "ร่ายเวทย์ล้มเหลว", 
+            `<div style="text-align:center;">
+                <span style="font-size:30px;">🔮</span><br>
+                <span style="color:#f1c40f;">${e.message}</span>
+             </div>`
+        );
     }
 };
 
@@ -596,7 +596,7 @@ function switchTurn() {
     if (battleState.turn === 'player') {
         
         // ป้องกันค่าเป็น undefined
-        if (!battleState.playerTurnCount) battleState.playerTurnCount = 1;
+        if (!battleState.playerTurnCount) battleState.playerTurnCount = 0;
 
         // บวกเทิร์นเพิ่ม
         battleState.playerTurnCount++;
@@ -641,18 +641,22 @@ function switchTurn() {
 window.battleAction = async (action, skillId = null) => {
     if (!battleState || battleState.turn !== 'player') return;
 
-    if (action === 'attack') {
-        const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
-        battleState.monster.hp -= dmg;
-        logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
-        checkWinCondition(); 
-        switchTurn(); 
+    try { // ✅ ใช้ try-catch ครอบเพื่อดัก Error (เช่น MP ไม่พอ)
 
-    } else if (action === 'skill') {
-        const skill = skills[skillId];
-        if (!skill) return;
-        try {
+        if (action === 'attack') {
+            const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
+            battleState.monster.hp -= dmg;
+            logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
+            await checkWinCondition(); // ✅ ใส่ await
+            switchTurn(); 
+
+        } else if (action === 'skill') {
+            const skill = skills[skillId];
+            if (!skill) return;
+
+            // ⚠️ จุดนี้ถ้า MP ไม่พอ GameLogic จะ throw Error ออกมา
             gameData = GameLogic.useSkill(gameData, skillId);
+
             if (skill.effect && skill.effect.damage) {
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
@@ -661,41 +665,69 @@ window.battleAction = async (action, skillId = null) => {
             } else if (skill.effect && skill.effect.hp) {
                 logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
             }
+
             updateBattleUI(); 
-            checkWinCondition(); 
+            await checkWinCondition(); // ✅ ใส่ await
             switchTurn(); 
-        } catch (e) {
-            alert(e.message); 
+
+        } else if (action === 'run') {
+            clearInterval(battleTimer);
+            battleState = null;
+            
+            let msg = "🏃 คุณหนีจากการต่อสู้!";
+            let isDead = false;
+
+            if (Math.random() < 0.1) {
+                const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
+                gameData.hp -= damagePenalty; 
+                msg += `\n💥 แต่สะดุดล้ม! เสียเลือด ${damagePenalty} หน่วย`;
+
+                if (gameData.hp <= 0) {
+                    isDead = true;
+                    msg += `\n💀 (บาดเจ็บสาหัส...)`;
+                }
+            }
+            
+            logBattle(msg);
+            
+            setTimeout(async () => {
+                if (isDead) {
+                    gameData.hp = 0;
+                    const lostExp = Math.floor(gameData.exp * 0.10); 
+                    gameData.exp = Math.max(0, gameData.exp - lostExp);
+
+                    // ✅ Popup ตายตอนหนี
+                    await UI.alert(
+                        "💀 อุบัติเหตุ!",
+                        `<div style="text-align:center;">
+                            <span style="font-size:40px;">🤕</span><br>
+                            <b>สะดุดล้มหัวฟาดพื้นดับอนาถ...</b><br>
+                            <span style="color:#e74c3c;">เสีย ${lostExp} EXP</span>
+                         </div>`
+                    );
+                    
+                    gameData.hp = Math.floor(gameData.maxHp * 0.5); 
+                }
+
+                UI.showScreen('game-screen');
+                UI.updateGameScreen(gameData);
+                saveToFirebase(); 
+            }, 1000);
         }
 
-    } else if (action === 'run') {
-        // --- 🏃 หนี ---
-        clearInterval(battleTimer);
-        battleState = null;
-        
-        let msg = "🏃 คุณหนีจากการต่อสู้!";
-
-        // สุ่ม 10% สะดุดล้ม
-        if (Math.random() < 0.1) {
-            const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
-            gameData.hp = Math.max(1, gameData.hp - damagePenalty);
-            msg += `\n💥 แต่สะดุดล้ม! เสียเลือด ${damagePenalty} หน่วย`;
-        }
-        
-        logBattle(msg);
-        
-        setTimeout(() => {
-            UI.showScreen('game-screen');
-            
-            // ✅ เพิ่มบรรทัดนี้: อัปเดตหน้าจอหลักทันที เพื่อให้หลอดเลือดลดลง
-            UI.updateGameScreen(gameData); 
-            
-            saveToFirebase(); 
-        }, 1000);
+    } catch (e) {
+        // ✅ ดักจับ Error ทั้งหมด (เช่น MP ไม่พอ, Cooldown) แล้วแสดง Popup
+        await UI.alert(
+            "⚠️ ผิดพลาด", 
+            `<div style="text-align:center;">
+                <span style="font-size:30px;">🚫</span><br>
+                <b style="color:#f1c40f;">${e.message}</b>
+             </div>`
+        );
     }
 };
 // 5. มอนสเตอร์โจมตีคืน
-function monsterAttack() {
+async function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
     // คำนวณดาเมจ
@@ -712,17 +744,25 @@ function monsterAttack() {
         const lostExp = Math.floor(gameData.exp * 0.10); 
         gameData.exp = Math.max(0, gameData.exp - lostExp);
 
-        alert(`💀 คุณพ่ายแพ้...\n(เสีย ${lostExp} EXP)`);
+        // ✅ Popup แจ้งเตือนการตาย
+        await UI.alert(
+            "💀 พ่ายแพ้...", 
+            `<div style="text-align:center; color:#e74c3c;">
+                <div style="font-size:50px; margin-bottom:10px;">🪦</div>
+                <b style="font-size:18px;">คุณหมดสภาพการต่อสู้!</b><br>
+                <span style="color:#aaa; font-size:12px;">ถูกส่งกลับไปยังจุดปลอดภัย...</span><br><br>
+                <div style="border:1px solid #e74c3c; padding:5px; border-radius:5px; display:inline-block;">
+                    📉 เสียค่าประสบการณ์ <b style="color:#fff;">${lostExp} EXP</b>
+                </div>
+             </div>`
+        );
         
-        // บทลงโทษ: ฟื้นเลือด 50%
+        // บทลงโทษ: ฟื้นเลือดครึ่งหลอด
         gameData.hp = Math.floor(gameData.maxHp * 0.5); 
         
         battleState = null;
         UI.showScreen('game-screen');
-        
-        // ✅ แก้ไข: อัปเดตหน้าจอหลักทันที (ไม่งั้นเลือดจะไม่ลดในหน้า UI)
         UI.updateGameScreen(gameData);
-        
         saveToFirebase(); 
     } else {
         // ยังไม่ตาย -> สลับเทิร์น
@@ -732,7 +772,7 @@ function monsterAttack() {
     updateBattleUI();
 }
 // 6. เช็คชนะ
-function checkWinCondition() {
+async function checkWinCondition() {
     if (battleState.monster.hp <= 0) {
         battleState.monster.hp = 0;
         clearInterval(battleTimer);
@@ -742,7 +782,18 @@ function checkWinCondition() {
         gameData.gold += goldGain;
         gameData = GameLogic.addExp(gameData, expGain);
 
-        alert(`🎉 ชนะแล้ว! ได้รับ ${expGain} EXP และ ${goldGain} G`);
+        // ✅ เรียกใช้ UI.alert แบบใส่ HTML
+        await UI.alert(
+            "🏆 ชัยชนะ!", 
+            `<div style="text-align:center;">
+                <img src="${battleState.monster.img}" style="width:80px; height:80px; object-fit:contain; margin-bottom:10px; filter:drop-shadow(0 0 5px gold);"><br>
+                กำจัด <b style="color:#e74c3c; font-size:18px;">${battleState.monster.name}</b> สำเร็จ!<br>
+                <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; margin-top:10px;">
+                    ได้รับ: <b style="color:gold">+${goldGain} G</b><br>
+                    ได้รับ: <b style="color:#3498db">+${expGain} EXP</b>
+                </div>
+             </div>`
+        );
         
         battleState = null;
         UI.showScreen('game-screen');
