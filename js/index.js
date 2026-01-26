@@ -3,7 +3,7 @@
 import { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut } from "./firebase-init.js";
 import { GameLogic } from "./game-logic.js"; // 🧠 นำเข้าสมอง
 import { UI } from "./ui.js";                // 🎨 นำเข้าหน้าตา
-import { items, monsters, skills } from "./gameData.js";
+import { items, monsters, skills, classStats } from "./gameData.js"; // ✅ เพิ่ม classStats เข้าไป
 
 let currentUser = null;
 let gameData = {}; 
@@ -716,15 +716,19 @@ function updateBattleUI() {
     document.getElementById('battle-player-hp').style.width = pHpPct + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    // ✅ MP (เพิ่มมาใหม่)
+    // MP
     const maxMp = (gameData.int * 10) || 10;
     const pMpPct = Math.max(0, (gameData.mp / maxMp * 100));
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
     document.getElementById('battle-player-mp-text').innerText = `${Math.floor(gameData.mp)}/${maxMp}`;
 
-    // ✅ Render รูปตัวละคร (ถ้ามี classStats)
-    // (ต้อง import classStats มาใช้ด้วย หรือดึงจาก UI ถ้ามี)
-    // document.getElementById('battle-player-img').src = ... 
+    // ✅ Render รูปตัวละคร (แก้ไขแล้ว)
+    if (classStats && gameData.classKey && classStats[gameData.classKey]) {
+        const playerImg = document.getElementById('battle-player-img');
+        if (playerImg) {
+            playerImg.src = classStats[gameData.classKey].img;
+        }
+    }
 
     // --- 3. Monster Status ---
     const mon = battleState.monster;
@@ -755,9 +759,7 @@ function updateBattleUI() {
         }
     }
 
-    // --- 5. Render Buffs (เรียก UI.renderBuffs แต่เปลี่ยน container) ---
-    // สร้างฟังก์ชัน renderBattleBuffs แยก หรือใช้ของเดิมแต่ชี้ไปที่ #battle-buffs
-    // เพื่อความง่าย เดี๋ยวเขียน logic วาด buff แบบย่อตรงนี้เลย
+    // --- 5. Render Buffs ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
         buffDiv.innerHTML = '';

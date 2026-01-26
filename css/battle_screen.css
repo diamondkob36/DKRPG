@@ -139,15 +139,20 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    left: 300px; /* เว้นที่ให้ Log ทางซ้าย */
-    height: 25vh; /* ความสูงพื้นที่ควบคุม */
+    left: 300px; /* เริ่มต่อจาก Log ที่กว้าง 300px */
+    height: 25vh;
     background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 20px;
+    
+    /* ✅ แก้จาก center เป็น flex-start เพื่อให้ชิดซ้าย */
+    align-items: flex-start; 
+    
+    /* ✅ เพิ่มระยะห่างจากขอบซ้ายนิดหน่อย ไม่ให้ชิด Log เกินไป */
+    padding: 20px 20px 20px 40px; 
+    
     box-sizing: border-box;
-    align-items: center;
 }
 
 .buff-row {
@@ -177,9 +182,17 @@
 }
 /* ปุ่มหนี (ขวา) */
 .run-btn {
-    width: 70px; height: 60px;
+    /* ✅ แก้ขนาดให้เท่าปุ่มโจมตี (จากเดิม 70px/60px) */
+    width: 100px; 
+    height: 80px;
+    
     background: linear-gradient(135deg, #7f8c8d, #95a5a6);
-    border: 2px solid #bdc3c7; font-size: 14px; color: #ecf0f1;
+    border: 2px solid #bdc3c7; 
+    
+    /* ✅ เพิ่มขนาดตัวหนังสือให้สมดุลขึ้น (จากเดิม 14px) */
+    font-size: 18px; 
+    
+    color: #ecf0f1;
 }
 
 /* Skill Grid */
