@@ -8,226 +8,233 @@
     background-image: url('../image/world_map.png');
     background-size: cover;
     background-position: center;
-    position: relative; /* เพื่อให้ลูกๆ ใช้ absolute ได้ */
-    overflow: hidden; /* ห้ามเลื่อนหน้าจอ */
+    position: relative;
+    overflow: hidden;
     color: #fff;
     padding: 0;
     margin: 0;
-    display: block; /* ยกเลิก Flex Center แบบเดิม */
+    display: block;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* --- 1. Top Bar --- */
 .battle-top-bar {
-    position: absolute;
-    top: 0; left: 0; width: 100%;
-    height: 60px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    box-sizing: border-box;
-    z-index: 10;
+    position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+    display: flex; justify-content: center; /* จัดกึ่งกลาง */
+    align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 10;
 }
 .turn-badge {
+    position: absolute; left: 20px; /* ย้าย Turn badge ไปซ้ายสุด */
     padding: 5px 15px; border-radius: 20px; font-weight: bold;
-    text-shadow: 1px 1px 2px black;
+    text-shadow: 1px 1px 2px black; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
-.turn-badge.player { background: #2ecc71; color: #fff; }
-.turn-badge.enemy { background: #e74c3c; color: #fff; }
+.turn-badge.player { background: linear-gradient(to bottom, #2ecc71, #27ae60); color: #fff; border: 1px solid #2ecc71; }
+.turn-badge.enemy { background: linear-gradient(to bottom, #e74c3c, #c0392b); color: #fff; border: 1px solid #e74c3c; }
 
 .timer-wrapper {
-    display: flex; align-items: center; gap: 10px; width: 300px;
+    display: flex; align-items: center; gap: 10px; width: 400px;
+    background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px;
 }
 .timer-bg {
     flex: 1; height: 10px; background: #333; border-radius: 5px; border: 1px solid #555; overflow: hidden;
 }
 #battle-timer-bar { height: 100%; background: #f1c40f; width: 100%; transition: width 1s linear; }
-.bag-btn { background: rgba(0,0,0,0.5); border: 1px solid #aaa; border-radius: 5px; cursor: pointer; font-size: 24px; padding: 5px; }
+
+.bag-action-btn {
+    /* ✅ ปรับขนาดให้เป็น 80x80 เท่ากับปุ่มหนี */
+    width: 80px; 
+    height: 80px; 
+    
+    background: linear-gradient(135deg, #d35400, #a04000);
+    border: 2px solid #e67e22; border-radius: 12px;
+    
+    /* ✅ เพิ่มขนาดไอคอนขึ้นอีกนิดให้สมส่วน */
+    color: #fff; font-size: 32px; 
+    
+    cursor: pointer;
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: all 0.2s;
+}
+
+.bag-action-btn:hover { transform: scale(1.1); border-color: #f1c40f; }
+.bag-action-btn:active { transform: scale(0.95); }
 
 /* --- 2. Arena (ตัวละคร) --- */
 .battle-arena {
     position: absolute;
-    top: 60px; /* ต่อจาก Top Bar */
-    bottom: 25%; /* เว้นที่ให้แผงควบคุมด้านล่าง */
+    top: 70px;
+    bottom: 25%;
     width: 100%;
     display: flex;
-    justify-content: space-around;
+    justify-content: center; /* จัดกึ่งกลางแล้วใช้ gap ช่วย */
+    gap: 50px; /* ระยะห่างระหว่าง Player - VS - Enemy */
     align-items: center;
 }
+
 .fighter-card { 
     text-align: center; 
-    width: 200px; /* ✅ ขยายความกว้างการ์ด */
+    width: 250px; /* ขยายความกว้างเผื่อแสงฟุ้ง */
     cursor: pointer; 
     transition: transform 0.2s; 
     position: relative; 
     z-index: 1002;
 }
+.fighter-card:hover { transform: scale(1.05); }
+
+/* ✅ ปรับปรุง: พื้นหลังตัวละคร (Highlight Glow) */
+.fighter-avatar {
+    width: 240px; 
+    height: 240px;
+    margin: 0 auto 5px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%; /* วงกลม */
+    position: relative;
+    
+    /* พื้นหลังแบบไล่ระดับจางๆ เพื่อดันตัวละครให้เด่น */
+    background: radial-gradient(circle, rgba(0,0,0,0.6) 20%, rgba(0,0,0,0) 70%);
+}
+
+/* แสงสีทองสำหรับฝั่งผู้เล่น */
+.fighter-card.player .fighter-avatar {
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.25) 0%, rgba(0,0,0,0) 70%);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+/* แสงสีแดงสำหรับฝั่งศัตรู */
+.fighter-card.enemy .fighter-avatar {
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.25) 0%, rgba(0,0,0,0) 70%);
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.1);
+}
 
 .fighter-avatar img { 
-    width: 200px; /* ✅ ขยายรูปให้ใหญ่สะใจ (จากเดิม 100px) */
+    width: 200px; 
     height: 200px; 
     object-fit: contain; 
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); /* เพิ่มเงาให้ดูลอยเด่น */
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.8)); /* เงาตัวละคร */
+    z-index: 2;
+    transition: transform 0.2s;
 }
-.fighter-card:hover { transform: scale(1.1); }
-.fighter-info { background: rgba(0,0,0,0.7); padding: 5px; border-radius: 8px; margin-top: 10px; border: 1px solid #444; }
 
+.fighter-info { 
+    background: rgba(0,0,0,0.8); /* พื้นหลังเข้มขึ้น */
+    padding: 8px; 
+    border-radius: 8px; 
+    margin-top: -20px; /* ดึงขึ้นไปทับวงกลมหน่อยๆ */
+    border: 1px solid #5d4037; 
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+/* หลอดเลือด/มานา */
 .stat-bar-group { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
 .mini-bar { 
-    width: 100%; 
-    height: 18px; /* ✅ เพิ่มความสูงหลอดให้ใส่ตัวเลขได้ */
-    background: #222; 
+    width: 100%; height: 18px; 
+    background: #111; 
     border-radius: 9px; 
-    position: relative; 
-    overflow: hidden; 
+    position: relative; overflow: hidden; 
     border: 1px solid #444;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
 }
-
-.mini-bar .fill { 
-    height: 100%; 
-    border-radius: 9px; 
-    transition: width 0.3s; 
-}
-
-/* ตัวเลขในหลอด */
+.mini-bar .fill { height: 100%; border-radius: 9px; transition: width 0.3s; }
 .mini-bar span { 
-    position: absolute; 
-    top: 50%; left: 50%; 
-    transform: translate(-50%, -50%); /* ✅ จัดกึ่งกลางเป๊ะๆ */
-    font-size: 11px; 
-    font-weight: bold;
-    color: #fff; 
-    text-shadow: 1px 1px 2px black; /* ขอบตัวหนังสือดำ */
-    z-index: 2;
-    white-space: nowrap;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 11px; font-weight: bold; color: #fff; 
+    text-shadow: 1px 1px 2px black; z-index: 2; white-space: nowrap;
 }
-.mini-bar.hp .fill { background: #e74c3c; }
-.mini-bar.mp .fill { background: #3498db; }
+.mini-bar.hp .fill { background: linear-gradient(to right, #e74c3c, #c0392b); }
+.mini-bar.mp .fill { background: linear-gradient(to right, #3498db, #2980b9); }
 
-.vs-badge { font-size: 40px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px red; font-style: italic; }
+/* ✅ ปรับปรุง: ป้าย VS (ให้มีพื้นหลัง) */
+.vs-badge { 
+    font-size: 40px; font-weight: bold; color: #f1c40f; 
+    text-shadow: 2px 2px 0 #000; font-style: Bold;
+    background: rgba(0, 0, 0, 0.7);
+    /* ✅ เพิ่ม flex-shrink: 0 เพื่อล็อกขนาดวงกลมไม่ให้โดนบีบจนเบี้ยว */
+    width: 70px; height: 70px; flex-shrink: 0;
+    
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    border: 3px double #e74c3c; box-shadow: 0 0 20px rgba(231, 76, 60, 0.4);
+    z-index: 1005;
+}
 
 /* --- 3. Battle Log (ซ้ายล่าง สูง 20%) --- */
 .battle-log-area {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 300px; /* ความกว้าง Log */
-    height: 20vh; /* ✅ สูง 20% จากล่าง */
-    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
-    padding: 10px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    pointer-events: none; /* เพื่อให้คลิกทะลุได้ ถ้ามันบังปุ่ม */
-    border-top: 1px solid #444;
+    position: absolute; bottom: 0; left: 0;
+    width: 300px; height: 20vh;
+    background: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.5), transparent);
+    padding: 10px; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    pointer-events: none; border-top: 1px solid #444;
 }
-.battle-log-area h3 { margin: 0 0 5px 0; font-size: 14px; color: #aaa; text-transform: uppercase; }
+.battle-log-area h3 { margin: 0 0 5px 0; font-size: 14px; color: #d4af37; text-transform: uppercase; text-shadow: 1px 1px 2px black;}
 .log-content {
-    flex: 1;
-    overflow: hidden; /* ✅ ห้ามเลื่อน (ตัดส่วนเกินทิ้ง) */
-    display: flex;
-    flex-direction: column-reverse; /* ข้อความใหม่อยู่ล่างสุด */
-    font-size: 13px;
-    text-shadow: 1px 1px 1px black;
+    flex: 1; overflow: hidden; display: flex; flex-direction: column-reverse;
+    font-size: 13px; text-shadow: 1px 1px 1px black;
 }
 .log-entry { margin-bottom: 4px; color: #ddd; }
 
-/* --- 4. Controls (กลางล่าง - ขวาล่าง) --- */
+/* --- 4. Controls (ชิดซ้าย ตามที่ขอ) --- */
 .battle-controls {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    left: 300px; /* เริ่มต่อจาก Log ที่กว้าง 300px */
+    position: absolute; bottom: 0; right: 0; left: 300px;
     height: 25vh;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    
-    /* ✅ แก้จาก center เป็น flex-start เพื่อให้ชิดซ้าย */
-    align-items: flex-start; 
-    
-    /* ✅ เพิ่มระยะห่างจากขอบซ้ายนิดหน่อย ไม่ให้ชิด Log เกินไป */
+    background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    align-items: flex-start; /* ชิดซ้าย */
     padding: 20px 20px 20px 40px; 
-    
     box-sizing: border-box;
 }
 
-.buff-row {
-    height: 30px; display: flex; gap: 5px; margin-bottom: 10px;
-}
+.buff-row { height: 30px; display: flex; gap: 5px; margin-bottom: 10px; }
+.action-panel { display: flex; gap: 15px; align-items: center; }
 
-.action-panel {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-/* ปุ่ม Action */
+/* Action Buttons */
 .action-btn {
     border: none; border-radius: 12px;
     color: white; font-weight: bold; cursor: pointer;
     transition: all 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-shadow: 1px 1px 2px black;
 }
 .action-btn:active { transform: scale(0.95); }
+.action-btn:hover { filter: brightness(1.2); }
 
-/* ปุ่มโจมตี (ซ้าย) */
+/* ปุ่มโจมตี */
 .attack-btn {
     width: 100px; height: 80px;
     background: linear-gradient(135deg, #c0392b, #8e44ad);
     border: 2px solid #e74c3c; font-size: 18px;
 }
-/* ปุ่มหนี (ขวา) */
+/* ปุ่มหนี (เท่าปุ่มโจมตี) */
 .run-btn {
-    /* ✅ แก้ขนาดให้เท่าปุ่มโจมตี (จากเดิม 70px/60px) */
-    width: 100px; 
-    height: 80px;
-    
+    width: 80px; height: 80px; 
     background: linear-gradient(135deg, #7f8c8d, #95a5a6);
-    border: 2px solid #bdc3c7; 
-    
-    /* ✅ เพิ่มขนาดตัวหนังสือให้สมดุลขึ้น (จากเดิม 14px) */
-    font-size: 18px; 
-    
-    color: #ecf0f1;
+    border: 2px solid #bdc3c7; font-size: 16px; color: #ecf0f1;
 }
 
-/* Skill Grid */
+/* Skills Grid */
 .skills-grid {
-    display: flex; 
-    gap: 8px;
-    background: rgba(0,0,0,0.6);
-    padding: 8px; 
-    border-radius: 12px;
+    display: flex; gap: 8px;
+    background: rgba(0,0,0,0.6); padding: 8px; border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.2);
 }
-
 .battle-skill-slot {
     width: 55px; height: 55px;
-    background: #2c3e50; 
-    border: 2px solid #34495e; 
-    border-radius: 8px;
+    background: #2c3e50; border: 2px solid #34495e; border-radius: 8px;
     display: flex; justify-content: center; align-items: center;
-    font-size: 24px; 
-    position: relative;
-    transition: all 0.2s;
+    font-size: 24px; position: relative; transition: all 0.2s;
 }
 .battle-skill-slot:hover { border-color: #f1c40f; transform: translateY(-3px); }
 .battle-skill-slot.cooldown { opacity: 0.5; filter: grayscale(100%); cursor: default; }
-.battle-skill-slot.empty {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px dashed #555;
-    cursor: default;
-}
-
+.battle-skill-slot.empty { background: rgba(255, 255, 255, 0.05); border: 2px dashed #555; cursor: default; }
 .battle-skill-slot:not(.empty):hover { 
-    border-color: #f1c40f; 
-    transform: translateY(-3px); 
-    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
-    cursor: pointer;
+    border-color: #f1c40f; transform: translateY(-3px); 
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5); cursor: pointer;
 }
 .skill-cost {
     position: absolute; bottom: -8px; right: -5px;
