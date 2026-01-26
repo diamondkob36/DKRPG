@@ -557,7 +557,7 @@ window.startBattle = (monsterId, bgImage = null) => {
         monster: { ...monsterTemplate }, 
         logs: [],
         
-        // ✅ แก้ไข: เริ่มนับที่ 1 (เดิม 0) เพื่อให้รอบที่ 3 ตรงกับความรู้สึกผู้เล่น
+        // ✅ แก้ไข: เริ่มนับที่ 1 เพื่อให้การคำนวณรอบแม่นยำขึ้น
         playerTurnCount: 1 
     };
 
@@ -595,35 +595,43 @@ function switchTurn() {
     // ✅ Logic รีเจ้นท์ (ทำงานเฉพาะเมื่อวนกลับมาตาเรา)
     if (battleState.turn === 'player') {
         
-        // บวกเทิร์นเพิ่ม (จาก 1 -> 2 -> 3...)
+        // ป้องกันค่าเป็น undefined
+        if (!battleState.playerTurnCount) battleState.playerTurnCount = 1;
+
+        // บวกเทิร์นเพิ่ม
         battleState.playerTurnCount++;
 
-        // เช็คว่าหาร 3 ลงตัวไหม (เช่นเทิร์น 3, 6, 9)
+        // เช็คว่าหาร 3 ลงตัวไหม (รอบที่ 3, 6, 9...)
         if (battleState.playerTurnCount % 3 === 0) {
             
-            const hpRegen = gameData.hpRegen || 1;
-            const mpRegen = gameData.mpRegen || 1;
+            // ป้องกันกรณีตัวละครเก่าไม่มีค่า Regen ให้ใช้ Default = 1
+            const hpRegen = gameData.hpRegen || Math.floor(gameData.maxHp * 0.05) || 1;
+            const mpRegen = gameData.mpRegen || Math.floor((gameData.int * 10) * 0.05) || 1;
             const maxMp = (gameData.int * 10) || 10;
 
             let msg = `✨ ครบ 3 เทิร์น: `;
             let hasRegen = false;
 
+            // ฟื้นฟู HP (ถ้าเลือดไม่เต็ม)
             if (gameData.hp < gameData.maxHp) {
                 gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
                 msg += `+${hpRegen} HP `;
                 hasRegen = true;
             }
             
+            // ฟื้นฟู MP (ถ้ามานาไม่เต็ม)
             if (gameData.mp < maxMp) {
                 gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
                 msg += `+${mpRegen} MP`;
                 hasRegen = true;
             }
 
+            // แสดง Log เมื่อมีการฟื้นฟู
             if (hasRegen) logBattle(msg);
         }
     }
     
+    // AI Action
     if (battleState.turn === 'enemy') {
         setTimeout(monsterAttack, 1000);
     }
@@ -700,27 +708,28 @@ function monsterAttack() {
         gameData.hp = 0;
         clearInterval(battleTimer);
 
-        // ✅ [ใหม่] หัก EXP 10%
+        // หัก EXP 10%
         const lostExp = Math.floor(gameData.exp * 0.10); 
-        gameData.exp = Math.max(0, gameData.exp - lostExp); // ไม่ให้ติดลบ
+        gameData.exp = Math.max(0, gameData.exp - lostExp);
 
         alert(`💀 คุณพ่ายแพ้...\n(เสีย ${lostExp} EXP)`);
         
-        // บทลงโทษ: ฟื้นเลือดครึ่งหลอด
+        // บทลงโทษ: ฟื้นเลือด 50%
         gameData.hp = Math.floor(gameData.maxHp * 0.5); 
         
         battleState = null;
         UI.showScreen('game-screen');
         
-        // บันทึกข้อมูล (EXP ที่ลดลง)
+        // ✅ แก้ไข: อัปเดตหน้าจอหลักทันที (ไม่งั้นเลือดจะไม่ลดในหน้า UI)
+        UI.updateGameScreen(gameData);
+        
         saveToFirebase(); 
     } else {
         // ยังไม่ตาย -> สลับเทิร์น
         switchTurn();
     }
-
+    
     updateBattleUI();
-    // (เอา saveToFirebase() ออกจากตรงนี้ เพื่อไม่ให้บันทึกทุกครั้งที่โดนตี)
 }
 // 6. เช็คชนะ
 function checkWinCondition() {
