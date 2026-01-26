@@ -16,7 +16,12 @@ export const GameLogic = {
             data.lvl++;
             data.maxExp = this.calculateMaxExp(data.lvl);
             data.statPoints = (data.statPoints || 0) + 5;
+            
+            // ✅ รี HP เต็ม
             data.hp = data.maxHp;
+            
+            // ✅ [ใหม่] รี MP เต็ม (สูตร: INT * 10 หรืออย่างน้อย 10)
+            data.mp = (data.int * 10) || 10;
         }
         return data;
     },
@@ -33,11 +38,19 @@ export const GameLogic = {
         if(statType === 'hp') { 
             newData.maxHp += 10; 
             newData.hp += 10; 
+            
+            // ✅ คำนวณ HP Regen ใหม่ (5% ของ MaxHP)
+            newData.hpRegen = Math.floor(newData.maxHp * 0.05) || 1;
+            
         } else { 
             newData[statType]++; 
-            // 🆕 ถ้าอัป INT ให้เพิ่ม MaxMP และ MP ด้วย (1 INT = 10 MP)
+            // ถ้าอัป INT ให้เพิ่ม MaxMP และ MP Regen
             if (statType === 'int') {
                 newData.mp = (newData.mp || 0) + 10;
+                
+                // ✅ คำนวณ MP Regen ใหม่ (5% ของ MaxMP)
+                const maxMp = newData.int * 10;
+                newData.mpRegen = Math.floor(maxMp * 0.05) || 1;
             }
         }
         
@@ -49,18 +62,24 @@ export const GameLogic = {
         let currentVal = (statType === 'hp') ? newData.maxHp : newData[statType];
         let originalVal = (statType === 'hp') ? originalData.maxHp : originalData[statType];
 
-        // ตรวจสอบว่าค่าปัจจุบันต่ำกว่าค่าเริ่มต้นหรือไม่
         if (currentVal <= originalVal) throw new Error("ลดต่ำกว่าค่าเริ่มต้นไม่ได้!");
         
-        // คืนแต้ม Stat
         newData.statPoints++;
 
         if(statType === 'hp') { 
             newData.maxHp -= 10; 
-            // ✅ แก้ไข: ป้องกันเลือดติดลบ โดยให้เหลืออย่างน้อย 1
             newData.hp = Math.max(1, newData.hp - 10); 
+            
+            // ✅ คำนวณ HP Regen ใหม่
+            newData.hpRegen = Math.floor(newData.maxHp * 0.05) || 1;
+            
         } else { 
             newData[statType]--; 
+            if (statType === 'int') {
+                // ✅ คำนวณ MP Regen ใหม่
+                const maxMp = newData.int * 10;
+                newData.mpRegen = Math.floor(maxMp * 0.05) || 1;
+            }
         }
         
         return newData;
@@ -77,14 +96,10 @@ export const GameLogic = {
         const base = classStats[classKey];
         const startMp = base.int * 10;
 
-        // ✅ 1. เลือกอาวุธเริ่มต้นให้ตรงสายอาชีพ
-        let startWeaponId = 'wooden_sword'; // ค่า Default สำหรับ Knight
-
-        if (classKey === 'mage') {
-            startWeaponId = 'novice_staff'; // นักเวทย์ได้คทา
-        } else if (classKey === 'rogue') {
-            startWeaponId = 'novice_dagger'; // โจรได้มีดสั้น
-        }
+        // เลือกอาวุธเริ่มต้น
+        let startWeaponId = 'wooden_sword';
+        if (classKey === 'mage') startWeaponId = 'novice_staff';
+        else if (classKey === 'rogue') startWeaponId = 'novice_dagger';
 
         return {
             name: name, classKey: classKey, className: base.name,
@@ -92,15 +107,14 @@ export const GameLogic = {
             hp: base.hp, maxHp: base.maxHp, mp: startMp,
             str: base.str, int: base.int, agi: base.agi,
             
+            // ✅ [ใหม่] เพิ่มค่า Regen ลงในสเตตัส (5% ของค่าสูงสุด)
+            hpRegen: Math.floor(base.maxHp * 0.05) || 1,
+            mpRegen: Math.floor(startMp * 0.05) || 1,
+
             def: 0, critRate: 5, critDmg: 150, 
             dodge: 0, block: 0, dmgRed: 0, ignoreBlock: 0,
 
-            // ✅ 2. ยัดอาวุธที่เลือกใส่กระเป๋าเริ่มต้น
-            inventory: { 
-                "potion_s": 3, 
-                [startWeaponId]: 1 
-            },
-            
+            inventory: { "potion_s": 3, [startWeaponId]: 1 },
             equipment: {},
             activeBuffs: {},
             maxSlots: 32, maxWeight: 60 

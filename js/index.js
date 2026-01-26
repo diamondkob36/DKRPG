@@ -540,20 +540,31 @@ window.useSkill = async (skillId) => {
 };
 
 // 1. เริ่มการต่อสู้
-window.startBattle = (monsterId) => {
-    // ต้องมี monsters import เข้ามาแล้วถึงจะทำงานได้
+window.startBattle = (monsterId, bgImage = null) => {
     const monsterTemplate = monsters[monsterId];
     if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
+
+    // ตั้งค่าพื้นหลัง
+    const battleScreen = document.getElementById('battle-screen');
+    if (bgImage) {
+        battleScreen.style.backgroundImage = `url('${bgImage}')`;
+    } else {
+        battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
+    }
 
     // สร้าง State การต่อสู้
     battleState = {
         turn: 'player', 
         timeLeft: 15,
-        monster: { ...monsterTemplate }, // Copy ข้อมูลมากันค่าเพี้ยน
-        logs: []
+        monster: { ...monsterTemplate }, 
+        logs: [],
+        
+        // ✅ [ใหม่] เพิ่มตัวแปรนับเทิร์นของผู้เล่น (เริ่มที่ 0)
+        playerTurnCount: 0 
     };
 
     UI.showScreen('battle-screen');
+    renderBattleSkills(); // (ถ้ามีฟังก์ชันนี้)
     updateBattleUI();
     runBattleTimer();
 };
@@ -583,13 +594,48 @@ function switchTurn() {
     const turnName = (battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!";
     logBattle(`⏳ เปลี่ยนเทิร์น: ${turnName}`);
     
-    // ถ้าเป็นตา AI ให้มันตีเรา
+    // ✅ เช็คเงื่อนไขเฉพาะ "ตาของผู้เล่น"
+    if (battleState.turn === 'player') {
+        
+        // 1. บวกจำนวนเทิร์นเพิ่ม
+        battleState.playerTurnCount++;
+
+        // 2. เช็คว่าครบ 3 เทิร์นหรือยัง (3, 6, 9, ...)
+        if (battleState.playerTurnCount > 0 && battleState.playerTurnCount % 3 === 0) {
+            
+            // ดึงค่า Regen จากสเตตัสตัวละคร
+            const hpRegen = gameData.hpRegen || 1;
+            const mpRegen = gameData.mpRegen || 1;
+            const maxMp = (gameData.int * 10) || 10;
+
+            let msg = `✨ ครบ 3 เทิร์น: `;
+            let hasRegen = false;
+
+            // ฟื้นฟู HP (ไม่เกิน Max)
+            if (gameData.hp < gameData.maxHp) {
+                gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
+                msg += `+${hpRegen} HP `;
+                hasRegen = true;
+            }
+            
+            // ฟื้นฟู MP (ไม่เกิน Max)
+            if (gameData.mp < maxMp) {
+                gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
+                msg += `+${mpRegen} MP`;
+                hasRegen = true;
+            }
+
+            // ถ้ามีการฟื้นฟู ให้แจ้งเตือนใน Log
+            if (hasRegen) logBattle(msg);
+        }
+    }
+    
+    // ถ้าเป็นตา AI ให้มันโจมตีเรา
     if (battleState.turn === 'enemy') {
         setTimeout(monsterAttack, 1000);
     }
     updateBattleUI();
 }
-
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
 window.battleAction = async (action, skillId = null) => {
     // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
@@ -602,8 +648,8 @@ window.battleAction = async (action, skillId = null) => {
         
         logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
         
-        checkWinCondition(); // (ในนี้มี saveToFirebase ตอนชนะอยู่แล้ว)
-        switchTurn(); // จบเทิร์นเรา (ไม่บันทึก)
+        checkWinCondition(); 
+        switchTurn(); 
 
     } else if (action === 'skill') {
         // --- ✨ ใช้สกิล ---
@@ -611,10 +657,8 @@ window.battleAction = async (action, skillId = null) => {
         if (!skill) return;
 
         try {
-            // ✅ เรียกใช้ Logic ใช้สกิล
             gameData = GameLogic.useSkill(gameData, skillId);
 
-            // ผลลัพธ์สกิล
             if (skill.effect && skill.effect.damage) {
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
@@ -625,8 +669,8 @@ window.battleAction = async (action, skillId = null) => {
             }
 
             updateBattleUI(); 
-            checkWinCondition(); // (บันทึกถ้าชนะ)
-            switchTurn(); // จบเทิร์น (ไม่บันทึก)
+            checkWinCondition(); 
+            switchTurn(); 
 
         } catch (e) {
             alert(e.message); 
@@ -636,19 +680,24 @@ window.battleAction = async (action, skillId = null) => {
         // --- 🏃 หนี ---
         clearInterval(battleTimer);
         battleState = null;
-        logBattle("🏃 คุณหนีจากการต่อสู้!");
         
-        // หน่วงเวลาเล็กน้อยแล้วกลับหน้าหลัก + บันทึก
+        let msg = "🏃 คุณหนีจากการต่อสู้!";
+
+        // ✅ [ใหม่] สุ่ม 10% (ถ้า random < 0.1)
+        if (Math.random() < 0.1) {
+            const damagePenalty = Math.floor(gameData.maxHp * 0.10); // ลด 10% ของ MaxHP
+            gameData.hp = Math.max(1, gameData.hp - damagePenalty); // เหลืออย่างน้อย 1
+            msg += `\n💥 แต่สะดุดล้ม! เสียเลือด ${damagePenalty} หน่วย`;
+        }
+        
+        logBattle(msg);
+        
         setTimeout(() => {
             UI.showScreen('game-screen');
-            
-            // ✅ เพิ่มการบันทึกเมื่อกดหนี
-            // (เพื่ออัปเดต HP/MP ที่ลดไปจากการต่อสู้ก่อนหน้านี้)
-            saveToFirebase(); 
-        }, 500);
+            saveToFirebase(); // บันทึก (เผื่อเลือดลด)
+        }, 1000);
     }
 };
-
 // 5. มอนสเตอร์โจมตีคืน
 function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
@@ -662,7 +711,12 @@ function monsterAttack() {
         // --- 💀 กรณีผู้เล่นตาย ---
         gameData.hp = 0;
         clearInterval(battleTimer);
-        alert("💀 คุณพ่ายแพ้...");
+
+        // ✅ [ใหม่] หัก EXP 10%
+        const lostExp = Math.floor(gameData.exp * 0.10); 
+        gameData.exp = Math.max(0, gameData.exp - lostExp); // ไม่ให้ติดลบ
+
+        alert(`💀 คุณพ่ายแพ้...\n(เสีย ${lostExp} EXP)`);
         
         // บทลงโทษ: ฟื้นเลือดครึ่งหลอด
         gameData.hp = Math.floor(gameData.maxHp * 0.5); 
@@ -670,18 +724,16 @@ function monsterAttack() {
         battleState = null;
         UI.showScreen('game-screen');
         
-        // ✅ บันทึกข้อมูลเมื่อตาย (เพื่อให้เสียเลือดจริง/กลับจุดเซฟ)
+        // บันทึกข้อมูล (EXP ที่ลดลง)
         saveToFirebase(); 
     } else {
         // ยังไม่ตาย -> สลับเทิร์น
         switchTurn();
     }
-    
-    updateBattleUI();
-    
-    // ❌ ลบ saveToFirebase() ตรงนี้ออก (ไม่ต้องบันทึกทุกครั้งที่โดนตี)
-}
 
+    updateBattleUI();
+    // (เอา saveToFirebase() ออกจากตรงนี้ เพื่อไม่ให้บันทึกทุกครั้งที่โดนตี)
+}
 // 6. เช็คชนะ
 function checkWinCondition() {
     if (battleState.monster.hp <= 0) {
