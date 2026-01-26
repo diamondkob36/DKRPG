@@ -80,34 +80,6 @@
                 <span class="zone-label">ร้านขายของ</span>
             </div>
 
-            <div id="shop-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-box box" style="width: 400px;">
-                    <div class="modal-header">
-                        <h2>🏪 ร้านค้าไอเทม</h2>
-                        <button class="close-btn" onclick="closeShop()">✖</button>
-                    </div>
-                    
-                    <div class="shop-mode-tabs">
-                        <button id="mode-buy-btn" class="mode-btn active" onclick="setShopMode('buy')">🛒 ซื้อของ</button>
-                        <button id="mode-sell-btn" class="mode-btn" onclick="setShopMode('sell')">💰 ขายของ</button>
-                    </div>
-                    
-                    <p>มีเงิน: <span id="shop-gold" style="color: gold;">0</span> G</p>
-                    <hr>
-
-                    <div id="shop-cat-tabs" class="shop-tabs">
-                        <button class="shop-tab-btn active" onclick="switchShopTab('all')">ทั้งหมด</button>
-                        <button class="shop-tab-btn" onclick="switchShopTab('potion')">ยา</button>
-                        <button class="shop-tab-btn" onclick="switchShopTab('weapon')">อาวุธ</button>
-                        <button class="shop-tab-btn" onclick="switchShopTab('armor')">ชุดเกราะ</button>
-                        <button class="shop-tab-btn" onclick="switchShopTab('special')">พิเศษ</button>
-                        <button class="shop-tab-btn" onclick="switchShopTab('loot')">ขยะ</button>
-                    </div>
-
-                    <div id="shop-grid" class="shop-grid"></div>
-                </div>
-            </div>
-
             <div id="char-status-panel" class="box" onclick="openProfile()" style="cursor: pointer;">
                 <div class="hud-compact">
                     <img id="hero-img" src="" class="hud-avatar">
@@ -142,50 +114,7 @@
                 </div>
             </div> 
 
-            <div id="profile-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-box box" style="width: 400px;">
-                    <div class="modal-header">
-                        <h2>📜 ข้อมูลตัวละคร</h2>
-                        <button class="close-btn" onclick="closeProfile()">✖</button>
-                    </div>
-                    
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <img id="profile-img" src="" style="width: 80px; height: 80px; border: 2px solid #aaa; border-radius: 50%;">
-                        <h3 id="profile-name" style="margin:5px 0; color:#f1c40f;">Name</h3>
-                        <small id="profile-class" style="color:#ccc;">Class</small>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 8px; font-size: 14px;">
-                        
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <span>❤️ HP: <span id="profile-hp" style="color:#fff;">-</span></span>
-                            <span>💧 MP: <span id="profile-mp" style="color:#fff;">-</span></span>
-                            <span>⚔️ STR: <span id="profile-str" style="color:#fff;">-</span></span>
-                            <span>🛡️ DEF: <span id="profile-def" style="color:#fff;">-</span></span> </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <span>🔥 INT: <span id="profile-int" style="color:#fff;">-</span></span>
-                            <span>💨 AGI: <span id="profile-agi" style="color:#fff;">-</span></span>
-                            <span>⚖️ นน.: <span id="profile-weight" style="color:#fff;">-</span></span>
-                        </div>
-
-                    </div>
-
-                    <div style="margin-top: 15px;">
-                        <button class="upgrade-btn-hud" onclick="closeProfile(); openUpgradeModal();" style="width:100%;">
-                            ✨ อัปเกรดสเตตัส (<span id="profile-points">0</span>)
-                        </button>
-                    </div>
-
-                    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
-                        <h4 style="margin: 0 0 5px 0; color:#aaa;">สถานะ (Buffs)</h4>
-                        <div id="buff-container" style="display: flex; gap: 5px; flex-wrap: wrap; min-height: 30px;">
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-                <div class="hud-details">
+            <div class="hud-details">
                     <small>อาชีพ: <span id="display-class">-</span></small>
 
                     <div style="display: flex; justify-content: space-between; text-align: left; font-size: 14px; margin-top: 5px;">
@@ -210,110 +139,11 @@
                     <p id="status" style="font-size: 10px; margin: 0;"></p>
                 </div>
             </div> 
-            
-            <div id="upgrade-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-box box">
-                    <div class="modal-header">
-                        <h2>⚡ อัปเกรดตัวละคร</h2>
-                        <button class="close-btn" onclick="closeUpgradeModal()">✖</button> 
-                    </div>
-                    
-                    <p>แต้มคงเหลือ: <span id="modal-points" style="color: #f1c40f; font-size: 20px; font-weight: bold;">0</span></p>
-                    <hr>
 
-                    <div class="stat-row">
-                        <span>⚔️ STR (โจมตี)</span>
-                        <div class="stat-controls">
-                            <button id="btn-minus-str" class="minus-btn" onclick="removeTempStat('str')">-</button>
-                            <b id="modal-str">0</b>
-                            <button id="btn-plus-str" class="plus-btn" onclick="addTempStat('str')">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <span>🔥 INT (เวทย์)</span>
-                        <div class="stat-controls">
-                            <button id="btn-minus-int" class="minus-btn" onclick="removeTempStat('int')">-</button>
-                            <b id="modal-int">0</b>
-                            <button id="btn-plus-int" class="plus-btn" onclick="addTempStat('int')">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <span>💨 AGI (ความเร็ว)</span>
-                        <div class="stat-controls">
-                            <button id="btn-minus-agi" class="minus-btn" onclick="removeTempStat('agi')">-</button>
-                            <b id="modal-agi">0</b>
-                            <button id="btn-plus-agi" class="plus-btn" onclick="addTempStat('agi')">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <span>🛡️ DEF (ป้องกัน)</span>
-                        <div class="stat-controls">
-                            <button id="btn-minus-def" class="minus-btn" onclick="removeTempStat('def')">-</button>
-                            <b id="modal-def">0</b>
-                            <button id="btn-plus-def" class="plus-btn" onclick="addTempStat('def')">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <span>❤️ Max HP (+10)</span>
-                        <div class="stat-controls">
-                            <button id="btn-minus-hp" class="minus-btn" onclick="removeTempStat('hp')">-</button>
-                            <b id="modal-maxHp">0</b>
-                            <button id="btn-plus-hp" class="plus-btn" onclick="addTempStat('hp')">+</button>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-                        <button class="reset-btn" onclick="resetTempStats()">🔄 รีเซ็ต</button>
-                        <button class="confirm-btn" onclick="saveUpgrade()">💾 ยืนยัน</button>
-                    </div>
-                </div> 
-            </div>
             <button id="inventory-btn" onclick="openInventory()">
                 🎒 กระเป๋า
             </button>
 
-           <div id="inventory-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-box box" style="width: 850px; max-width: 95%;"> 
-                    <div class="modal-header">
-                        <h2>🎒 ตัวละคร & กระเป๋า</h2>
-                        <button class="close-btn" onclick="closeInventory()">✖</button>
-                    </div>
-                    <hr>
-                    
-                    <div class="inventory-layout">
-                        
-                        <div class="equipment-panel">
-                            <h3>สวมใส่</h3>
-                            <div id="equipment-grid" class="equipment-grid">
-                                </div>
-                            <div class="equipment-stats-summary">
-                                </div>
-                        </div>
-
-                        <div class="bag-panel">
-                            <h3>กระเป๋า</h3>
-                            
-                            <div class="shop-tabs" style="justify-content: flex-start; margin-bottom: 10px;">
-                                <button class="shop-tab-btn active" onclick="switchInventoryTab('all')">ทั้งหมด</button>
-                                <button class="shop-tab-btn" onclick="switchInventoryTab('weapon')">อาวุธ</button>
-                                <button class="shop-tab-btn" onclick="switchInventoryTab('armor')">ชุดเกราะ</button>
-                                <button class="shop-tab-btn" onclick="switchInventoryTab('potion')">ยา</button>
-                                <button class="shop-tab-btn" onclick="switchInventoryTab('special')">พิเศษ</button>
-                                <button class="shop-tab-btn" onclick="switchInventoryTab('loot')">ขยะ</button>
-                            </div>
-
-                            <div id="inventory-grid" class="inventory-grid" style="height: 350px; overflow-y: auto;">
-                                <p style="color: #ccc;">(กระเป๋าว่างเปล่า)</p>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
         </div> 
     </div>
 
@@ -407,7 +237,179 @@
             </div>
         </div>
     </div>
+
+    <div id="inventory-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box box" style="width: 850px; max-width: 95%;"> 
+            <div class="modal-header">
+                <h2>🎒 ตัวละคร & กระเป๋า</h2>
+                <button class="close-btn" onclick="closeInventory()">✖</button>
+            </div>
+                <hr>
+                    <div class="inventory-layout">
+                        
+                        <div class="equipment-panel">
+                            <h3>สวมใส่</h3>
+                            <div id="equipment-grid" class="equipment-grid">
+                                </div>
+                            <div class="equipment-stats-summary">
+                                </div>
+                        </div>
+
+                        <div class="bag-panel">
+                            <h3>กระเป๋า</h3>
+                            
+                            <div class="shop-tabs" style="justify-content: flex-start; margin-bottom: 10px;">
+                                <button class="shop-tab-btn active" onclick="switchInventoryTab('all')">ทั้งหมด</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('weapon')">อาวุธ</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('armor')">ชุดเกราะ</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('potion')">ยา</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('special')">พิเศษ</button>
+                                <button class="shop-tab-btn" onclick="switchInventoryTab('loot')">ขยะ</button>
+                            </div>
+
+                        <div id="inventory-grid" class="inventory-grid" style="height: 350px; overflow-y: auto;">
+                            <p style="color: #ccc;">(กระเป๋าว่างเปล่า)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <div id="upgrade-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box box">
+                    <div class="modal-header">
+                        <h2>⚡ อัปเกรดตัวละคร</h2>
+                        <button class="close-btn" onclick="closeUpgradeModal()">✖</button> 
+                    </div>
+                    
+                    <p>แต้มคงเหลือ: <span id="modal-points" style="color: #f1c40f; font-size: 20px; font-weight: bold;">0</span></p>
+                    <hr>
+
+                    <div class="stat-row">
+                        <span>⚔️ STR (โจมตี)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-str" class="minus-btn" onclick="removeTempStat('str')">-</button>
+                            <b id="modal-str">0</b>
+                            <button id="btn-plus-str" class="plus-btn" onclick="addTempStat('str')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
+                        <span>🔥 INT (เวทย์)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-int" class="minus-btn" onclick="removeTempStat('int')">-</button>
+                            <b id="modal-int">0</b>
+                            <button id="btn-plus-int" class="plus-btn" onclick="addTempStat('int')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
+                        <span>💨 AGI (ความเร็ว)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-agi" class="minus-btn" onclick="removeTempStat('agi')">-</button>
+                            <b id="modal-agi">0</b>
+                            <button id="btn-plus-agi" class="plus-btn" onclick="addTempStat('agi')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
+                        <span>🛡️ DEF (ป้องกัน)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-def" class="minus-btn" onclick="removeTempStat('def')">-</button>
+                            <b id="modal-def">0</b>
+                            <button id="btn-plus-def" class="plus-btn" onclick="addTempStat('def')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
+                        <span>❤️ Max HP (+10)</span>
+                        <div class="stat-controls">
+                            <button id="btn-minus-hp" class="minus-btn" onclick="removeTempStat('hp')">-</button>
+                            <b id="modal-maxHp">0</b>
+                            <button id="btn-plus-hp" class="plus-btn" onclick="addTempStat('hp')">+</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                        <button class="reset-btn" onclick="resetTempStats()">🔄 รีเซ็ต</button>
+                        <button class="confirm-btn" onclick="saveUpgrade()">💾 ยืนยัน</button>
+                    </div>
+                </div> 
+    </div>
+
+    <div id="profile-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box box" style="width: 400px;">
+                    <div class="modal-header">
+                        <h2>📜 ข้อมูลตัวละคร</h2>
+                        <button class="close-btn" onclick="closeProfile()">✖</button>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img id="profile-img" src="" style="width: 80px; height: 80px; border: 2px solid #aaa; border-radius: 50%;">
+                        <h3 id="profile-name" style="margin:5px 0; color:#f1c40f;">Name</h3>
+                        <small id="profile-class" style="color:#ccc;">Class</small>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 8px; font-size: 14px;">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span>❤️ HP: <span id="profile-hp" style="color:#fff;">-</span></span>
+                            <span>💧 MP: <span id="profile-mp" style="color:#fff;">-</span></span>
+                            <span>⚔️ STR: <span id="profile-str" style="color:#fff;">-</span></span>
+                            <span>🛡️ DEF: <span id="profile-def" style="color:#fff;">-</span></span> </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span>🔥 INT: <span id="profile-int" style="color:#fff;">-</span></span>
+                            <span>💨 AGI: <span id="profile-agi" style="color:#fff;">-</span></span>
+                            <span>⚖️ นน.: <span id="profile-weight" style="color:#fff;">-</span></span>
+                        </div>
+
+                    </div>
+
+                    <div style="margin-top: 15px;">
+                        <button class="upgrade-btn-hud" onclick="closeProfile(); openUpgradeModal();" style="width:100%;">
+                            ✨ อัปเกรดสเตตัส (<span id="profile-points">0</span>)
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
+                        <h4 style="margin: 0 0 5px 0; color:#aaa;">สถานะ (Buffs)</h4>
+                        <div id="buff-container" style="display: flex; gap: 5px; flex-wrap: wrap; min-height: 30px;">
+                            </div>
+                    </div>
+                </div>
+    </div>
+
+    <div id="shop-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box box" style="width: 400px;">
+                    <div class="modal-header">
+                        <h2>🏪 ร้านค้าไอเทม</h2>
+                        <button class="close-btn" onclick="closeShop()">✖</button>
+                    </div>
+                    
+                    <div class="shop-mode-tabs">
+                        <button id="mode-buy-btn" class="mode-btn active" onclick="setShopMode('buy')">🛒 ซื้อของ</button>
+                        <button id="mode-sell-btn" class="mode-btn" onclick="setShopMode('sell')">💰 ขายของ</button>
+                    </div>
+                    
+                    <p>มีเงิน: <span id="shop-gold" style="color: gold;">0</span> G</p>
+                    <hr>
+
+                    <div id="shop-cat-tabs" class="shop-tabs">
+                        <button class="shop-tab-btn active" onclick="switchShopTab('all')">ทั้งหมด</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('potion')">ยา</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('weapon')">อาวุธ</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('armor')">ชุดเกราะ</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('special')">พิเศษ</button>
+                        <button class="shop-tab-btn" onclick="switchShopTab('loot')">ขยะ</button>
+                    </div>
+
+                    <div id="shop-grid" class="shop-grid"></div>
+                </div>
+    </div>
+
     <div id="item-tooltip" class="custom-tooltip" style="display: none;"></div>
+
     <script type="module" src="js/index.js"></script>
     
 </body>
