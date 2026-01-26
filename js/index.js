@@ -591,7 +591,6 @@ function switchTurn() {
 }
 
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
-// 4. การกระทำของผู้เล่น
 window.battleAction = async (action, skillId = null) => {
     // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
     if (!battleState || battleState.turn !== 'player') return;
@@ -602,8 +601,9 @@ window.battleAction = async (action, skillId = null) => {
         battleState.monster.hp -= dmg;
         
         logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
-        checkWinCondition();
-        switchTurn(); // จบเทิร์นเรา
+        
+        checkWinCondition(); // (ในนี้มี saveToFirebase ตอนชนะอยู่แล้ว)
+        switchTurn(); // จบเทิร์นเรา (ไม่บันทึก)
 
     } else if (action === 'skill') {
         // --- ✨ ใช้สกิล ---
@@ -611,34 +611,24 @@ window.battleAction = async (action, skillId = null) => {
         if (!skill) return;
 
         try {
-            // ✅ เรียกใช้ Logic หลัก (เพื่อให้ได้ Buff, หัก MP, และติด Cooldown จริงๆ)
+            // ✅ เรียกใช้ Logic ใช้สกิล
             gameData = GameLogic.useSkill(gameData, skillId);
 
-            // --- จัดการผลลัพธ์ในหน้า Battle ---
-            
-            // 1. กรณีเป็นสกิลโจมตี (Damage Skill)
+            // ผลลัพธ์สกิล
             if (skill.effect && skill.effect.damage) {
-                // หักเลือดมอนสเตอร์ (เพราะ GameLogic ไม่รู้จักมอนสเตอร์)
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
-            } 
-            // 2. กรณีเป็นสกิลบัพ (Buff Skill)
-            else if (skill.buff) {
+            } else if (skill.buff) {
                 logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
-            }
-            // 3. กรณีฮีล (Heal Skill)
-            else if (skill.effect && skill.effect.hp) {
+            } else if (skill.effect && skill.effect.hp) {
                 logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
             }
 
-            // อัปเดต UI ทันที (เพื่อให้เห็น MP ลด / เลือดเพิ่ม / บัพขึ้น)
             updateBattleUI(); 
-            
-            checkWinCondition();
-            switchTurn();
+            checkWinCondition(); // (บันทึกถ้าชนะ)
+            switchTurn(); // จบเทิร์น (ไม่บันทึก)
 
         } catch (e) {
-            // กรณี MP หมด หรือติด Cooldown ให้แจ้งเตือนและไม่เสียเทิร์น
             alert(e.message); 
         }
 
@@ -647,7 +637,15 @@ window.battleAction = async (action, skillId = null) => {
         clearInterval(battleTimer);
         battleState = null;
         logBattle("🏃 คุณหนีจากการต่อสู้!");
-        setTimeout(() => UI.showScreen('game-screen'), 500);
+        
+        // หน่วงเวลาเล็กน้อยแล้วกลับหน้าหลัก + บันทึก
+        setTimeout(() => {
+            UI.showScreen('game-screen');
+            
+            // ✅ เพิ่มการบันทึกเมื่อกดหนี
+            // (เพื่ออัปเดต HP/MP ที่ลดไปจากการต่อสู้ก่อนหน้านี้)
+            saveToFirebase(); 
+        }, 500);
     }
 };
 
@@ -655,23 +653,33 @@ window.battleAction = async (action, skillId = null) => {
 function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
+    // คำนวณดาเมจ
     const dmg = Math.max(1, battleState.monster.atk - (gameData.def || 0));
     gameData.hp -= dmg;
     logBattle(`👾 มอนสเตอร์โจมตีคุณ ${dmg} ดาเมจ!`);
 
     if (gameData.hp <= 0) {
+        // --- 💀 กรณีผู้เล่นตาย ---
         gameData.hp = 0;
         clearInterval(battleTimer);
         alert("💀 คุณพ่ายแพ้...");
-        gameData.hp = Math.floor(gameData.maxHp * 0.5); // ฟื้นครึ่งหลอด
+        
+        // บทลงโทษ: ฟื้นเลือดครึ่งหลอด
+        gameData.hp = Math.floor(gameData.maxHp * 0.5); 
+        
         battleState = null;
         UI.showScreen('game-screen');
+        
+        // ✅ บันทึกข้อมูลเมื่อตาย (เพื่อให้เสียเลือดจริง/กลับจุดเซฟ)
+        saveToFirebase(); 
     } else {
+        // ยังไม่ตาย -> สลับเทิร์น
         switchTurn();
     }
     
     updateBattleUI();
-    saveToFirebase(); 
+    
+    // ❌ ลบ saveToFirebase() ตรงนี้ออก (ไม่ต้องบันทึกทุกครั้งที่โดนตี)
 }
 
 // 6. เช็คชนะ
