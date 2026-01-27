@@ -385,27 +385,32 @@ window.dropItem = async (itemId) => {
 
 // 🆕 เพิ่มฟังก์ชันนับเวลา
 function startBuffTimer() {
-    if (buffInterval) clearInterval(buffInterval); // เคลียร์ของเก่าถ้ามี
+    if (buffInterval) clearInterval(buffInterval); 
 
     buffInterval = setInterval(async () => {
         if (!gameData.activeBuffs) return;
 
-        // เรียก Logic เช็คเวลา
+        // เรียก Logic เช็คเวลาตามปกติ
         const result = GameLogic.checkBuffs(gameData);
         
-        // อัปเดตหน้าจอเฉพาะส่วน Buff (เพื่อให้ตัวเลขเวลามันวิ่ง)
+        // อัปเดตหน้าจอส่วน Buff ให้เวลาวิ่ง (UI เท่านั้น)
         UI.renderBuffs(gameData.activeBuffs);
 
-        // ถ้าบัพหมดอายุจริง (hasChanged = true) ค่อยอัปเดต Stat และ Save
+        // ถ้าบัพหมดอายุ (hasChanged = true)
         if (result.hasChanged) {
-            gameData = result.newData;
-            UI.updateGameScreen(gameData); // อัปเดต Stat ที่ลดลงกลับมา
-            await saveToFirebase();
+            gameData = result.newData; // อัปเดตข้อมูลในแรม (Stat ผู้เล่นจะลดลงตามจริง)
+            UI.updateGameScreen(gameData); // อัปเดตค่าพลังบนหน้าจอ
+            
+            // ✅ ส่วนที่แก้ไข: เช็คว่า "ไม่ได้" กำลังต่อสู้ ถึงจะบันทึก
+            // ถ้ากำลังสู้ (battleState มีค่า) เราจะปล่อยผ่านไปก่อน 
+            // รอไปบันทึกทีเดียวตอนจบการต่อสู้ (checkWinCondition / monsterAttack)
+            if (!battleState) {
+                await saveToFirebase();
+            }
         }
         
-    }, 1000); // ทำงานทุก 1 วินาที
+    }, 1000);
 }
-
 // --- ระบบร้านค้า --- (ย้ายออกมาข้างนอกแล้ว)
 
 // --- Shop System ---
@@ -629,6 +634,10 @@ window.battleAction = async (action, skillId = null) => {
         } else if (action === 'run') {
             // --- 🏃 หนี ---
             clearInterval(battleTimer);
+            
+            // ✅ ล้างบัพสกิลทิ้งก่อนออก
+            clearBattleBuffs();
+
             battleState = null;
             
             let msg = "🏃 คุณหนีจากการต่อสู้!";
@@ -681,7 +690,6 @@ async function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
     // ✅ ใช้ GameLogic คำนวณดาเมจ (Monster -> Player)
-    // ส่ง monster เป็น attacker, gameData เป็น defender
     const result = GameLogic.calculateBattleDamage(battleState.monster, gameData);
     
     gameData.hp -= result.damage;
@@ -706,6 +714,9 @@ async function monsterAttack() {
 
         const lostExp = Math.floor(gameData.exp * 0.10); 
         gameData.exp = Math.max(0, gameData.exp - lostExp);
+
+        // ✅ ล้างบัพสกิลทิ้งเมื่อตาย
+        clearBattleBuffs();
 
         await UI.alert(
             "💀 พ่ายแพ้...", 
@@ -742,6 +753,9 @@ async function checkWinCondition() {
         const expGain = battleState.monster.exp;
         gameData.gold += goldGain;
         gameData = GameLogic.addExp(gameData, expGain);
+
+        // ✅ เรียกใช้ฟังก์ชันล้างบัพสกิลทิ้ง (ก่อนบันทึก)
+        clearBattleBuffs();
 
         // ✅ เรียกใช้ UI.alert แบบใส่ HTML
         await UI.alert(
@@ -1153,4 +1167,25 @@ function renderBattleSkills() {
 
         grid.appendChild(slot);
     }
+}
+
+function clearBattleBuffs() {
+    if (!gameData.activeBuffs) return;
+
+    const persistentBuffs = {};
+
+    for (const [key, buff] of Object.entries(gameData.activeBuffs)) {
+        // ✅ เก็บไว้เฉพาะบัพที่ "ไม่ใช่" battleOnly (เช่น บัพจากยา)
+        if (!buff.isBattleOnly) {
+            persistentBuffs[key] = buff;
+        } else {
+            // ถ้าเป็นบัพต่อสู้ ให้ลบ Stat ที่เพิ่มไว้ออกด้วย เพื่อความถูกต้อง
+            if (gameData[buff.type] !== undefined) {
+                 gameData[buff.type] -= buff.value;
+            }
+        }
+    }
+
+    // อัปเดตรายการบัพให้เหลือแต่ของถาวร
+    gameData.activeBuffs = persistentBuffs;
 }

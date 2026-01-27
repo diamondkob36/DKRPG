@@ -525,7 +525,7 @@ export const GameLogic = {
 
         // 3. เช็ค Cooldown
         const now = Date.now();
-        newData.skillCooldowns = newData.skillCooldowns || {}; // สร้างถังเก็บ Cooldown ถ้ายังไม่มี
+        newData.skillCooldowns = newData.skillCooldowns || {}; 
         const readyTime = newData.skillCooldowns[skillId] || 0;
 
         if (now < readyTime) {
@@ -545,6 +545,7 @@ export const GameLogic = {
         if (skill.effect) {
             if (skill.effect.hp) newData.hp = Math.min(newData.hp + skill.effect.hp, newData.maxHp);
             if (skill.effect.mp) newData.mp = Math.min(newData.mp + skill.effect.mp, (newData.int * 10));
+            // Damage จะถูกคำนวณใน battleAction (index.js)
         }
 
         // แสดงผลสกิล (Buff: เพิ่มสถานะชั่วคราว)
@@ -568,10 +569,12 @@ export const GameLogic = {
                 type: skill.buff.type,
                 value: skill.buff.value,
                 expiresAt: expireTime,
-                icon: skill.icon
+                icon: skill.icon,
+                // ✅ เพิ่มบรรทัดนี้: รับค่า isBattleOnly มาด้วย (ถ้าไม่มีให้เป็น false)
+                isBattleOnly: skill.buff.isBattleOnly || false 
             };
         }
 
         return newData;
-    },
+    }
 };

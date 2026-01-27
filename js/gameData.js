@@ -205,6 +205,7 @@ export const skills = {
         desc: "เพิ่มพลังโจมตี (STR +10) นาน 30 วิ",
         mpCost: 10, cooldown: 60,
         classReq: "knight",
+        isBattleOnly: true,
         buff: { type: "str", value: 10, duration: 30 }
     },
     knight_fortify: {
@@ -212,6 +213,7 @@ export const skills = {
         desc: "ผิวเหล็กไหล (DEF +5) นาน 45 วิ",
         mpCost: 15, cooldown: 90,
         classReq: "knight",
+        isBattleOnly: true,
         buff: { type: "def", value: 5, duration: 45 }
     },
 
@@ -228,6 +230,7 @@ export const skills = {
         desc: "รวบรวมสมาธิ (INT +15) นาน 20 วิ",
         mpCost: 0, cooldown: 120,
         classReq: "mage",
+        isBattleOnly: true,
         buff: { type: "int", value: 15, duration: 20 }
     },
 
@@ -237,6 +240,7 @@ export const skills = {
         desc: "เร่งความเร็ว (AGI +10) นาน 30 วิ",
         mpCost: 10, cooldown: 45,
         classReq: "rogue",
+        isBattleOnly: true,
         buff: { type: "agi", value: 10, duration: 30 }
     },
     rogue_sharpen: {
@@ -244,6 +248,7 @@ export const skills = {
         desc: "ลับมีด (Crit +10%) นาน 60 วิ",
         mpCost: 15, cooldown: 90,
         classReq: "rogue",
+        isBattleOnly: true,
         buff: { type: "critRate", value: 10, duration: 60 }
     }
 };
