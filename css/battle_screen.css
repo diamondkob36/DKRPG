@@ -18,6 +18,19 @@
     user-select: none;
 }
 
+#battle-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* ปรับค่า 0.5 เป็น 0.3 (จาง) ถึง 0.8 (มืดมาก) ตามต้องการ */
+    background-color: rgba(0, 0, 0, 0.5); 
+    z-index: 0; /* ให้อยู่ชั้นล่างสุด */
+    pointer-events: none; /* เพื่อให้คลิกทะลุไปโดนเนื้อหาได้ */
+}
+
 /* --- 1. Top Bar --- */
 .battle-top-bar {
     position: absolute; top: 0; left: 0; width: 100%; height: 60px;
