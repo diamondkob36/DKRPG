@@ -87,6 +87,9 @@ export const GameLogic = {
     // 1. แก้ไข createCharacter ให้มีสเตตัสใหม่
     createCharacter(name, classKey) {
         const base = classStats[classKey];
+        
+        // ใช้สูตร MaxMP ใหม่ (Base + INT*10)
+        // หมายเหตุ: base.baseMp มาจากที่เราแก้ไปเมื่อกี้
         const initialMaxMp = getMaxMp(base.baseMp, base.int);
 
         let startWeaponId = 'wooden_sword';
@@ -97,27 +100,33 @@ export const GameLogic = {
             name: name, 
             classKey: classKey, 
             className: base.name,
-            lvl: 1, 
-            exp: 0, 
-            maxExp: 100, 
-            gold: 0, 
-            statPoints: 5,
-            baseMp: base.baseMp || 100, // เก็บค่าฐานไว้เพื่อใช้คำนวณต่อ
-            hp: base.hp, 
-            maxHp: base.maxHp, 
-            mp: initialMaxMp, 
-            maxMp: initialMaxMp,
-            str: base.str, 
-            int: base.int, 
-            agi: base.agi,
+            lvl: 1, exp: 0, maxExp: 100, 
+            gold: 0, statPoints: 5,
+            
+            // Base Stats
+            baseMp: base.baseMp || 100, 
+            hp: base.hp, maxHp: base.maxHp, 
+            mp: initialMaxMp, maxMp: initialMaxMp,
+            
+            // Main Attributes
+            str: base.str, int: base.int, agi: base.agi, def: base.def || 0,
+
+            // ✅ เพิ่ม: Combat Stats (ค่าเสริม) ที่ขาดหายไป
+            block: base.block || 0,
+            dmgRed: base.dmgRed || 0,
+            critRate: base.critRate || 0,
+            critDmg: base.critDmg || 150, // ค่าพื้นฐานคือ 150%
+            dodge: base.dodge || 0,
+            ignoreBlock: base.ignoreBlock || 0,
+
+            // Regen
             hpRegen: Math.floor(base.maxHp * 0.05) || 1,
             mpRegen: Math.floor(initialMaxMp * 0.05) || 1,
-            def: base.def || 0,
+            
             inventory: { "potion_s": 3, [startWeaponId]: 1 },
             equipment: {},
             activeBuffs: {},
-            maxSlots: 32, 
-            maxWeight: 60 
+            maxSlots: 32, maxWeight: 60 
         };
     },
 

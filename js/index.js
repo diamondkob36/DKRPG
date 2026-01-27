@@ -828,10 +828,13 @@ function updateBattleUI() {
     document.getElementById('battle-player-hp').style.width = pHpPct + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    // MP Player
-    const maxMp = (gameData.int * 10) || 10;
+    // ✅ MP Player (แก้ไขใหม่)
+    // ใช้ค่า maxMp จาก gameData โดยตรง (หรือคำนวณใหม่โดยรวม baseMp ด้วย)
+    const maxMp = gameData.maxMp || ((gameData.baseMp || 0) + (gameData.int * 10));
+    
     const pMpPct = Math.max(0, (gameData.mp / maxMp * 100));
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
+    // ปัดเศษลงเพื่อความสวยงาม
     document.getElementById('battle-player-mp-text').innerText = `${Math.floor(gameData.mp)}/${maxMp}`;
 
     if (classStats && gameData.classKey && classStats[gameData.classKey]) {
@@ -870,26 +873,18 @@ function updateBattleUI() {
     if (mMpBar) mMpBar.style.width = mMpPct + "%";
     if (mMpText) mMpText.innerText = `${Math.floor(mMp)}/${mMaxMp}`;
 
-    // --- 3.3 Monster Buffs (✅ แก้ไขใหม่: ไม่กระพริบ) ---
+    // --- 3.3 Monster Buffs ---
     const mBuffDiv = document.getElementById('battle-monster-buffs');
     if (mBuffDiv) {
         const activeBuffs = mon.activeBuffs || {};
 
-        // ลบบัพที่หมดเวลา (หรือไม่มีแล้ว)
-        // เนื่องจากบัพมอนอาจจะไม่มี key ชัดเจนเหมือน player เสมอไป
-        // เพื่อความง่ายและเสถียร เราจะเช็คตามลำดับ key
-        
-        // Loop สร้าง/อัปเดต
         for (const [k, buff] of Object.entries(activeBuffs)) {
             if (buff.expiresAt > now) {
-                // คำนวณเวลา
                 const timeLeft = (buff.expiresAt > 9999999999000) ? "∞" : Math.ceil((buff.expiresAt - now)/1000) + "s";
                 
-                // เช็คว่ามี element นี้อยู่แล้วไหม (กันกระพริบ)
                 let buffEl = mBuffDiv.querySelector(`.monster-buff-item[data-key="${k}"]`);
                 
                 if (!buffEl) {
-                    // สร้างใหม่ (Create)
                     buffEl = document.createElement('div');
                     buffEl.className = 'monster-buff-item';
                     buffEl.dataset.key = k;
@@ -905,7 +900,6 @@ function updateBattleUI() {
                     `;
                     mBuffDiv.appendChild(buffEl);
                 } else {
-                    // อัปเดตเวลา (Update)
                     const timeSpan = buffEl.querySelector('.t-left');
                     if(timeSpan) timeSpan.innerText = timeLeft;
                 }
@@ -924,7 +918,7 @@ function updateBattleUI() {
         }
     }
 
-    // --- 5. Player Buffs (เหมือนเดิม: ไม่กระพริบ) ---
+    // --- 5. Player Buffs ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
         const activeBuffs = gameData.activeBuffs || {};
@@ -1039,12 +1033,32 @@ window.startBattle = (monsterId, bgImage = null) => {
 // 2. ตัวนับเวลา
 function runBattleTimer() {
     if (battleTimer) clearInterval(battleTimer);
+    
     battleTimer = setInterval(() => {
+        // ถ้าไม่มีการต่อสู้แล้ว ให้หยุดเวลา
         if (!battleState) return clearInterval(battleTimer);
 
+        // 1. ลดเวลาเทิร์น
         battleState.timeLeft--;
+
+        // 2. ✅ เพิ่ม: เช็คเวลาบัพของมอนสเตอร์ (Real-time)
+        // ใช้ GameLogic ช่วยคำนวณเหมือนของผู้เล่น
+        if (battleState.monster && battleState.monster.activeBuffs) {
+            const result = GameLogic.checkBuffs(battleState.monster);
+            
+            if (result.hasChanged) {
+                // ถ้าบัพหมดอายุ ให้อัปเดตค่ามอนสเตอร์ทันที (เช่น เกราะกลับมาเท่าเดิม)
+                battleState.monster = result.newData;
+                
+                // (Optional) อาจจะ Log บอกผู้เล่นว่าบัพมอนสเตอร์หมดแล้ว
+                // logBattle("บัพของศัตรูหมดลงแล้ว!");
+            }
+        }
+
+        // 3. อัปเดตหน้าจอ
         updateBattleUI();
 
+        // 4. ถ้าหมดเวลาเทิร์น ให้สลับฝั่ง
         if (battleState.timeLeft <= 0) {
             switchTurn();
         }

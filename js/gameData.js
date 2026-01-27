@@ -12,11 +12,12 @@ export const classStats = {
         
         // Base Stats
         hp: 200, maxHp: 200,
-        str: 10, int: 2, agi: 3,def: 8,
+        baseMp: 20, // ✅ เพิ่มค่านี้ (รวม INT 2 = 40 MP)
+        str: 10, int: 2, agi: 3, def: 8,
 
-        // Combat Stats (เอกลักษณ์: ถึกทน)
-        block: 15,       // บล็อก 15%
-        dmgRed: 2,       // ลดดาเมจ 2 หน่วย
+        // Combat Stats
+        block: 15,
+        dmgRed: 2,
         critRate: 5,
         critDmg: 150,
         dodge: 0,
@@ -30,15 +31,16 @@ export const classStats = {
 
         // Base Stats
         hp: 80, maxHp: 80,
+        baseMp: 50, // ✅ เพิ่มค่านี้ (รวม INT 15 = 200 MP)
         str: 2, int: 15, agi: 4, def: 1,
 
-        // Combat Stats (เอกลักษณ์: ตีแรงทะลุเกราะ)
+        // Combat Stats
         block: 0,
         dmgRed: 0,
         critRate: 10,
-        critDmg: 200,    // คริแรง 200%
+        critDmg: 200,
         dodge: 5,
-        ignoreBlock: 15  // เจาะเกราะ 15%
+        ignoreBlock: 15
     },
 
     rogue: {
@@ -48,14 +50,15 @@ export const classStats = {
 
         // Base Stats
         hp: 120, maxHp: 120,
+        baseMp: 30, // ✅ เพิ่มค่านี้ (รวม INT 3 = 60 MP)
         str: 7, int: 3, agi: 12, def: 3,
 
-        // Combat Stats (เอกลักษณ์: พริ้วไหว)
+        // Combat Stats
         block: 5,
         dmgRed: 0,
-        critRate: 25,    // คริบ่อย 25%
+        critRate: 25,
         critDmg: 170,
-        dodge: 15,       // หลบ 15%
+        dodge: 15,
         ignoreBlock: 10
     }
 };
