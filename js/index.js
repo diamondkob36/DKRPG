@@ -551,18 +551,30 @@ window.startBattle = (monsterId, bgImage = null) => {
         battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
     }
 
+    // Clone ข้อมูลมอนสเตอร์ และ activeBuffs
+    let monsterInstance = { 
+        ...monsterTemplate,
+        activeBuffs: JSON.parse(JSON.stringify(monsterTemplate.activeBuffs || {})) 
+    };
+
+    // ✅ คำนวณบัพติดตัว (Passive) ใส่เข้าไปในสเตตัสมอนสเตอร์ทันที
+    // เพื่อให้ค่าพลัง (เช่น DEF, STR) ถูกบวกเพิ่มจริงๆ ก่อนเริ่มสู้
+    if (monsterInstance.activeBuffs) {
+        for (const buff of Object.values(monsterInstance.activeBuffs)) {
+            // เช็คว่ามีค่า stat นี้ในตัวมอนสเตอร์ไหม ถ้ามีให้บวกเพิ่ม
+            if (monsterInstance[buff.type] !== undefined) {
+                monsterInstance[buff.type] += buff.value;
+            }
+        }
+    }
+
     battleState = {
         turn: 'player', 
         timeLeft: 15,
-        // Clone มอนสเตอร์ออกมา และ Clone activeBuffs ด้วยเพื่อไม่ให้กระทบตัวต้นฉบับ
-        monster: { 
-            ...monsterTemplate,
-            activeBuffs: JSON.parse(JSON.stringify(monsterTemplate.activeBuffs || {})) 
-        }, 
+        monster: monsterInstance, 
         logs: [],
-        
         playerTurnCount: 1,
-        enemyTurnCount: 1 // ✅ เพิ่มตัวนับเทิร์นศัตรู
+        enemyTurnCount: 1
     };
 
     UI.showScreen('battle-screen');
@@ -657,25 +669,35 @@ function switchTurn() {
 }
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
 window.battleAction = async (action, skillId = null) => {
+    // ห้ามกดถ้าระบบยังไม่พร้อม หรือไม่ใช่ตาเรา
     if (!battleState || battleState.turn !== 'player') return;
 
-    try { // ✅ ใช้ try-catch ครอบเพื่อดัก Error (เช่น MP ไม่พอ)
-
+    try {
         if (action === 'attack') {
-            const dmg = Math.max(1, gameData.str * 2 - battleState.monster.def);
-            battleState.monster.hp -= dmg;
-            logBattle(`⚔️ คุณโจมตี ${dmg} ดาเมจ!`);
-            await checkWinCondition(); // ✅ ใส่ await
+            // ✅ ใช้ GameLogic คำนวณดาเมจ (Player -> Monster)
+            const result = GameLogic.calculateBattleDamage(gameData, battleState.monster);
+            
+            battleState.monster.hp -= result.damage;
+            
+            // สร้างข้อความ Log สวยๆ
+            let icon = "⚔️";
+            if (result.isCrit) icon = "💥 CRITICAL!";
+            if (result.isBlocked) icon = "🛡️ Blocked";
+            
+            logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ!`);
+            
+            await checkWinCondition(); 
             switchTurn(); 
 
         } else if (action === 'skill') {
             const skill = skills[skillId];
             if (!skill) return;
 
-            // ⚠️ จุดนี้ถ้า MP ไม่พอ GameLogic จะ throw Error ออกมา
+            // ใช้สกิล (GameLogic จะจัดการเรื่อง MP/Cooldown)
             gameData = GameLogic.useSkill(gameData, skillId);
 
             if (skill.effect && skill.effect.damage) {
+                // กรณีสกิลทำดาเมจ (อาจจะใช้สูตรแยก หรือสูตรกลางก็ได้)
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
             } else if (skill.buff) {
@@ -685,16 +707,18 @@ window.battleAction = async (action, skillId = null) => {
             }
 
             updateBattleUI(); 
-            await checkWinCondition(); // ✅ ใส่ await
+            await checkWinCondition(); 
             switchTurn(); 
 
         } else if (action === 'run') {
+            // --- 🏃 หนี ---
             clearInterval(battleTimer);
             battleState = null;
             
             let msg = "🏃 คุณหนีจากการต่อสู้!";
             let isDead = false;
 
+            // สุ่ม 10% สะดุดล้ม
             if (Math.random() < 0.1) {
                 const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
                 gameData.hp -= damagePenalty; 
@@ -714,7 +738,6 @@ window.battleAction = async (action, skillId = null) => {
                     const lostExp = Math.floor(gameData.exp * 0.10); 
                     gameData.exp = Math.max(0, gameData.exp - lostExp);
 
-                    // ✅ Popup ตายตอนหนี
                     await UI.alert(
                         "💀 อุบัติเหตุ!",
                         `<div style="text-align:center;">
@@ -734,35 +757,33 @@ window.battleAction = async (action, skillId = null) => {
         }
 
     } catch (e) {
-        // ✅ ดักจับ Error ทั้งหมด (เช่น MP ไม่พอ, Cooldown) แล้วแสดง Popup
-        await UI.alert(
-            "⚠️ ผิดพลาด", 
-            `<div style="text-align:center;">
-                <span style="font-size:30px;">🚫</span><br>
-                <b style="color:#f1c40f;">${e.message}</b>
-             </div>`
-        );
+        await UI.alert("⚠️ ผิดพลาด", `<div style="text-align:center;">${e.message}</div>`);
     }
 };
 // 5. มอนสเตอร์โจมตีคืน
 async function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
-    // คำนวณดาเมจ
-    const dmg = Math.max(1, battleState.monster.atk - (gameData.def || 0));
-    gameData.hp -= dmg;
-    logBattle(`👾 มอนสเตอร์โจมตีคุณ ${dmg} ดาเมจ!`);
+    // ✅ ใช้ GameLogic คำนวณดาเมจ (Monster -> Player)
+    // ส่ง monster เป็น attacker, gameData เป็น defender
+    const result = GameLogic.calculateBattleDamage(battleState.monster, gameData);
+    
+    gameData.hp -= result.damage;
+    
+    let icon = "👾";
+    if (result.isCrit) icon = "💥";
+    if (result.isBlocked) icon = "🛡️";
+    
+    logBattle(`${icon} มอนสเตอร์โจมตี ${result.damage} ดาเมจ! ${result.isBlocked ? '(บล็อก!)' : ''}`);
 
     if (gameData.hp <= 0) {
         // --- 💀 กรณีผู้เล่นตาย ---
         gameData.hp = 0;
         clearInterval(battleTimer);
 
-        // หัก EXP 10%
         const lostExp = Math.floor(gameData.exp * 0.10); 
         gameData.exp = Math.max(0, gameData.exp - lostExp);
 
-        // ✅ Popup แจ้งเตือนการตาย
         await UI.alert(
             "💀 พ่ายแพ้...", 
             `<div style="text-align:center; color:#e74c3c;">
@@ -775,7 +796,6 @@ async function monsterAttack() {
              </div>`
         );
         
-        // บทลงโทษ: ฟื้นเลือดครึ่งหลอด
         gameData.hp = Math.floor(gameData.maxHp * 0.5); 
         
         battleState = null;
@@ -912,7 +932,7 @@ function updateBattleUI() {
     // --- 3. Monster Status ---
     const mon = battleState.monster;
     
-    // ✅ คลิกที่ชื่อหรือรูปเพื่อดู Info Popup
+    // คลิกดู Info
     const monNameEl = document.getElementById('battle-monster-name');
     monNameEl.innerText = mon.name;
     monNameEl.style.cursor = "pointer";
@@ -921,7 +941,7 @@ function updateBattleUI() {
     const monImg = document.getElementById('battle-monster-img');
     if (monImg) {
         monImg.src = mon.img || 'image/dummy.png';
-        monImg.onclick = showMonsterInfo; // ✅ ผูก Event คลิก
+        monImg.onclick = showMonsterInfo;
         monImg.title = "คลิกเพื่อดูข้อมูล";
     }
     
@@ -940,32 +960,44 @@ function updateBattleUI() {
     if (mMpBar) mMpBar.style.width = mMpPct + "%";
     if (mMpText) mMpText.innerText = `${Math.floor(mMp)}/${mMaxMp}`;
 
-    // --- 3.3 Monster Buffs (✅ แก้ไข: ใช้ Tooltip แบบ Hover) ---
+    // --- 3.3 Monster Buffs (✅ แก้ไขใหม่: ไม่กระพริบ) ---
     const mBuffDiv = document.getElementById('battle-monster-buffs');
     if (mBuffDiv) {
-        mBuffDiv.innerHTML = '';
-        if (mon.activeBuffs) {
-            for (const [k, buff] of Object.entries(mon.activeBuffs)) {
-                if (buff.expiresAt > now) {
-                    const timeLeft = Math.ceil((buff.expiresAt - now)/1000);
-                    let timeString = (timeLeft >= 60) ? `${Math.floor(timeLeft/60)}m` : `${timeLeft}s`;
+        const activeBuffs = mon.activeBuffs || {};
 
-                    const buffEl = document.createElement('div');
+        // ลบบัพที่หมดเวลา (หรือไม่มีแล้ว)
+        // เนื่องจากบัพมอนอาจจะไม่มี key ชัดเจนเหมือน player เสมอไป
+        // เพื่อความง่ายและเสถียร เราจะเช็คตามลำดับ key
+        
+        // Loop สร้าง/อัปเดต
+        for (const [k, buff] of Object.entries(activeBuffs)) {
+            if (buff.expiresAt > now) {
+                // คำนวณเวลา
+                const timeLeft = (buff.expiresAt > 9999999999000) ? "∞" : Math.ceil((buff.expiresAt - now)/1000) + "s";
+                
+                // เช็คว่ามี element นี้อยู่แล้วไหม (กันกระพริบ)
+                let buffEl = mBuffDiv.querySelector(`.monster-buff-item[data-key="${k}"]`);
+                
+                if (!buffEl) {
+                    // สร้างใหม่ (Create)
+                    buffEl = document.createElement('div');
                     buffEl.className = 'monster-buff-item';
-                    
-                    // สร้างโครงสร้าง HTML สำหรับ Tooltip
+                    buffEl.dataset.key = k;
                     buffEl.innerHTML = `
                         <span>${buff.icon || '💀'}</span>
                         <div class="buff-tooltip">
                             <span class="tooltip-header">${buff.itemName}</span>
                             <div class="tooltip-desc">
                                 เพิ่ม ${buff.type.toUpperCase()} +${buff.value}<br>
-                                <span style="color:#aaa; font-size:10px;">(เหลือเวลา ${timeString})</span>
+                                <span style="color:#aaa; font-size:10px;">(เหลือเวลา <span class="t-left">${timeLeft}</span>)</span>
                             </div>
                         </div>
                     `;
-                    
                     mBuffDiv.appendChild(buffEl);
+                } else {
+                    // อัปเดตเวลา (Update)
+                    const timeSpan = buffEl.querySelector('.t-left');
+                    if(timeSpan) timeSpan.innerText = timeLeft;
                 }
             }
         }
@@ -982,7 +1014,7 @@ function updateBattleUI() {
         }
     }
 
-    // --- 5. Player Buffs (เหมือนเดิม) ---
+    // --- 5. Player Buffs (เหมือนเดิม: ไม่กระพริบ) ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
         const activeBuffs = gameData.activeBuffs || {};
