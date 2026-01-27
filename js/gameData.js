@@ -247,14 +247,44 @@ export const skills = {
 
 export const monsters = {
     dummy: {
-        id: "dummy", name: "หุ่นซ้อม", img: "image/dummy.png", // หาภาพมาใส่ หรือใช้ Emoji แทนได้
+        id: "dummy", name: "หุ่นซ้อม", img: "image/dummy.png",
+        // Base Stats (พื้นฐาน)
         hp: 500, maxHp: 500,
-        atk: 5, def: 0, exp: 50, gold: 10
+        mp: 100, maxMp: 100,    // ✅ เพิ่ม MP
+        str: 5, int: 1, agi: 1, // ✅ เพิ่มสเตตัสหลัก
+        
+        // Combat Stats (ต่อสู้)
+        def: 5, 
+        hpRegen: 10, mpRegen: 5, // ✅ เพิ่มค่าพื้นฟู
+        critRate: 0, critDmg: 150, 
+        dodge: 0, block: 0, dmgRed: 0, ignoreBlock: 0,
+
+        // Rewards
+        exp: 50, gold: 10,
+
+        // ✅ บัพติดตัว (Passive Buff)
+        activeBuffs: {
+            "dummy_passive": {
+                itemName: "เกราะฝึกซ้อม",
+                type: "def",
+                value: 10,
+                expiresAt: 9999999999999, // ตลอดกาล
+                icon: "🛡️"
+            }
+        }
     },
+
     slime: {
         id: "slime", name: "สไลม์", img: "image/slime.png",
         hp: 100, maxHp: 100,
-        atk: 10, def: 2, exp: 20, gold: 15
+        mp: 50, maxMp: 50,
+        str: 8, int: 2, agi: 3,
+        def: 2,
+        hpRegen: 5, mpRegen: 1,
+        critRate: 5, critDmg: 150,
+        dodge: 5, block: 0, dmgRed: 0, ignoreBlock: 0,
+        exp: 20, gold: 15,
+        activeBuffs: {} // ไม่มีบัพเริ่มต้น
     }
 };
 

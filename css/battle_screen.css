@@ -194,11 +194,11 @@
     height: 50px;
     display: flex;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 15px;
     align-items: flex-end;
     
     /* ✅ 1. ปรับตำแหน่ง: ขยับขวาเพิ่มเป็น 125px ให้ตรงกับช่องสกิลแรกเป๊ะๆ */
-    margin-left: 125px; 
+    margin-left: 135px; 
     /* ✅ 2. แสดงทับตัวอื่น: ให้ลอยอยู่เหนือ elements อื่นๆ ในแถบควบคุม */
     position: relative;
     z-index: 500; 
@@ -206,8 +206,8 @@
 
 .buff-item {
     position: relative;
-    width: 42px;
-    height: 42px;
+    width: 32px;
+    height: 32px;
     background: linear-gradient(135deg, rgba(44, 62, 80, 0.9), rgba(0, 0, 0, 0.9));
     border: 1px solid #f1c40f;
     border-radius: 8px;
@@ -283,6 +283,34 @@
     visibility: visible;
     opacity: 1;
     bottom: 125%; /* เลื่อนลงมานิดหน่อยตอนแสดง */
+}
+
+/* แถบบัพของมอนสเตอร์ (ตำแหน่งใหม่) */
+.monster-buff-row {
+    width: 100%;             /* ความกว้างเต็มกรอบ Card */
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลาง */
+    flex-wrap: wrap;         /* ให้ขึ้นบรรทัดใหม่เมื่อเต็ม */
+    gap: 4px;                /* ระยะห่างระหว่างไอคอน */
+    
+    margin-top: 8px;         /* เว้นระยะห่างจากกรอบ Info ด้านบน */
+    padding: 0 10px;         /* กันขอบซ้ายขวานิดหน่อย */
+    box-sizing: border-box;
+
+    /* ✅ จำกัดให้แสดงสูงสุด 2 แถว */
+    max-height: 56px;        /* (ความสูงไอคอน 24px * 2) + gap */
+    overflow: hidden;        /* ส่วนเกินซ่อนไว้ */
+}
+
+.monster-buff-item {
+    width: 24px; height: 24px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #e74c3c;
+    border-radius: 4px;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 14px;
+    cursor: help;
+    flex-shrink: 0;          /* ห้ามบีบเล็กกว่านี้ */
 }
 
 .tooltip-header {

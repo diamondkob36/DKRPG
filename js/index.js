@@ -554,11 +554,15 @@ window.startBattle = (monsterId, bgImage = null) => {
     battleState = {
         turn: 'player', 
         timeLeft: 15,
-        monster: { ...monsterTemplate }, 
+        // Clone มอนสเตอร์ออกมา และ Clone activeBuffs ด้วยเพื่อไม่ให้กระทบตัวต้นฉบับ
+        monster: { 
+            ...monsterTemplate,
+            activeBuffs: JSON.parse(JSON.stringify(monsterTemplate.activeBuffs || {})) 
+        }, 
         logs: [],
         
-        // ✅ แก้ไข: เริ่มนับที่ 1 เพื่อให้การคำนวณรอบแม่นยำขึ้น
-        playerTurnCount: 1 
+        playerTurnCount: 1,
+        enemyTurnCount: 1 // ✅ เพิ่มตัวนับเทิร์นศัตรู
     };
 
     UI.showScreen('battle-screen');
@@ -592,49 +596,63 @@ function switchTurn() {
     const turnName = (battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!";
     logBattle(`⏳ เปลี่ยนเทิร์น: ${turnName}`);
     
-    // ✅ Logic รีเจ้นท์ (ทำงานเฉพาะเมื่อวนกลับมาตาเรา)
+    // --- 🟢 ส่วนของผู้เล่น (เหมือนเดิม) ---
     if (battleState.turn === 'player') {
-        
-        // ป้องกันค่าเป็น undefined
-        if (!battleState.playerTurnCount) battleState.playerTurnCount = 0;
-
-        // บวกเทิร์นเพิ่ม
+        if (!battleState.playerTurnCount) battleState.playerTurnCount = 1;
         battleState.playerTurnCount++;
 
-        // เช็คว่าหาร 3 ลงตัวไหม (รอบที่ 3, 6, 9...)
         if (battleState.playerTurnCount % 3 === 0) {
-            
-            // ป้องกันกรณีตัวละครเก่าไม่มีค่า Regen ให้ใช้ Default = 1
             const hpRegen = gameData.hpRegen || Math.floor(gameData.maxHp * 0.05) || 1;
             const mpRegen = gameData.mpRegen || Math.floor((gameData.int * 10) * 0.05) || 1;
             const maxMp = (gameData.int * 10) || 10;
 
-            let msg = `✨ ครบ 3 เทิร์น: `;
+            let msg = `✨ (คุณ) ครบ 3 เทิร์น: `;
             let hasRegen = false;
 
-            // ฟื้นฟู HP (ถ้าเลือดไม่เต็ม)
             if (gameData.hp < gameData.maxHp) {
                 gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
                 msg += `+${hpRegen} HP `;
                 hasRegen = true;
             }
-            
-            // ฟื้นฟู MP (ถ้ามานาไม่เต็ม)
             if (gameData.mp < maxMp) {
                 gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
                 msg += `+${mpRegen} MP`;
                 hasRegen = true;
             }
-
-            // แสดง Log เมื่อมีการฟื้นฟู
             if (hasRegen) logBattle(msg);
         }
     }
     
-    // AI Action
+    // --- 🔴 ส่วนของศัตรู (✅ เพิ่มใหม่: ฟื้นฟูทุก 3 เทิร์น) ---
     if (battleState.turn === 'enemy') {
+        if (!battleState.enemyTurnCount) battleState.enemyTurnCount = 1;
+        battleState.enemyTurnCount++;
+
+        // เช็คครบ 3 เทิร์น
+        if (battleState.enemyTurnCount % 3 === 0) {
+            const mon = battleState.monster;
+            const hpRegen = mon.hpRegen || Math.floor(mon.maxHp * 0.05) || 1;
+            const mpRegen = mon.mpRegen || Math.floor(mon.maxMp * 0.05) || 1;
+
+            let msg = `👾 (ศัตรู) ครบ 3 เทิร์น: `;
+            let hasRegen = false;
+
+            if (mon.hp < mon.maxHp) {
+                mon.hp = Math.min(mon.maxHp, mon.hp + hpRegen);
+                msg += `+${hpRegen} HP `;
+                hasRegen = true;
+            }
+            if (mon.mp < mon.maxMp) {
+                mon.mp = Math.min(mon.maxMp, mon.mp + mpRegen);
+                msg += `+${mpRegen} MP`;
+                hasRegen = true;
+            }
+            if (hasRegen) logBattle(msg);
+        }
+
         setTimeout(monsterAttack, 1000);
     }
+    
     updateBattleUI();
 }
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
@@ -806,6 +824,8 @@ async function checkWinCondition() {
 function updateBattleUI() {
     if (!battleState) return;
 
+    const now = Date.now();
+
     // --- 1. Header & Timer ---
     const turnBadge = document.getElementById('turn-badge');
     if(turnBadge) {
@@ -819,12 +839,12 @@ function updateBattleUI() {
     // --- 2. Player Status ---
     document.getElementById('battle-player-name').innerText = gameData.name;
     
-    // HP
+    // HP Player
     const pHpPct = Math.max(0, (gameData.hp / gameData.maxHp * 100));
     document.getElementById('battle-player-hp').style.width = pHpPct + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    // MP
+    // MP Player
     const maxMp = (gameData.int * 10) || 10;
     const pMpPct = Math.max(0, (gameData.mp / maxMp * 100));
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
@@ -839,76 +859,90 @@ function updateBattleUI() {
     // --- 3. Monster Status ---
     const mon = battleState.monster;
     document.getElementById('battle-monster-name').innerText = mon.name;
-    const monImg = document.getElementById('battle-monster-img');
-    if (monImg) monImg.src = battleState.monster.img || 'image/dummy.png';
     
+    const monImg = document.getElementById('battle-monster-img');
+    if (monImg) monImg.src = mon.img || 'image/dummy.png';
+    
+    // 3.1 Monster HP
     const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
     document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
     document.getElementById('battle-monster-hp-text').innerText = `${mon.hp}/${mon.maxHp}`;
 
-    // --- 4. Cooldown Check ---
-    const now = Date.now();
-    const cooldowns = gameData.skillCooldowns || {};
-    
-    for (const [id, skill] of Object.entries(skills)) {
-        const btn = document.getElementById(`btn-skill-${id}`);
-        if (btn) {
-            const readyTime = cooldowns[id] || 0;
-            if (now < readyTime) {
-                btn.classList.add('cooldown');
-            } else {
-                btn.classList.remove('cooldown');
+    // 3.2 Monster MP
+    const mMaxMp = mon.maxMp || (mon.int * 10) || 100; 
+    const mMp = (mon.mp !== undefined) ? mon.mp : mMaxMp;
+    const mMpPct = Math.max(0, (mMp / mMaxMp * 100));
+
+    const mMpBar = document.getElementById('battle-monster-mp');
+    const mMpText = document.getElementById('battle-monster-mp-text');
+    if (mMpBar) mMpBar.style.width = mMpPct + "%";
+    if (mMpText) mMpText.innerText = `${Math.floor(mMp)}/${mMaxMp}`;
+
+    // 3.3 Monster Buffs (โค้ดส่วนนี้จะไปเติมใน div ที่เราย้ายตำแหน่งแล้ว)
+    const mBuffDiv = document.getElementById('battle-monster-buffs');
+    if (mBuffDiv) {
+        mBuffDiv.innerHTML = '';
+        if (mon.activeBuffs) {
+            for (const [k, buff] of Object.entries(mon.activeBuffs)) {
+                if (buff.expiresAt > now) {
+                    const icon = document.createElement('div');
+                    icon.className = 'monster-buff-item';
+                    icon.innerHTML = buff.icon || '💀';
+                    
+                    // Tooltip อย่างง่าย
+                    icon.title = `${buff.itemName} (${Math.ceil((buff.expiresAt - now)/1000)}s)`;
+                    
+                    mBuffDiv.appendChild(icon);
+                }
             }
         }
     }
 
-    // --- 5. Render Buffs (✅ แก้ไขใหม่: สวยงาม + ตรงช่องสกิล + เวลานับถอยหลัง) ---
+    // --- 4. Cooldown Check ---
+    const cooldowns = gameData.skillCooldowns || {};
+    for (const [id, skill] of Object.entries(skills)) {
+        const btn = document.getElementById(`btn-skill-${id}`);
+        if (btn) {
+            const readyTime = cooldowns[id] || 0;
+            if (now < readyTime) btn.classList.add('cooldown');
+            else btn.classList.remove('cooldown');
+        }
+    }
+
+    // --- 5. Player Buffs (เหมือนเดิม) ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
-        buffDiv.innerHTML = ''; // เคลียร์ของเก่า
-        if (gameData.activeBuffs) {
-            for (const [k, buff] of Object.entries(gameData.activeBuffs)) {
-                if (buff.expiresAt > now) {
-                    const timeLeft = Math.ceil((buff.expiresAt - now) / 1000);
-                    
-                    // สร้างกล่องบัพ
-                    const buffEl = document.createElement('div');
+        const activeBuffs = gameData.activeBuffs || {};
+        
+        Array.from(buffDiv.children).forEach(child => {
+            const key = child.dataset.key;
+            if (!activeBuffs[key] || activeBuffs[key].expiresAt <= now) child.remove();
+        });
+
+        for (const [key, buff] of Object.entries(activeBuffs)) {
+            if (buff.expiresAt > now) {
+                const timeLeft = Math.ceil((buff.expiresAt - now) / 1000);
+                let timeString = (timeLeft >= 60) ? `${Math.floor(timeLeft/60)}m` : `${timeLeft}s`;
+
+                let buffEl = buffDiv.querySelector(`.buff-item[data-key="${key}"]`);
+                if (!buffEl) {
+                    buffEl = document.createElement('div');
                     buffEl.className = 'buff-item';
-                    
-                    // ไอคอน
-                    const iconSpan = document.createElement('span');
-                    iconSpan.innerHTML = buff.icon || '✨';
-                    buffEl.appendChild(iconSpan);
-
-                    // ✅ ตัวนับเวลาถอยหลัง (ใต้ไอคอน)
-                    const timerSpan = document.createElement('span');
-                    timerSpan.className = 'buff-timer';
-                    timerSpan.innerText = `${timeLeft}s`; // แสดงหน่วยวินาที
-                    buffEl.appendChild(timerSpan);
-
-                    // ✅ Tooltip รายละเอียด (แสดงเมื่อ Hover)
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'buff-tooltip';
-                    
-                    // ข้อความอธิบายผลลัพธ์
-                    let effectText = `เพิ่ม ${buff.type.toUpperCase()} +${buff.value}`;
-                    
-                    tooltip.innerHTML = `
-                        <span class="tooltip-header">${buff.itemName}</span>
-                        <div class="tooltip-desc">
-                            ${effectText}<br>
-                            <span style="color:#aaa; font-size:10px;">(เหลือเวลา ${timeLeft} วินาที)</span>
-                        </div>
-                    `;
-                    buffEl.appendChild(tooltip);
-
+                    buffEl.dataset.key = key;
+                    buffEl.innerHTML = `<span>${buff.icon||'✨'}</span><span class="buff-timer">${timeString}</span><div class="buff-tooltip"></div>`;
                     buffDiv.appendChild(buffEl);
+                }
+
+                buffEl.querySelector('.buff-timer').innerText = timeString;
+                
+                const tooltip = buffEl.querySelector('.buff-tooltip');
+                if(tooltip) {
+                     tooltip.innerHTML = `<span class="tooltip-header">${buff.itemName}</span><div class="tooltip-desc">เพิ่ม ${buff.type.toUpperCase()} +${buff.value}<br><span style="color:#aaa; font-size:10px;">(${timeString})</span></div>`;
                 }
             }
         }
     }
 }
-
 // Helper: Log
 function logBattle(msg) {
     const logBox = document.getElementById('battle-log');
