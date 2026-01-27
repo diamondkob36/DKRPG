@@ -25,35 +25,42 @@ export const UI = {
 
     // 2. แก้ไข updateGameScreen ให้เรียก renderBuffs
     updateGameScreen(gameData) {
-        // --- 1. HUD มุมซ้ายบน (Compact) ---
-        // คำนวณ Max MP (INT * 10)
-        const maxMp = (gameData.int * 10) || 10;
-        const currentMp = gameData.mp || 0; 
-        // อัปเดตข้อความทั่วไป
+        // 1. คำนวณค่า Max MP ตามมาตรฐานใหม่ (Base + INT * 10)
+        // หมายเหตุ: gameData.maxMp ควรถูกคำนวณมาแล้วจาก GameLogic แต่ใส่ fallback ไว้เพื่อความชัวร์
+        const baseMp = gameData.baseMp || 100;
+        const maxMp = gameData.maxMp || (baseMp + (gameData.int * 10));
+        const currentMp = gameData.mp || 0;
+        const currentHp = gameData.hp || 0;
+        const maxHp = gameData.maxHp || 100;
+
+        // 2. อัปเดตข้อมูลพื้นฐานใน Compact HUD (มุมซ้ายบน)
         setText('display-name', gameData.name);
         setText('lvl', gameData.lvl);
         setText('gold', gameData.gold);
         
-        // อัปเดตรูปอาชีพ
+        // อัปเดตรูปภาพโปรไฟล์ตามอาชีพ
         if(gameData.classKey && classStats[gameData.classKey]) {
             const imgSrc = classStats[gameData.classKey].img;
-            document.getElementById('hero-img').src = imgSrc;
+            const heroImg = document.getElementById('hero-img');
+            if(heroImg) heroImg.src = imgSrc;
             const profileImg = document.getElementById('profile-img');
             if(profileImg) profileImg.src = imgSrc;
         }
 
-        // อัปเดตหลอดเลือด (HP)
-        const hpPercent = Math.min((gameData.hp / gameData.maxHp) * 100, 100);
-        document.getElementById('hp-bar-fill').style.width = hpPercent + "%";
-        setText('hp-text', `${gameData.hp}/${gameData.maxHp}`);
+        // 3. อัปเดตหลอดพลัง (Bars) และตัวเลข
+        // หลอดเลือด (HP)
+        const hpPercent = Math.max(0, Math.min((currentHp / maxHp) * 100, 100));
+        const hpBar = document.getElementById('hp-bar-fill');
+        if(hpBar) hpBar.style.width = hpPercent + "%";
+        setText('hp-text', `${Math.floor(currentHp)}/${maxHp}`);
 
-        // อัปเดตหลอดมานา (MP)
-        const mpPercent = Math.min((currentMp / maxMp) * 100, 100);
+        // หลอดมานา (MP) - มาตรฐานใหม่
+        const mpPercent = Math.max(0, Math.min((currentMp / maxMp) * 100, 100));
         const mpBar = document.getElementById('mp-bar-fill');
         if(mpBar) mpBar.style.width = mpPercent + "%";
         setText('mp-text', `${Math.floor(currentMp)}/${maxMp}`);
 
-        // อัปเดตหลอด EXP
+        // หลอดค่าประสบการณ์ (EXP)
         if (gameData.maxExp > 0) {
             const expPercent = Math.min((gameData.exp / gameData.maxExp) * 100, 100);
             const expBar = document.getElementById('exp-bar-fill');
@@ -61,77 +68,75 @@ export const UI = {
             setText('exp-text', `EXP ${Math.floor(gameData.exp)}/${gameData.maxExp}`);
         }
 
-        // --- 2. Profile Modal (หน้าข้อมูลตัวละคร) ---
+        // 4. อัปเดตหน้าต่างข้อมูลตัวละคร (Profile Modal)
         setText('profile-name', gameData.name);
         setText('profile-class', gameData.className);
-        
-        // Stats หลัก (ในกล่องสีเทา)
-        setText('profile-hp', `${gameData.hp}/${gameData.maxHp}`);
+        setText('profile-hp', `${Math.floor(currentHp)}/${maxHp}`);
         setText('profile-mp', `${Math.floor(currentMp)}/${maxMp}`);
         setText('profile-str', gameData.str);
         setText('profile-int', gameData.int);
         setText('profile-agi', gameData.agi);
+        setText('profile-def', gameData.def || 0);
         
-        // ค่าป้องกัน (DEF)
-        setText('profile-def', gameData.def || 0); 
-        
-        // ข้อมูลอื่นๆ (น้ำหนัก/แต้มอัปเกรด)
+        // แสดงค่าน้ำหนักกระเป๋า
         const usage = GameLogic.getInventoryUsage(gameData);
         setText('profile-weight', `${usage.currentWeight.toFixed(1)}/${usage.limitWeight} kg`);
         
+        // แสดงแต้มคงเหลือ
         const points = gameData.statPoints || 0;
         setText('profile-points', points);
-        
-        // --- 3. อัปเดตหน้าต่าง Upgrade Modal (เผื่อเปิดอยู่) ---
+        setText('hud-points', points); // อัปเดตที่ปุ่มหน้าจอหลักด้วย
+
+        // 5. อัปเดตหน้าต่างอัปเกรด (Upgrade Modal)
         setText('modal-points', points);
-        ['str', 'int', 'agi', 'def', 'maxHp'].forEach(k => setText('modal-'+k, gameData[k]));
+        const statsToUpdate = {
+            'str': gameData.str,
+            'int': gameData.int,
+            'agi': gameData.agi,
+            'def': gameData.def || 0,
+            'maxHp': gameData.maxHp
+        };
+        Object.entries(statsToUpdate).forEach(([key, val]) => {
+            setText('modal-' + key, val);
+        });
 
-        // --- 4. ส่วนแสดงสเตตัสเสริม (Extra Stats) ด้านล่าง ---
-        
-        // ✅ [ใหม่] 1. เตรียมค่า Regen (ถ้าไม่มีใน Data ให้คำนวณสด)
-        const hpRegen = gameData.hpRegen || Math.floor(gameData.maxHp * 0.05) || 1;
-        const mpRegen = gameData.mpRegen || Math.floor((gameData.int * 10) * 0.05) || 1;
+        // 6. แสดงสเตตัสเสริม (Regen, Dodge, Crit, etc.)
+        const hpRegen = gameData.hpRegen || Math.floor(maxHp * 0.05) || 1;
+        const mpRegen = gameData.mpRegen || Math.floor(maxMp * 0.05) || 1;
 
-        // ✅ [ใหม่] 2. สร้าง HTML สำหรับแสดง Regen และ Stats อื่นๆ
         const extraStatsHTML = `
-            <div style="grid-column: 1 / -1; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #5d4037; font-size: 13px;">
-                
+            <div id="extra-stats-content" style="grid-column: 1 / -1; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #5d4037; font-size: 0.9em;">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-                    <span>🌱 รีเลือด (HP): <b style="color:#2ecc71">+${hpRegen}</b><small style="color:#aaa;">/3T</small></span>
-                    <span>💧 รีมานา (MP): <b style="color:#3498db">+${mpRegen}</b><small style="color:#aaa;">/3T</small></span>
+                    <span>🌱 HP Regen: <b style="color:#2ecc71">+${hpRegen}</b> <small>/3T</small></span>
+                    <span>💧 MP Regen: <b style="color:#3498db">+${mpRegen}</b> <small>/3T</small></span>
                 </div>
-
                 <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-                    <span>🛡️ บล็อก (Block): <b style="color:#fff">${gameData.block || 0}%</b></span>
-                    <span>💨 หลบหลีก (Dodge): <b style="color:#2ecc71">${gameData.dodge || 0}%</b></span>
+                    <span>🛡️ Block: <b>${gameData.block || 0}%</b></span>
+                    <span>💨 Dodge: <b>${gameData.dodge || 0}%</b></span>
                 </div>
-
                 <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-                    <span>⚡ คริเรท (Crit): <b style="color:#f1c40f">${gameData.critRate || 0}%</b></span>
-                    <span>💥 คริแรง (Dmg): <b style="color:#e74c3c">${gameData.critDmg || 0}%</b></span>
+                    <span>⚡ Crit Rate: <b>${gameData.critRate || 0}%</b></span>
+                    <span>💥 Crit Dmg: <b>${gameData.critDmg || 0}%</b></span>
                 </div>
-
                 <div style="display:flex; justify-content:space-between;">
-                    <span>💢 เจาะเกราะ (Pierce): <b style="color:#9b59b6">${gameData.ignoreBlock || 0}%</b></span>
+                    <span>💢 Pierce: <b>${gameData.ignoreBlock || 0}%</b></span>
                 </div>
             </div>
         `;
 
-        // Logic แทรก HTML ลงไปต่อท้ายตารางสเตตัสหลักใน Modal
-        const statsContainer = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
-        if(statsContainer) {
-             let extraDiv = document.getElementById('extra-stats-display');
-             // ถ้ายังไม่มี div นี้ ให้สร้างใหม่และแทรกต่อท้าย
-             if (!extraDiv) {
-                 extraDiv = document.createElement('div');
-                 extraDiv.id = 'extra-stats-display';
-                 statsContainer.parentNode.insertBefore(extraDiv, statsContainer.nextSibling);
-             }
-             // อัปเดตเนื้อหา HTML
-             extraDiv.innerHTML = extraStatsHTML;
+        // ค้นหาตำแหน่งที่จะใส่สเตตัสเสริม (มักจะใส่ต่อจาก Grid สเตตัสหลัก)
+        const statsGrid = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
+        if(statsGrid) {
+            let extraDiv = document.getElementById('extra-stats-display');
+            if (!extraDiv) {
+                extraDiv = document.createElement('div');
+                extraDiv.id = 'extra-stats-display';
+                statsGrid.parentNode.insertBefore(extraDiv, statsGrid.nextSibling);
+            }
+            extraDiv.innerHTML = extraStatsHTML;
         }
 
-        // --- 5. เรียกวาด Buffs ---
+        // 7. อัปเดตรายการบัพที่ทำงานอยู่
         this.renderBuffs(gameData.activeBuffs);
     },
 

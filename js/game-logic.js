@@ -1,6 +1,9 @@
 // js/game-logic.js (ฉบับแก้ไขสมบูรณ์)
 import { classStats, items, skills } from "./gameData.js";
 
+export const getMaxMp = (baseMp, int) => {
+    return (baseMp || 100) + (int * 10); 
+};
 export const GameLogic = {
     calculateMaxExp(lvl) {
         const tier = Math.floor((lvl - 1) / 10);
@@ -16,12 +19,8 @@ export const GameLogic = {
             data.lvl++;
             data.maxExp = this.calculateMaxExp(data.lvl);
             data.statPoints = (data.statPoints || 0) + 5;
-            
-            // ✅ รี HP เต็ม
             data.hp = data.maxHp;
-            
-            // ✅ [ใหม่] รี MP เต็ม (สูตร: INT * 10 หรืออย่างน้อย 10)
-            data.mp = (data.int * 10) || 10;
+            data.mp = getMaxMp(data.int); // รีมานาให้เต็มตามขีดจำกัดใหม่
         }
         return data;
     },
@@ -38,24 +37,18 @@ export const GameLogic = {
         if(statType === 'hp') { 
             newData.maxHp += 10; 
             newData.hp += 10; 
-            
-            // ✅ คำนวณ HP Regen ใหม่ (5% ของ MaxHP)
             newData.hpRegen = Math.floor(newData.maxHp * 0.05) || 1;
-            
         } else { 
             newData[statType]++; 
-            // ถ้าอัป INT ให้เพิ่ม MaxMP และ MP Regen
             if (statType === 'int') {
-                newData.mp = (newData.mp || 0) + 10;
-                
-                // ✅ คำนวณ MP Regen ใหม่ (5% ของ MaxMP)
-                const maxMp = newData.int * 10;
-                newData.mpRegen = Math.floor(maxMp * 0.05) || 1;
+                const newMaxMp = getMaxMp(newData.baseMp, newData.int);
+                newData.maxMp = newMaxMp;
+                newData.mp += 10; // เพิ่ม 10 หน่วยต่อ 1 INT
+                newData.mpRegen = Math.floor(newMaxMp * 0.05) || 1;
             }
         }
-        
         return newData;
-    },
+    }, 
 
     downgradeStat(currentData, originalData, statType) {
         const newData = { ...currentData };
@@ -94,36 +87,37 @@ export const GameLogic = {
     // 1. แก้ไข createCharacter ให้มีสเตตัสใหม่
     createCharacter(name, classKey) {
         const base = classStats[classKey];
-        const startMp = base.int * 10;
+        const initialMaxMp = getMaxMp(base.baseMp, base.int);
 
-        // เลือกอาวุธเริ่มต้น
         let startWeaponId = 'wooden_sword';
         if (classKey === 'mage') startWeaponId = 'novice_staff';
         else if (classKey === 'rogue') startWeaponId = 'novice_dagger';
 
         return {
-            name: name, classKey: classKey, className: base.name,
-            lvl: 1, exp: 0, maxExp: 100, gold: 0, statPoints: 5,
-            hp: base.hp, maxHp: base.maxHp, mp: startMp,
-            str: base.str, int: base.int, agi: base.agi,
-            
-            // ค่า Regen (คงเดิม)
+            name: name, 
+            classKey: classKey, 
+            className: base.name,
+            lvl: 1, 
+            exp: 0, 
+            maxExp: 100, 
+            gold: 0, 
+            statPoints: 5,
+            baseMp: base.baseMp || 100, // เก็บค่าฐานไว้เพื่อใช้คำนวณต่อ
+            hp: base.hp, 
+            maxHp: base.maxHp, 
+            mp: initialMaxMp, 
+            maxMp: initialMaxMp,
+            str: base.str, 
+            int: base.int, 
+            agi: base.agi,
             hpRegen: Math.floor(base.maxHp * 0.05) || 1,
-            mpRegen: Math.floor(startMp * 0.05) || 1,
-
-            // ✅ แก้ไข: ดึงค่าจาก base แทนการใส่เลข 0
-            def: base.def || 0, 
-            critRate: base.critRate || 5, 
-            critDmg: base.critDmg || 150, 
-            dodge: base.dodge || 0, 
-            block: base.block || 0, 
-            dmgRed: base.dmgRed || 0, 
-            ignoreBlock: base.ignoreBlock || 0,
-
+            mpRegen: Math.floor(initialMaxMp * 0.05) || 1,
+            def: base.def || 0,
             inventory: { "potion_s": 3, [startWeaponId]: 1 },
             equipment: {},
             activeBuffs: {},
-            maxSlots: 32, maxWeight: 60 
+            maxSlots: 32, 
+            maxWeight: 60 
         };
     },
 

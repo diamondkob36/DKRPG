@@ -546,66 +546,35 @@ function switchTurn() {
     battleState.turn = (battleState.turn === 'player') ? 'enemy' : 'player';
     battleState.timeLeft = 15;
 
-    const turnName = (battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!";
-    logBattle(`⏳ เปลี่ยนเทิร์น: ${turnName}`);
+    logBattle(`⏳ เปลี่ยนเทิร์น: ${(battleState.turn === 'player') ? "ตาของคุณ!" : "ตาของศัตรู!"}`);
     
-    // --- 🟢 ส่วนของผู้เล่น (เหมือนเดิม) ---
     if (battleState.turn === 'player') {
-        if (!battleState.playerTurnCount) battleState.playerTurnCount = 1;
-        battleState.playerTurnCount++;
+        battleState.playerTurnCount = (battleState.playerTurnCount || 0) + 1;
 
         if (battleState.playerTurnCount % 3 === 0) {
-            const hpRegen = gameData.hpRegen || Math.floor(gameData.maxHp * 0.05) || 1;
-            const mpRegen = gameData.mpRegen || Math.floor((gameData.int * 10) * 0.05) || 1;
-            const maxMp = (gameData.int * 10) || 10;
+            const hpRegen = gameData.hpRegen || 1;
+            const maxMp = gameData.maxMp || 100;
+            const mpRegen = gameData.mpRegen || Math.floor(maxMp * 0.05) || 1;
 
-            let msg = `✨ (คุณ) ครบ 3 เทิร์น: `;
-            let hasRegen = false;
-
-            if (gameData.hp < gameData.maxHp) {
-                gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
-                msg += `+${hpRegen} HP `;
-                hasRegen = true;
-            }
-            if (gameData.mp < maxMp) {
-                gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
-                msg += `+${mpRegen} MP`;
-                hasRegen = true;
-            }
-            if (hasRegen) logBattle(msg);
+            gameData.hp = Math.min(gameData.maxHp, gameData.hp + hpRegen);
+            gameData.mp = Math.min(maxMp, gameData.mp + mpRegen);
+            logBattle(`✨ ฟื้นฟูอัตโนมัติ: +${hpRegen} HP, +${mpRegen} MP`);
         }
-    }
-    
-    // --- 🔴 ส่วนของศัตรู (✅ เพิ่มใหม่: ฟื้นฟูทุก 3 เทิร์น) ---
-    if (battleState.turn === 'enemy') {
-        if (!battleState.enemyTurnCount) battleState.enemyTurnCount = 1;
-        battleState.enemyTurnCount++;
+    } else {
+        battleState.enemyTurnCount = (battleState.enemyTurnCount || 0) + 1;
 
-        // เช็คครบ 3 เทิร์น
         if (battleState.enemyTurnCount % 3 === 0) {
             const mon = battleState.monster;
-            const hpRegen = mon.hpRegen || Math.floor(mon.maxHp * 0.05) || 1;
-            const mpRegen = mon.mpRegen || Math.floor(mon.maxMp * 0.05) || 1;
+            const hpRegen = mon.hpRegen || 1;
+            const maxMp = mon.maxMp || 100;
+            const mpRegen = Math.floor(maxMp * 0.05) || 1;
 
-            let msg = `👾 (ศัตรู) ครบ 3 เทิร์น: `;
-            let hasRegen = false;
-
-            if (mon.hp < mon.maxHp) {
-                mon.hp = Math.min(mon.maxHp, mon.hp + hpRegen);
-                msg += `+${hpRegen} HP `;
-                hasRegen = true;
-            }
-            if (mon.mp < mon.maxMp) {
-                mon.mp = Math.min(mon.maxMp, mon.mp + mpRegen);
-                msg += `+${mpRegen} MP`;
-                hasRegen = true;
-            }
-            if (hasRegen) logBattle(msg);
+            mon.hp = Math.min(mon.maxHp, mon.hp + hpRegen);
+            mon.mp = Math.min(maxMp, (mon.mp || 0) + mpRegen);
+            logBattle(`👾 ศัตรูฟื้นฟูอัตโนมัติ`);
         }
-
         setTimeout(monsterAttack, 1000);
     }
-    
     updateBattleUI();
 }
 // 4. การกระทำของผู้เล่น (โจมตี / สกิล / หนี)
