@@ -107,12 +107,18 @@ export const GameLogic = {
             hp: base.hp, maxHp: base.maxHp, mp: startMp,
             str: base.str, int: base.int, agi: base.agi,
             
-            // ✅ [ใหม่] เพิ่มค่า Regen ลงในสเตตัส (5% ของค่าสูงสุด)
+            // ค่า Regen (คงเดิม)
             hpRegen: Math.floor(base.maxHp * 0.05) || 1,
             mpRegen: Math.floor(startMp * 0.05) || 1,
 
-            def: 0, critRate: 5, critDmg: 150, 
-            dodge: 0, block: 0, dmgRed: 0, ignoreBlock: 0,
+            // ✅ แก้ไข: ดึงค่าจาก base แทนการใส่เลข 0
+            def: base.def || 0, 
+            critRate: base.critRate || 5, 
+            critDmg: base.critDmg || 150, 
+            dodge: base.dodge || 0, 
+            block: base.block || 0, 
+            dmgRed: base.dmgRed || 0, 
+            ignoreBlock: base.ignoreBlock || 0,
 
             inventory: { "potion_s": 3, [startWeaponId]: 1 },
             equipment: {},

@@ -830,22 +830,17 @@ function updateBattleUI() {
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
     document.getElementById('battle-player-mp-text').innerText = `${Math.floor(gameData.mp)}/${maxMp}`;
 
-    // ✅ Render รูปตัวละคร (แก้ไขแล้ว)
+    // Render รูปตัวละคร
     if (classStats && gameData.classKey && classStats[gameData.classKey]) {
         const playerImg = document.getElementById('battle-player-img');
-        if (playerImg) {
-            playerImg.src = classStats[gameData.classKey].img;
-        }
+        if (playerImg) playerImg.src = classStats[gameData.classKey].img;
     }
 
     // --- 3. Monster Status ---
     const mon = battleState.monster;
     document.getElementById('battle-monster-name').innerText = mon.name;
     const monImg = document.getElementById('battle-monster-img');
-    if (monImg) {
-        // ดึง path รูปจากข้อมูลมอนสเตอร์ (ถ้าไม่มีให้ใช้ dummy)
-        monImg.src = battleState.monster.img || 'image/dummy.png';
-    }
+    if (monImg) monImg.src = battleState.monster.img || 'image/dummy.png';
     
     const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
     document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
@@ -867,18 +862,47 @@ function updateBattleUI() {
         }
     }
 
-    // --- 5. Render Buffs ---
+    // --- 5. Render Buffs (✅ แก้ไขใหม่: สวยงาม + ตรงช่องสกิล + เวลานับถอยหลัง) ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
-        buffDiv.innerHTML = '';
+        buffDiv.innerHTML = ''; // เคลียร์ของเก่า
         if (gameData.activeBuffs) {
             for (const [k, buff] of Object.entries(gameData.activeBuffs)) {
                 if (buff.expiresAt > now) {
-                    const icon = document.createElement('div');
-                    icon.innerHTML = buff.icon;
-                    icon.title = `${buff.itemName} (${Math.ceil((buff.expiresAt - now)/1000)}s)`;
-                    icon.style.cssText = "background:rgba(0,0,0,0.5); border:1px solid gold; border-radius:4px; width:24px; height:24px; display:flex; justify-content:center; align-items:center; font-size:14px; cursor:help;";
-                    buffDiv.appendChild(icon);
+                    const timeLeft = Math.ceil((buff.expiresAt - now) / 1000);
+                    
+                    // สร้างกล่องบัพ
+                    const buffEl = document.createElement('div');
+                    buffEl.className = 'buff-item';
+                    
+                    // ไอคอน
+                    const iconSpan = document.createElement('span');
+                    iconSpan.innerHTML = buff.icon || '✨';
+                    buffEl.appendChild(iconSpan);
+
+                    // ✅ ตัวนับเวลาถอยหลัง (ใต้ไอคอน)
+                    const timerSpan = document.createElement('span');
+                    timerSpan.className = 'buff-timer';
+                    timerSpan.innerText = `${timeLeft}s`; // แสดงหน่วยวินาที
+                    buffEl.appendChild(timerSpan);
+
+                    // ✅ Tooltip รายละเอียด (แสดงเมื่อ Hover)
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'buff-tooltip';
+                    
+                    // ข้อความอธิบายผลลัพธ์
+                    let effectText = `เพิ่ม ${buff.type.toUpperCase()} +${buff.value}`;
+                    
+                    tooltip.innerHTML = `
+                        <span class="tooltip-header">${buff.itemName}</span>
+                        <div class="tooltip-desc">
+                            ${effectText}<br>
+                            <span style="color:#aaa; font-size:10px;">(เหลือเวลา ${timeLeft} วินาที)</span>
+                        </div>
+                    `;
+                    buffEl.appendChild(tooltip);
+
+                    buffDiv.appendChild(buffEl);
                 }
             }
         }

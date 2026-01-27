@@ -79,7 +79,7 @@
     cursor: pointer; 
     transition: transform 0.2s; 
     position: relative; 
-    z-index: 1002;
+    z-index: 500;
 }
 .fighter-card:hover { transform: scale(1.05); }
 
@@ -190,7 +190,117 @@
     box-sizing: border-box;
 }
 
-.buff-row { height: 30px; display: flex; gap: 5px; margin-bottom: 10px; }
+.buff-row {
+    height: 50px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: flex-end;
+    
+    /* ✅ 1. ปรับตำแหน่ง: ขยับขวาเพิ่มเป็น 125px ให้ตรงกับช่องสกิลแรกเป๊ะๆ */
+    margin-left: 125px; 
+    /* ✅ 2. แสดงทับตัวอื่น: ให้ลอยอยู่เหนือ elements อื่นๆ ในแถบควบคุม */
+    position: relative;
+    z-index: 500; 
+}
+
+.buff-item {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, rgba(44, 62, 80, 0.9), rgba(0, 0, 0, 0.9));
+    border: 1px solid #f1c40f;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    cursor: help;
+    transition: all 0.2s; /* อนิเมชั่นนุ่มนวล */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.buff-item:hover {
+    /* transform: translateY(-5px) scale(1.1); <--- ของเดิมที่ทำให้กระพริบ */
+    transform: scale(1.1); /* เหลือแค่ขยายขนาด */
+    
+    box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+    border-color: #fff;
+    z-index: 100; /* ให้ไอคอนที่ชี้อยู่บนสุดเสมอ */
+}
+/* --- ตัวนับเวลาถอยหลัง (ใต้ไอคอน) --- */
+.buff-timer {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    white-space: nowrap;
+    background: rgba(0,0,0,0.5);
+    padding: 0 4px;
+    border-radius: 4px;
+    pointer-events: none; /* ไม่ให้บังการคลิก/hover */
+}
+/* --- Tooltip รายละเอียดสวยงาม (Hover) --- */
+.buff-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: 160px;
+    background-color: rgba(20, 20, 20, 0.95);
+    border: 1px solid #d4af37;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1020; /* อยู่บนสุดจริงๆ */
+    
+    /* ตำแหน่งเริ่มต้น */
+    bottom: 140%; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    transition: opacity 0.3s, bottom 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    pointer-events: none; /* สำคัญ! ป้องกัน Tooltip แย่ง Hover ทำให้กระพริบ */
+}
+
+.buff-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(20, 20, 20, 0.95) transparent transparent transparent;
+}
+
+.buff-item:hover .buff-tooltip {
+    visibility: visible;
+    opacity: 1;
+    bottom: 125%; /* เลื่อนลงมานิดหน่อยตอนแสดง */
+}
+
+.tooltip-header {
+    color: #f1c40f;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.tooltip-desc {
+    font-size: 12px;
+    color: #ddd;
+    line-height: 1.4;
+}
+
 .action-panel { display: flex; gap: 15px; align-items: center; }
 
 /* Action Buttons */
