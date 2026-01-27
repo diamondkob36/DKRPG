@@ -284,10 +284,18 @@ export const monsters = {
         str: 8, int: 2, agi: 3,
         def: 2,
         hpRegen: 5, mpRegen: 1,
-        critRate: 5, critDmg: 150,
-        dodge: 5, block: 0, dmgRed: 0, ignoreBlock: 0,
+        
+        // ✅ เพิ่ม/ตรวจสอบค่าเหล่านี้ให้ครบเหมือนผู้เล่น:
+        critRate: 5,      // โอกาสคริติคอล (%)
+        critDmg: 150,     // แรงคริติคอล (%)
+        dodge: 5,         // โอกาสหลบหลีกพื้นฐาน (%)
+        block: 0,         // โอกาสบล็อก (%)
+        dmgRed: 0,        // ลดดาเมจคงที่
+        ignoreBlock: 0,   // เจาะเกราะ/ลดโอกาสบล็อกศัตรู (%)
+        
+        // Rewards
         exp: 20, gold: 15,
-        activeBuffs: {} // ไม่มีบัพเริ่มต้น
+        activeBuffs: {} 
     }
 };
 
