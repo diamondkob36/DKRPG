@@ -414,14 +414,41 @@
     font-size: 24px; position: relative; transition: all 0.2s;
 }
 .battle-skill-slot:hover { border-color: #f1c40f; transform: translateY(-3px); }
-.battle-skill-slot.cooldown { opacity: 0.5; filter: grayscale(100%); cursor: default; }
+.battle-skill-slot.cooldown { opacity: 0.5; filter: none; cursor: default; }
 .battle-skill-slot.empty { background: rgba(255, 255, 255, 0.05); border: 2px dashed #555; cursor: default; }
 .battle-skill-slot:not(.empty):hover { 
     border-color: #f1c40f; transform: translateY(-3px); 
     box-shadow: 0 5px 10px rgba(0,0,0,0.5); cursor: pointer;
 }
+
+/* ✅ เพิ่ม: สไตล์เมื่อมานาไม่พอ (ขาว-ดำ) */
+.battle-skill-slot.no-mp {
+    filter: grayscale(100%); /* เปลี่ยนเป็นขาว-ดำ */
+    opacity: 0.6;            /* ทำให้จางลงเล็กน้อย */
+    cursor: not-allowed;
+    border-color: #555;      /* เปลี่ยนขอบเป็นสีเทา */
+}
+
+/* ✅ เพิ่ม: เลเยอร์นับถอยหลัง (Overlay) */
+.cooldown-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* พื้นหลังสีดำโปร่งแสง */
+    color: #f1c40f;                       /* ตัวเลขสีทอง */
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    z-index: 10;
+    text-shadow: 1px 1px 2px #000;
+}
+
 .skill-cost {
     position: absolute; bottom: -8px; right: -5px;
     font-size: 10px; background: #2980b9; color: #fff;
     padding: 2px 5px; border-radius: 10px; border: 1px solid #fff;
+    z-index: 20;
 }
