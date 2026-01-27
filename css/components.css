@@ -91,3 +91,27 @@ hr {
 .modal-header h2 { margin: 0; font-size: 20px; color: #5d4037; }
 .close-btn { background: none; border: none; color: #5d4037; font-size: 24px; padding: 0; margin: 0; width: auto; box-shadow: none; }
 .close-btn:hover { color: #c0392b; background: none; box-shadow: none; transform: scale(1.2); }
+
+/* 1. กำหนดขนาดกล่องของไอคอนในร้านค้า */
+.shop-item .shop-icon {
+    width: 60px;        /* ✅ กำหนดความกว้าง (ปรับเลขได้ตามชอบ) */
+    height: 60px;       /* ✅ กำหนดความสูง */
+    flex-shrink: 0;     /* ห้ามไม่ให้กล่องหดตัว */
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    background-color: rgba(0, 0, 0, 0.2); /* (เสริม) ใส่พื้นหลังจางๆ ให้ดูสวยขึ้น */
+    border-radius: 8px; /* (เสริม) ทำมุมโค้งมน */
+    overflow: hidden;   /* ตัดส่วนเกินออก */
+    margin-right: 15px; /* เว้นระยะห่างจากตัวหนังสือ */
+}
+
+/* 2. บังคับรูปภาพให้อยู่ในกล่อง */
+.shop-item .shop-icon img.item-img-display {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* ✅ ย่อรูปให้พอดีกรอบโดยสัดส่วนไม่เพี้ยน */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); /* เงาเล็กน้อย */
+}

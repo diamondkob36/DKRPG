@@ -348,6 +348,26 @@
 }
 
 .tooltip-icon { font-size: 24px; }
+
+.custom-tooltip .tooltip-header .tooltip-icon {
+    width: 64px;  /* ✅ กำหนดความกว้าง (ปรับเลขลด/เพิ่มได้ตามชอบ) */
+    height: 64px; /* ✅ กำหนดความสูง */
+    
+    font-size: 30px; /* (เผื่อกรณีเป็น Emoji ให้ขนาดพอดีๆ) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* ห้ามหดตัว */
+    margin-right: 10px;
+}
+
+/* 2. บังคับรูปภาพข้างในให้พอดีกรอบ */
+.custom-tooltip .tooltip-header .tooltip-icon img.item-img-display {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* ย่อรูปให้พอดีกรอบโดยสัดส่วนไม่เพี้ยน */
+}
+
 .tooltip-title { font-size: 16px; font-weight: bold; color: #f1c40f; } /* ชื่อสีทอง */
 .tooltip-type { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
 
