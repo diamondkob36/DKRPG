@@ -4,6 +4,14 @@
 import { classStats, items, equipmentSlots, skills } from "./gameData.js";
 import { GameLogic } from "./game-logic.js";
 
+const getItemVisual = (item) => {
+    if (item.img) {
+        return `<img src="${item.img}" class="item-img-display" alt="${item.name}">`;
+    } else {
+        return `<span class="item-icon">${item.icon || '📦'}</span>`;
+    }
+};
+
 export const UI = {
     // สลับหน้าจอ (Login -> Create -> Game)
     showScreen(screenId) {
@@ -288,14 +296,19 @@ updateGameScreen(gameData) {
             slotEl.className = `equip-slot ${item ? 'occupied' : ''}`;
 
             if (item) {
-                // ✅ ใช้ Tooltip แบบใหม่ (เอาเมาส์ชี้แล้วขึ้นกล่องสวยๆ)
+                // ✅ ใช้ Tooltip
                 this.bindTooltip(slotEl, item);
 
                 slotEl.onclick = () => window.unequipItem(slotDef.id);
-                slotEl.innerHTML = `
-                    <div class="equipped-item-icon">${item.icon}</div>
-                    <div class="slot-name" style="color:#f1c40f;">${item.name}</div>
-                `;
+                
+                // ✅ แก้ไข: รองรับการแสดงรูปภาพในช่องสวมใส่
+                if (item.img) {
+                    slotEl.innerHTML = `<img src="${item.img}" class="equipped-item-img" alt="${item.name}">`;
+                } else {
+                    slotEl.innerHTML = `<div class="equipped-item-icon">${item.icon}</div>`;
+                }
+                
+                slotEl.innerHTML += `<div class="slot-name" style="color:#f1c40f;">${item.name}</div>`;
             } else {
                 // ถ้าไม่มีของใส่ ให้แสดงชื่อช่องปกติ
                 slotEl.title = slotDef.name; 
@@ -338,7 +351,6 @@ updateGameScreen(gameData) {
             slot.className = 'item-slot';
             slot.style.position = 'relative'; 
             
-            // ✅ ใช้ Tooltip แบบใหม่
             this.bindTooltip(slot, item);
 
             // Event คลิกหลัก (ใช้/สวมใส่)
@@ -350,7 +362,7 @@ updateGameScreen(gameData) {
                 }
             };
 
-            // ปุ่มทิ้งของ (Trash Button)
+            // ปุ่มทิ้งของ
             const trashBtn = document.createElement('div');
             trashBtn.innerHTML = '🗑️';
             trashBtn.style.position = 'absolute';
@@ -369,8 +381,9 @@ updateGameScreen(gameData) {
                 window.dropItem(itemId);
             };
 
+            // ✅ แก้ไข: ใช้ getItemVisual เพื่อแสดงรูปภาพหรือไอคอน
             slot.innerHTML += `
-                <span class="item-icon">${item.icon}</span>
+                <div class="item-visual-wrapper">${getItemVisual(item)}</div>
                 <span class="item-count">${count}</span>
             `;
             
@@ -479,11 +492,11 @@ updateGameScreen(gameData) {
                     const card = document.createElement('div');
                     card.className = 'shop-item';
                     
-                    // ✅ เพิ่ม Tooltip ให้สินค้าในร้านค้า
                     this.bindTooltip(card, item);
 
+                    // ✅ แก้ไข: ใช้ getItemVisual
                     card.innerHTML = `
-                        <div class="shop-icon">${item.icon}</div>
+                        <div class="shop-icon">${getItemVisual(item)}</div>
                         <div class="shop-info">
                             <b>${item.name}</b><br>
                             <small>${item.desc}</small>
@@ -500,7 +513,7 @@ updateGameScreen(gameData) {
         if (grid.innerHTML === "") grid.innerHTML = "<p style='color:#ccc;'>(ไม่มีสินค้า)</p>";
     },
 
-    renderSellShop(inventory, filterCategory = 'all') {
+renderSellShop(inventory, filterCategory = 'all') {
         const grid = document.getElementById('shop-grid');
         grid.innerHTML = "";
 
@@ -531,7 +544,6 @@ updateGameScreen(gameData) {
             const card = document.createElement('div');
             card.className = 'shop-item';
 
-            // ✅ เพิ่ม Tooltip เวลาจะขายของ
             this.bindTooltip(card, item);
 
             let actionPart = '';
@@ -545,8 +557,9 @@ updateGameScreen(gameData) {
                 actionPart = `<small style="color:red;">ขายไม่ได้</small>`;
             }
 
+            // ✅ แก้ไข: ใช้ getItemVisual
             card.innerHTML = `
-                <div class="shop-icon">${item.icon}</div>
+                <div class="shop-icon">${getItemVisual(item)}</div>
                 <div class="shop-info">
                     <b>${item.name} x${count}</b><br>
                     <small>${item.desc}</small>
@@ -665,11 +678,10 @@ updateGameScreen(gameData) {
         const tooltip = document.getElementById('item-tooltip');
         if (!tooltip) return;
 
-        // --- 1. สร้าง HTML สำหรับ Stats (ค่าพลัง) ---
+        // ... (ส่วนสร้าง HTML statsHTML คงเดิม) ...
         let statsHTML = '';
         if (item.stats || item.effect || item.buff) {
             statsHTML += '<div class="tooltip-stats">';
-            
             // Stats อุปกรณ์
             if (item.stats) {
                 if(item.stats.str) statsHTML += `<span class="stat-str">⚔️ STR +${item.stats.str}</span>`;
@@ -698,32 +710,29 @@ updateGameScreen(gameData) {
             statsHTML += '</div>';
         }
 
-        // --- 2. ส่วนแสดงตำแหน่งสวมใส่ (Slot) ---
+        // ... (ส่วน slotDisplay คงเดิม) ...
         let slotDisplay = '';
         if (item.type === 'equipment' && item.slot) {
-            // ค้นหาชื่อภาษาไทยจาก equipmentSlots
             const slotDef = (typeof equipmentSlots !== 'undefined') ? equipmentSlots.find(s => s.id === item.slot) : null;
             const slotName = slotDef ? slotDef.name : item.slot;
-            
             slotDisplay = `<div style="font-size:11px; color:#f39c12; margin-top:-2px; margin-bottom: 2px;">📍 สวมใส่: ${slotName}</div>`;
         }
 
-        // --- 3. (ส่วนที่เพิ่ม) แสดงเงื่อนไขอาชีพ ---
+        // ... (ส่วน classReqDisplay คงเดิม) ...
         let classReqDisplay = '';
         if (item.allowedClasses) {
-            // แปลง key เป็นชื่อไทย (เช่น 'knight' -> 'อัศวิน')
-            // ต้องมั่นใจว่าตัวแปร classStats ถูก import มาแล้ว
             const classNames = item.allowedClasses.map(key => {
                 return (typeof classStats !== 'undefined' && classStats[key]) ? classStats[key].name : key;
             }).join(', ');
-            
             classReqDisplay = `<div style="font-size:11px; color:#e74c3c; margin-top:2px;">⚠️ เฉพาะ: ${classNames}</div>`;
         }
 
-        // --- 4. ประกอบร่าง HTML ---
+        // ✅ แก้ไข: ดึงรูปภาพมาแสดงใน Tooltip ด้วย
+        const visual = getItemVisual(item);
+
         tooltip.innerHTML = `
             <div class="tooltip-header">
-                <div class="tooltip-icon">${item.icon}</div>
+                <div class="tooltip-icon">${visual}</div>
                 <div>
                     <div class="tooltip-title">${item.name}</div>
                     ${slotDisplay}

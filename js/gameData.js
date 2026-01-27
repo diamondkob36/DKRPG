@@ -74,21 +74,21 @@ export const items = {
     // --- 🍷 หมวดยา (Consumables: Potion) ---
     potion_s: {
         id: "potion_s", 
-        name: "ยาแดงขวดเล็ก", icon: "🍷", desc: "ฟื้นฟูเลือด 30 หน่วย",
+        name: "ยาแดงขวดเล็ก", img: "image/items/potion_s.png", icon: "🍷", desc: "ฟื้นฟูเลือด 30 หน่วย",
         type: "consumable", category: "potion", 
         price: 50, weight: 0.5, inShop: true,
         effect: { hp: 30 }
     },
     potion_l: {
         id: "potion_l", 
-        name: "ยาแดงขวดใหญ่", icon: "🏺", desc: "ฟื้นฟูเลือด 100 หน่วย",
+        name: "ยาแดงขวดใหญ่", img: "image/items/potion_l.png", icon: "🏺", desc: "ฟื้นฟูเลือด 100 หน่วย",
         type: "consumable", category: "potion", 
         price: 120, sellPrice: 40, weight: 1.0, inShop: true,
         effect: { hp: 100 }
     },
     potion_str_time: {
         id: "potion_str_time", 
-        name: "ยาพลังฮึดสู้", icon: "💪", desc: "เพิ่ม STR +5 (3 นาที)",
+        name: "ยาพลังฮึดสู้", img: "image/items/potion_str_time.png", icon: "💪", desc: "เพิ่ม STR +5 (3 นาที)",
         type: "consumable", category: "potion", 
         price: 2000, weight: 0.5, inShop: true,
         buff: { type: "str", value: 5, duration: 300 }
@@ -97,7 +97,7 @@ export const items = {
     // --- 🧪 หมวดยาพิเศษ (Consumables: Special) ---
     elixir: {
         id: "elixir", 
-        name: "ยาเพิ่มพลัง", icon: "🧪", desc: "เพิ่ม STR ถาวร +1",
+        name: "ยาเพิ่มพลัง", img: "image/items/elixir.png", icon: "🧪", desc: "เพิ่ม STR ถาวร +1",
         type: "consumable", category: "special", 
         price: 0, sellPrice: 2000, weight: 0.2, inShop: false,
         effect: { str: 1 }
@@ -106,7 +106,7 @@ export const items = {
     // --- ⚔️ หมวดอาวุธ (Equipment: Weapon) ---
     wooden_sword: {
         id: "wooden_sword", 
-        name: "ดาบไม้", icon: "🗡️", desc: "ดาบฝึกหัด (Atk +2)",
+        name: "ดาบไม้", img: "image/items/wooden_sword.png", icon: "🗡️", desc: "ดาบฝึกหัด (Atk +2)",
         type: "equipment", category: "weapon", slot: "main_hand", 
         price: 100, sellPrice: 20, weight: 2.0, inShop: true,
         stats: { str: 2 },
@@ -114,7 +114,7 @@ export const items = {
     },
     novice_dagger: {
         id: "novice_dagger",
-        name: "มีดสั้นฝึกหัด", icon: "🗡️", desc: "เบาและคล่องตัว (Atk +2, Crit +2%)",
+        name: "มีดสั้นฝึกหัด", img: "image/items/novice_dagger.png", icon: "🗡️", desc: "เบาและคล่องตัว (Atk +2, Crit +2%)",
         type: "equipment", category: "weapon", slot: "main_hand",
         price: 100, sellPrice: 20, weight: 1.0, inShop: true,
         stats: { str: 2, critRate: 2 },
@@ -122,7 +122,7 @@ export const items = {
     },
     novice_staff: {
         id: "novice_staff",
-        name: "คทาไม้เก่าๆ", icon: "🪄", desc: "ไม้เท้าฝึกหัดเวทย์ (Int +3)",
+        name: "คทาไม้เก่าๆ", img: "image/items/novice_staff.png", icon: "🪄", desc: "ไม้เท้าฝึกหัดเวทย์ (Int +3)",
         type: "equipment", category: "weapon", slot: "main_hand",
         price: 100, sellPrice: 20, weight: 1.5, inShop: true,
         stats: { int: 3 }, // นักเวทย์ต้องการ INT
@@ -131,7 +131,7 @@ export const items = {
 
     iron_sword: {
         id: "iron_sword", 
-        name: "ดาบเหล็ก", icon: "⚔️", desc: "ดาบมาตรฐาน (Atk +5)",
+        name: "ดาบเหล็ก", img: "image/items/iron_sword.png", icon: "⚔️", desc: "ดาบมาตรฐาน (Atk +5)",
         type: "equipment", category: "weapon", slot: "main_hand", 
         price: 500, sellPrice: 200, weight: 5.0, inShop: true,
         stats: { str: 5 },
@@ -139,7 +139,7 @@ export const items = {
     },
     assassin_dagger: {
         id: "assassin_dagger", 
-        name: "มีดนักฆ่า", icon: "🗡️", desc: "คมกริบ (Crit+15%, เจาะ+5%)",
+        name: "มีดนักฆ่า", img: "image/items/assassin_dagger.png", icon: "🗡️", desc: "คมกริบ (Crit+15%, เจาะ+5%)",
         type: "equipment", category: "weapon", slot: "main_hand", 
         price: 1200, weight: 1.5, inShop: true,
         stats: { str: 10, critRate: 15, ignoreBlock: 5 },
@@ -147,7 +147,7 @@ export const items = {
     },
     wooden_shield: {
         id: "wooden_shield", 
-        name: "โล่ไม้", icon: "🛡️", desc: "ป้องกันพื้นฐาน (Block +10%)",
+        name: "โล่ไม้", img: "image/items/wooden_shield.png", icon: "🛡️", desc: "ป้องกันพื้นฐาน (Block +10%)",
         type: "equipment", category: "weapon", slot: "off_hand", 
         price: 300, sellPrice: 100, weight: 3.0, inShop: true,
         stats: { def: 5, block: 10 },
@@ -157,14 +157,14 @@ export const items = {
     // --- 🛡️ หมวดเกราะ (Equipment: Armor) ---
     leather_cap: {
         id: "leather_cap", 
-        name: "หมวกหนัง", icon: "🧢", desc: "หมวกธรรมดา (HP +10)",
+        name: "หมวกหนัง", img: "image/items/leather_cap.png", icon: "🧢", desc: "หมวกธรรมดา (HP +10)",
         type: "equipment", category: "armor", slot: "head", 
         price: 150, sellPrice: 50, weight: 1.5, inShop: true,
         stats: { maxHp: 10, def: 1 }
     },
     cloth_armor: {
         id: "cloth_armor", 
-        name: "เสื้อผ้าดิบ", icon: "👕", desc: "ใส่สบาย (HP +20)",
+        name: "เสื้อผ้าดิบ", img: "image/items/cloth_armor.png", icon: "👕", desc: "ใส่สบาย (HP +20)",
         type: "equipment", category: "armor", slot: "body", 
         price: 200, sellPrice: 60, weight: 3.0, inShop: true,
         stats: { maxHp: 20, def: 2 }
@@ -173,14 +173,14 @@ export const items = {
     // --- 💍 หมวดเครื่องประดับ (Equipment: Accessory) ---
     ring_str: {
         id: "ring_str", 
-        name: "แหวนพลัง", icon: "💍", desc: "แหวนเก่าๆ (STR +1)",
+        name: "แหวนพลัง", img: "image/items/ring_str.png", icon: "💍", desc: "แหวนเก่าๆ (STR +1)",
         type: "equipment", category: "accessory", slot: "accessory", 
         price: 800, sellPrice: 300, weight: 0.1, inShop: true,
         stats: { str: 1 }
     },
     ring_dodge: {
         id: "ring_dodge", 
-        name: "แหวนสายลม", icon: "💍", desc: "พริ้วไหว (Dodge +5%)",
+        name: "แหวนสายลม", img: "image/items/ring_dodge.png", icon: "💍", desc: "พริ้วไหว (Dodge +5%)",
         type: "equipment", category: "accessory", slot: "accessory", 
         price: 800, weight: 0.1, inShop: true,
         stats: { dodge: 5 }
@@ -189,13 +189,13 @@ export const items = {
     // --- 📦 หมวดขยะ/วัสดุ (Loot) ---
     slime_gel: {
         id: "slime_gel", 
-        name: "เจลสไลม์", icon: "💧", desc: "ของดรอปจากสไลม์",
+        name: "เจลสไลม์", img: "image/items/slime_gel.png", icon: "💧", desc: "ของดรอปจากสไลม์",
         type: "material", category: "loot", 
         price: 0, sellPrice: 15, weight: 0.2, inShop: false
     },
     wolf_fang: {
         id: "wolf_fang", 
-        name: "เขี้ยวหมาป่า", icon: "🐺", desc: "เขี้ยวแหลมคม",
+        name: "เขี้ยวหมาป่า", img: "image/items/wolf_fang.png", icon: "🐺", desc: "เขี้ยวแหลมคม",
         type: "material", category: "loot", 
         price: 0, sellPrice: 30, weight: 0.1, inShop: false
     }
@@ -204,7 +204,7 @@ export const items = {
 export const skills = {
     // --- 🛡️ สกิลของ Knight ---
     knight_bash: {
-        id: "knight_bash", name: "Heavy Bash", icon: "💥",
+        id: "knight_bash", name: "Heavy Bash", img: "image/skulls/knight_bash.png", icon: "💥",
         desc: "เพิ่มพลังโจมตี (STR +10) นาน 30 วิ",
         mpCost: 10, cooldown: 60,
         classReq: "knight",
@@ -212,7 +212,7 @@ export const skills = {
         buff: { type: "str", value: 10, duration: 30 }
     },
     knight_fortify: {
-        id: "knight_fortify", name: "Iron Skin", icon: "🛡️",
+        id: "knight_fortify", name: "Iron Skin", img: "image/skulls/knight_fortify.png", icon: "🛡️",
         desc: "ผิวเหล็กไหล (DEF +5) นาน 45 วิ",
         mpCost: 15, cooldown: 90,
         classReq: "knight",
@@ -222,14 +222,14 @@ export const skills = {
 
     // --- 🔮 สกิลของ Mage ---
     mage_heal: {
-        id: "mage_heal", name: "Minor Heal", icon: "✨",
+        id: "mage_heal", name: "Minor Heal", img: "image/skulls/mage_heal.png", icon: "✨",
         desc: "ฟื้นฟู HP 50 หน่วย",
         mpCost: 20, cooldown: 30,
         classReq: "mage",
         effect: { hp: 50 } // ผลทันที (Instant)
     },
     mage_meditate: {
-        id: "mage_meditate", name: "Focus", icon: "🧘",
+        id: "mage_meditate", name: "Focus", img: "image/skulls/mage_meditate.png", icon: "🧘",
         desc: "รวบรวมสมาธิ (INT +15) นาน 20 วิ",
         mpCost: 0, cooldown: 120,
         classReq: "mage",
@@ -239,7 +239,7 @@ export const skills = {
 
     // --- 🗡️ สกิลของ Rogue ---
     rogue_sprint: {
-        id: "rogue_sprint", name: "Sprint", icon: "💨",
+        id: "rogue_sprint", name: "Sprint", img: "image/skulls/rogue_sprint.png", icon: "💨",
         desc: "เร่งความเร็ว (AGI +10) นาน 30 วิ",
         mpCost: 10, cooldown: 45,
         classReq: "rogue",
@@ -247,7 +247,7 @@ export const skills = {
         buff: { type: "agi", value: 10, duration: 30 }
     },
     rogue_sharpen: {
-        id: "rogue_sharpen", name: "Sharpen", icon: "🔪",
+        id: "rogue_sharpen", name: "Sharpen", img: "image/skulls/rogue_sharpen.png", icon: "🔪",
         desc: "ลับมีด (Crit +10%) นาน 60 วิ",
         mpCost: 15, cooldown: 90,
         classReq: "rogue",
