@@ -539,65 +539,6 @@ window.useSkill = async (skillId) => {
     }
 };
 
-// 1. เริ่มการต่อสู้
-window.startBattle = (monsterId, bgImage = null) => {
-    const monsterTemplate = monsters[monsterId];
-    if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
-
-    const battleScreen = document.getElementById('battle-screen');
-    if (bgImage) {
-        battleScreen.style.backgroundImage = `url('${bgImage}')`;
-    } else {
-        battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
-    }
-
-    // Clone ข้อมูลมอนสเตอร์ และ activeBuffs
-    let monsterInstance = { 
-        ...monsterTemplate,
-        activeBuffs: JSON.parse(JSON.stringify(monsterTemplate.activeBuffs || {})) 
-    };
-
-    // ✅ คำนวณบัพติดตัว (Passive) ใส่เข้าไปในสเตตัสมอนสเตอร์ทันที
-    // เพื่อให้ค่าพลัง (เช่น DEF, STR) ถูกบวกเพิ่มจริงๆ ก่อนเริ่มสู้
-    if (monsterInstance.activeBuffs) {
-        for (const buff of Object.values(monsterInstance.activeBuffs)) {
-            // เช็คว่ามีค่า stat นี้ในตัวมอนสเตอร์ไหม ถ้ามีให้บวกเพิ่ม
-            if (monsterInstance[buff.type] !== undefined) {
-                monsterInstance[buff.type] += buff.value;
-            }
-        }
-    }
-
-    battleState = {
-        turn: 'player', 
-        timeLeft: 15,
-        monster: monsterInstance, 
-        logs: [],
-        playerTurnCount: 1,
-        enemyTurnCount: 1
-    };
-
-    UI.showScreen('battle-screen');
-    renderBattleSkills(); 
-    updateBattleUI();
-    runBattleTimer();
-};
-
-// 2. ตัวนับเวลา
-function runBattleTimer() {
-    if (battleTimer) clearInterval(battleTimer);
-    battleTimer = setInterval(() => {
-        if (!battleState) return clearInterval(battleTimer);
-
-        battleState.timeLeft--;
-        updateBattleUI();
-
-        if (battleState.timeLeft <= 0) {
-            switchTurn();
-        }
-    }, 1000);
-}
-
 // 3. สลับเทิร์น
 function switchTurn() {
     if (!battleState) return;
@@ -1084,35 +1025,63 @@ window.openSkillMenu = () => {
 };
 
 window.startBattle = (monsterId, bgImage = null) => {
-    // ต้องมี monsters import เข้ามาแล้วถึงจะทำงานได้
     const monsterTemplate = monsters[monsterId];
     if (!monsterTemplate) return alert("ไม่พบข้อมูลมอนสเตอร์: " + monsterId);
 
-    // ✅ ตั้งค่าพื้นหลัง (ถ้ามีส่งมา) หรือใช้ค่า Default
     const battleScreen = document.getElementById('battle-screen');
     if (bgImage) {
         battleScreen.style.backgroundImage = `url('${bgImage}')`;
     } else {
-        // Default Background (เช่น ลานฝึก)
         battleScreen.style.backgroundImage = `url('image/world_map.png')`; 
     }
 
-    // สร้าง State การต่อสู้
+    // Clone ข้อมูลมอนสเตอร์ และ activeBuffs
+    let monsterInstance = { 
+        ...monsterTemplate,
+        activeBuffs: JSON.parse(JSON.stringify(monsterTemplate.activeBuffs || {})) 
+    };
+
+    // ✅ คำนวณบัพติดตัว (Passive) ใส่เข้าไปในสเตตัสมอนสเตอร์ทันที
+    // เพื่อให้ค่าพลัง (เช่น DEF, STR) ถูกบวกเพิ่มจริงๆ ก่อนเริ่มสู้
+    if (monsterInstance.activeBuffs) {
+        for (const buff of Object.values(monsterInstance.activeBuffs)) {
+            // เช็คว่ามีค่า stat นี้ในตัวมอนสเตอร์ไหม ถ้ามีให้บวกเพิ่ม
+            if (monsterInstance[buff.type] !== undefined) {
+                monsterInstance[buff.type] += buff.value;
+            }
+        }
+    }
+
     battleState = {
         turn: 'player', 
         timeLeft: 15,
-        monster: { ...monsterTemplate }, 
-        logs: []
+        monster: monsterInstance, 
+        logs: [],
+        playerTurnCount: 1,
+        enemyTurnCount: 1
     };
 
     UI.showScreen('battle-screen');
-    
-    // ✅ เรียกฟังก์ชันวาดสกิลครั้งแรก (เตรียมไว้ก่อน)
-    renderBattleSkills();
-    
+    renderBattleSkills(); 
     updateBattleUI();
     runBattleTimer();
 };
+
+// 2. ตัวนับเวลา
+function runBattleTimer() {
+    if (battleTimer) clearInterval(battleTimer);
+    battleTimer = setInterval(() => {
+        if (!battleState) return clearInterval(battleTimer);
+
+        battleState.timeLeft--;
+        updateBattleUI();
+
+        if (battleState.timeLeft <= 0) {
+            switchTurn();
+        }
+    }, 1000);
+}
+
 
 function renderBattleSkills() {
     const grid = document.getElementById('battle-skills-grid');
