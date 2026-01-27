@@ -820,6 +820,60 @@ async function checkWinCondition() {
     }
 }
 
+window.showMonsterInfo = async () => {
+    if (!battleState || !battleState.monster) return;
+    
+    const m = battleState.monster;
+    
+    // คำนวณค่าปัจจุบัน
+    const curHp = Math.max(0, m.hp);
+    const maxHp = m.maxHp;
+    const curMp = (m.mp !== undefined) ? Math.floor(m.mp) : (m.maxMp || 0);
+    const maxMp = m.maxMp || (m.int * 10) || 100;
+    
+    const hpRegen = m.hpRegen || Math.floor(maxHp * 0.05) || 0;
+    const mpRegen = m.mpRegen || Math.floor(maxMp * 0.05) || 0;
+
+    // สร้าง HTML สวยๆ
+    const infoHTML = `
+        <div style="text-align: left; padding: 10px; font-size: 14px; line-height: 1.6;">
+            <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <img src="${m.img}" style="width:60px; height:60px; object-fit:contain;">
+                <div>
+                    <div style="font-size:18px; font-weight:bold; color:#e74c3c;">${m.name}</div>
+                    <div style="font-size:12px; color:#aaa;">ID: ${m.id}</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div>❤️ HP: <b style="color:#fff">${curHp}/${maxHp}</b></div>
+                <div>🌱 Regen: <b style="color:#2ecc71">+${hpRegen}</b>/3T</div>
+                
+                <div>💧 MP: <b style="color:#fff">${curMp}/${maxMp}</b></div>
+                <div>✨ Regen: <b style="color:#3498db">+${mpRegen}</b>/3T</div>
+
+                <div style="margin-top:5px;">⚔️ STR: <b style="color:#e67e22">${m.str}</b></div>
+                <div style="margin-top:5px;">🔥 INT: <b style="color:#9b59b6">${m.int}</b></div>
+                <div>💨 AGI: <b style="color:#2ecc71">${m.agi}</b></div>
+                <div>🛡️ DEF: <b style="color:#95a5a6">${m.def}</b></div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #555; display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:12px;">
+                <div>⚡ Crit Rate: <b style="color:#f1c40f">${m.critRate || 0}%</b></div>
+                <div>💥 Crit Dmg: <b style="color:#e74c3c">${m.critDmg || 150}%</b></div>
+                <div>🛡️ Block: <b style="color:#fff">${m.block || 0}%</b></div>
+                <div>🍃 Dodge: <b style="color:#2ecc71">${m.dodge || 0}%</b></div>
+            </div>
+            
+            <div style="margin-top: 15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:5px; text-align:center;">
+                💰 รางวัล: <span style="color:gold">${m.gold} G</span> | <span style="color:#3498db">${m.exp} EXP</span>
+            </div>
+        </div>
+    `;
+
+    await UI.alert("👾 ข้อมูลศัตรู", infoHTML);
+};
+
 // 7. อัปเดต UI หน้าจอต่อสู้
 function updateBattleUI() {
     if (!battleState) return;
@@ -850,7 +904,6 @@ function updateBattleUI() {
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
     document.getElementById('battle-player-mp-text').innerText = `${Math.floor(gameData.mp)}/${maxMp}`;
 
-    // Render รูปตัวละคร
     if (classStats && gameData.classKey && classStats[gameData.classKey]) {
         const playerImg = document.getElementById('battle-player-img');
         if (playerImg) playerImg.src = classStats[gameData.classKey].img;
@@ -858,17 +911,26 @@ function updateBattleUI() {
 
     // --- 3. Monster Status ---
     const mon = battleState.monster;
-    document.getElementById('battle-monster-name').innerText = mon.name;
     
+    // ✅ คลิกที่ชื่อหรือรูปเพื่อดู Info Popup
+    const monNameEl = document.getElementById('battle-monster-name');
+    monNameEl.innerText = mon.name;
+    monNameEl.style.cursor = "pointer";
+    monNameEl.onclick = showMonsterInfo;
+
     const monImg = document.getElementById('battle-monster-img');
-    if (monImg) monImg.src = mon.img || 'image/dummy.png';
+    if (monImg) {
+        monImg.src = mon.img || 'image/dummy.png';
+        monImg.onclick = showMonsterInfo; // ✅ ผูก Event คลิก
+        monImg.title = "คลิกเพื่อดูข้อมูล";
+    }
     
-    // 3.1 Monster HP
+    // Monster HP
     const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
     document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
     document.getElementById('battle-monster-hp-text').innerText = `${mon.hp}/${mon.maxHp}`;
 
-    // 3.2 Monster MP
+    // Monster MP
     const mMaxMp = mon.maxMp || (mon.int * 10) || 100; 
     const mMp = (mon.mp !== undefined) ? mon.mp : mMaxMp;
     const mMpPct = Math.max(0, (mMp / mMaxMp * 100));
@@ -878,21 +940,32 @@ function updateBattleUI() {
     if (mMpBar) mMpBar.style.width = mMpPct + "%";
     if (mMpText) mMpText.innerText = `${Math.floor(mMp)}/${mMaxMp}`;
 
-    // 3.3 Monster Buffs (โค้ดส่วนนี้จะไปเติมใน div ที่เราย้ายตำแหน่งแล้ว)
+    // --- 3.3 Monster Buffs (✅ แก้ไข: ใช้ Tooltip แบบ Hover) ---
     const mBuffDiv = document.getElementById('battle-monster-buffs');
     if (mBuffDiv) {
         mBuffDiv.innerHTML = '';
         if (mon.activeBuffs) {
             for (const [k, buff] of Object.entries(mon.activeBuffs)) {
                 if (buff.expiresAt > now) {
-                    const icon = document.createElement('div');
-                    icon.className = 'monster-buff-item';
-                    icon.innerHTML = buff.icon || '💀';
+                    const timeLeft = Math.ceil((buff.expiresAt - now)/1000);
+                    let timeString = (timeLeft >= 60) ? `${Math.floor(timeLeft/60)}m` : `${timeLeft}s`;
+
+                    const buffEl = document.createElement('div');
+                    buffEl.className = 'monster-buff-item';
                     
-                    // Tooltip อย่างง่าย
-                    icon.title = `${buff.itemName} (${Math.ceil((buff.expiresAt - now)/1000)}s)`;
+                    // สร้างโครงสร้าง HTML สำหรับ Tooltip
+                    buffEl.innerHTML = `
+                        <span>${buff.icon || '💀'}</span>
+                        <div class="buff-tooltip">
+                            <span class="tooltip-header">${buff.itemName}</span>
+                            <div class="tooltip-desc">
+                                เพิ่ม ${buff.type.toUpperCase()} +${buff.value}<br>
+                                <span style="color:#aaa; font-size:10px;">(เหลือเวลา ${timeString})</span>
+                            </div>
+                        </div>
+                    `;
                     
-                    mBuffDiv.appendChild(icon);
+                    mBuffDiv.appendChild(buffEl);
                 }
             }
         }

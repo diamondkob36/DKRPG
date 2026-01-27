@@ -132,6 +132,14 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
+#battle-monster-img {
+    cursor: zoom-in;
+    transition: filter 0.2s;
+}
+#battle-monster-img:hover {
+    filter: brightness(1.2) drop-shadow(0 0 5px white);
+}
+
 /* หลอดเลือด/มานา */
 .stat-bar-group { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
 .mini-bar { 
@@ -286,22 +294,6 @@
 }
 
 /* แถบบัพของมอนสเตอร์ (ตำแหน่งใหม่) */
-.monster-buff-row {
-    width: 100%;             /* ความกว้างเต็มกรอบ Card */
-    display: flex;
-    justify-content: center; /* จัดกึ่งกลาง */
-    flex-wrap: wrap;         /* ให้ขึ้นบรรทัดใหม่เมื่อเต็ม */
-    gap: 4px;                /* ระยะห่างระหว่างไอคอน */
-    
-    margin-top: 8px;         /* เว้นระยะห่างจากกรอบ Info ด้านบน */
-    padding: 0 10px;         /* กันขอบซ้ายขวานิดหน่อย */
-    box-sizing: border-box;
-
-    /* ✅ จำกัดให้แสดงสูงสุด 2 แถว */
-    max-height: 56px;        /* (ความสูงไอคอน 24px * 2) + gap */
-    overflow: hidden;        /* ส่วนเกินซ่อนไว้ */
-}
-
 .monster-buff-item {
     width: 24px; height: 24px;
     background: rgba(0,0,0,0.6);
@@ -310,7 +302,61 @@
     display: flex; justify-content: center; align-items: center;
     font-size: 14px;
     cursor: help;
-    flex-shrink: 0;          /* ห้ามบีบเล็กกว่านี้ */
+    flex-shrink: 0;
+    
+    /* ✅ เพิ่ม: เพื่อให้ Tooltip อ้างอิงตำแหน่งจากกล่องนี้ */
+    position: relative;
+    overflow: visible; 
+    transition: transform 0.2s;
+}
+
+.monster-buff-item:hover {
+    transform: scale(1.2);
+    z-index: 100;
+    border-color: #fff;
+    box-shadow: 0 0 5px #e74c3c;
+}
+
+/* ✅ เพิ่ม: Tooltip สำหรับมอนสเตอร์ (ใช้สไตล์เดียวกับผู้เล่นแต่ปรับตำแหน่ง) */
+.monster-buff-item .buff-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: 140px;
+    background-color: rgba(20, 20, 20, 0.95);
+    border: 1px solid #e74c3c; /* ขอบแดงตามธีมมอนสเตอร์ */
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    
+    position: absolute;
+    bottom: 130%; /* แสดงด้านบน */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 101;
+    
+    transition: opacity 0.2s, bottom 0.2s;
+    pointer-events: none;
+    font-size: 11px;
+    line-height: 1.4;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
+
+.monster-buff-item .buff-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(20, 20, 20, 0.95) transparent transparent transparent;
+}
+
+.monster-buff-item:hover .buff-tooltip {
+    visibility: visible;
+    opacity: 1;
+    bottom: 115%; /* Animation เลื่อนลง */
 }
 
 .tooltip-header {

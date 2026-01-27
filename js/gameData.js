@@ -267,7 +267,7 @@ export const monsters = {
             "dummy_passive": {
                 itemName: "เกราะฝึกซ้อม",
                 type: "def",
-                value: 10,
+                value: 1000,
                 expiresAt: 9999999999999, // ตลอดกาล
                 icon: "🛡️"
             }
