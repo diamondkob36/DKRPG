@@ -118,6 +118,7 @@ export const GameLogic = {
             critDmg: base.critDmg || 150, // ค่าพื้นฐานคือ 150%
             dodge: base.dodge || 0,
             ignoreBlock: base.ignoreBlock || 0,
+            acc: base.acc || 0,
 
             // Regen
             hpRegen: Math.floor(base.maxHp * 0.05) || 1,
@@ -270,62 +271,59 @@ export const GameLogic = {
 
     // ✅ แถม: ฟังก์ชันคำนวณดาเมจ (Battle System) ตามสูตรที่คุณขอ
     calculateBattleDamage(attacker, defender) {
-        // 1. หาค่าพลังโจมตีพื้นฐาน (Base Damage)
-        // มอนสเตอร์อาจใช้ atk, ผู้เล่นใช้ str/int
+        // 1. Base Damage
         let baseDmg = 0;
-        
         if (attacker.atk) {
-            baseDmg = attacker.atk; // กรณีเป็นมอนสเตอร์ที่มีค่า ATK
-        } else if (attacker.classKey === 'mage') {
+            baseDmg = attacker.atk;
+        } else if (attacker.classKey === 'mage' || (attacker.int || 0) > (attacker.str || 0)) {
             baseDmg = (attacker.int || 0) * 2;
         } else {
             baseDmg = (attacker.str || 0) * 2;
         }
-        
-        // ป้องกัน NaN
         baseDmg = baseDmg || 0;
 
-        // 2. คำนวณ Dodge (หลบหลีก)
-        // สูตร: AGI / 4 = โอกาสหลบเพิ่ม 1%
+        // 2. คำนวณ Dodge & Accuracy (ความแม่นยำ)
         const agiBonus = Math.floor((defender.agi || 0) / 4);
         const totalDodge = (defender.dodge || 0) + agiBonus;
         
-        // สุ่มหลบ (Hit Check)
-        const hitChance = 100 - totalDodge;
-        // ยอมให้มีโอกาสโดนอย่างน้อย 5% เสมอ
+        // ✅ สูตรใหม่: โอกาสหลบ = Dodgeศัตรู - Accเรา (ต่ำสุดคือ 0)
+        const effectiveDodge = Math.max(0, totalDodge - (attacker.acc || 0));
+        
+        // โอกาสตีโดน (Hit Chance)
+        const hitChance = 100 - effectiveDodge;
+
+        // สุ่ม Hit (ยอมให้มีโอกาสโดนอย่างน้อย 5% เสมอ)
         if (Math.random() * 100 > Math.max(5, hitChance)) {
             return { damage: 0, text: "MISS!", isCrit: false, isBlocked: false };
         }
 
-        // 3. เริ่มคำนวณ Block & Critical
+        // 3. Block & Crit
         let finalDmg = baseDmg;
         let isCrit = false;
         
-        // เช็ค Block (เอา Ignore Block ของคนตี มาลบโอกาส Block ของคนรับ)
         let blockChance = (defender.block || 0) - (attacker.ignoreBlock || 0);
         let isBlocked = (Math.random() * 100 < blockChance);
 
         if (isBlocked) {
-            // ถ้าบล็อกได้ ลดดาเมจ 50% และไม่ติดคริ
             finalDmg = Math.floor(finalDmg * 0.5);
         } else {
-            // ถ้าไม่บล็อก -> เช็คคริติคอล
             if (Math.random() * 100 < (attacker.critRate || 0)) {
                 isCrit = true;
                 finalDmg = Math.floor(finalDmg * ((attacker.critDmg || 150) / 100));
             }
         }
 
-        // 4. หักลบพลังป้องกัน (Defense)
-        // สูตร: Damage - (Def + DmgRed)
-        const def = defender.def || 0;
+        // 4. Defense & Pierce
+        let def = defender.def || 0;
         const dmgRed = defender.dmgRed || 0;
         
+        if ((attacker.ignoreBlock || 0) > 0) {
+            def = Math.floor(def * 0.4); 
+        }
+        
         finalDmg -= (def + dmgRed);
-
-        // ✅ รับประกันว่าดาเมจขั้นต่ำคือ 1 (ถ้าโดนตี) และเป็นตัวเลขแน่นอน
         finalDmg = Math.max(1, finalDmg);
-        if (isNaN(finalDmg)) finalDmg = 1; // กันเหนียว
+        if (isNaN(finalDmg)) finalDmg = 1;
 
         return { 
             damage: finalDmg, 

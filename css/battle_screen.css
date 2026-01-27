@@ -84,6 +84,7 @@
     justify-content: center; /* จัดกึ่งกลางแล้วใช้ gap ช่วย */
     gap: 50px; /* ระยะห่างระหว่าง Player - VS - Enemy */
     align-items: center;
+    z-index: 10;
 }
 
 .fighter-card { 
@@ -94,7 +95,6 @@
     position: relative; 
     z-index: 500;
 }
-.fighter-card:hover { transform: scale(1.05); }
 
 /* ✅ ปรับปรุง: พื้นหลังตัวละคร (Highlight Glow) */
 .fighter-avatar {
@@ -145,12 +145,25 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
+#battle-player-img {
+    transition: all 0.3s ease; /* เอฟเฟกต์นุ่มนวล */
+    cursor: zoom-in;
+    /* เริ่มต้น: ให้มีความสว่างปกติ */
+}
+
+#battle-player-img:hover {
+    /* เมื่อชี้เมาส์: เพิ่มแสงสีขาวเรืองรองรอบตัว */
+    filter: brightness(1.2) drop-shadow(0 0 5px white);
+    transform: scale(1.05); /* ขยายตัวนิดหน่อย */
+}
+
 #battle-monster-img {
     cursor: zoom-in;
-    transition: filter 0.2s;
+    transition: all 0.3s ease; /* เอฟเฟกต์นุ่มนวล */
 }
 #battle-monster-img:hover {
     filter: brightness(1.2) drop-shadow(0 0 5px white);
+    transform: scale(1.05); /* ขยายตัวนิดหน่อย */
 }
 
 /* หลอดเลือด/มานา */

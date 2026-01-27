@@ -16,6 +16,7 @@ export const classStats = {
         str: 10, int: 2, agi: 3, def: 8,
 
         // Combat Stats
+        acc: 0,
         block: 15,
         dmgRed: 2,
         critRate: 5,
@@ -35,6 +36,7 @@ export const classStats = {
         str: 2, int: 15, agi: 4, def: 1,
 
         // Combat Stats
+        acc: 5,
         block: 0,
         dmgRed: 0,
         critRate: 10,
@@ -54,6 +56,7 @@ export const classStats = {
         str: 7, int: 3, agi: 12, def: 3,
 
         // Combat Stats
+        acc: 10,
         block: 5,
         dmgRed: 0,
         critRate: 25,
@@ -262,7 +265,7 @@ export const monsters = {
         str: 5, int: 1, agi: 1, // ✅ เพิ่มสเตตัสหลัก
         
         // Combat Stats (ต่อสู้)
-        def: 5, 
+        def: 5, acc: 0,
         hpRegen: 10, mpRegen: 5, // ✅ เพิ่มค่าพื้นฟู
         critRate: 0, critDmg: 150, 
         dodge: 0, block: 0, dmgRed: 0, ignoreBlock: 0,
@@ -291,6 +294,7 @@ export const monsters = {
         hpRegen: 5, mpRegen: 1,
         
         // ✅ เพิ่ม/ตรวจสอบค่าเหล่านี้ให้ครบเหมือนผู้เล่น:
+        acc: 0,
         critRate: 5,      // โอกาสคริติคอล (%)
         critDmg: 150,     // แรงคริติคอล (%)
         dodge: 5,         // โอกาสหลบหลีกพื้นฐาน (%)

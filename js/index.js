@@ -782,7 +782,6 @@ window.showMonsterInfo = async () => {
     
     const m = battleState.monster;
     
-    // ... (ส่วนคำนวณค่า HP/MP คงเดิม) ...
     const curHp = Math.max(0, m.hp);
     const maxHp = m.maxHp;
     const curMp = (m.mp !== undefined) ? Math.floor(m.mp) : (m.maxMp || 0);
@@ -791,7 +790,6 @@ window.showMonsterInfo = async () => {
     const hpRegen = m.hpRegen || Math.floor(maxHp * 0.05) || 0;
     const mpRegen = m.mpRegen || Math.floor(maxMp * 0.05) || 0;
 
-    // สร้าง HTML
     const infoHTML = `
         <div style="text-align: left; padding: 10px; font-size: 14px; line-height: 1.6;">
             <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
@@ -818,10 +816,13 @@ window.showMonsterInfo = async () => {
             <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #555; display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:12px;">
                 <div>⚡ Crit Rate: <b style="color:#f1c40f">${m.critRate || 0}%</b></div>
                 <div>💥 Crit Dmg: <b style="color:#e74c3c">${m.critDmg || 150}%</b></div>
-                <div>🛡️ Block: <b style="color:#fff">${m.block || 0}%</b></div>
-                <div>🍃 Dodge: <b style="color:#2ecc71">${m.dodge || 0}%</b></div>
                 
+                <div>🎯 Acc: <b style="color:#e91e63">${m.acc || 0}%</b></div>
+                <div>🍃 Dodge: <b style="color:#2ecc71">${m.dodge || 0}%</b></div>
+
+                <div>🛡️ Block: <b style="color:#fff">${m.block || 0}%</b></div>
                 <div>💢 Pierce: <b style="color:#c0392b">${m.ignoreBlock || 0}%</b></div>
+                
                 <div>🛡️ Dmg Red: <b style="color:#95a5a6">${m.dmgRed || 0}</b></div>
             </div>
             
