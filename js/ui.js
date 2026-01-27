@@ -24,18 +24,19 @@ export const UI = {
     },
 
     // 2. แก้ไข updateGameScreen ให้เรียก renderBuffs
-    updateGameScreen(gameData) {
-        // 1. เตรียมข้อมูล
+updateGameScreen(gameData) {
+        // 1. เตรียมข้อมูลพื้นฐาน
         const baseMp = gameData.baseMp || 100;
         const maxMp = gameData.maxMp || (baseMp + (gameData.int * 10));
         const currentHp = gameData.hp || 0;
         const maxHp = gameData.maxHp || 100;
         const currentMp = gameData.mp || 0;
         
-        // ข้อมูล HUD ด้านบน (คงเดิม)
+        // --- HUD ด้านบน ---
         setText('display-name', gameData.name);
         setText('lvl', gameData.lvl);
         setText('gold', gameData.gold);
+        
         if(gameData.classKey && classStats[gameData.classKey]) {
             const imgSrc = classStats[gameData.classKey].img;
             const heroImg = document.getElementById('hero-img');
@@ -44,7 +45,7 @@ export const UI = {
             if(profileImg) profileImg.src = imgSrc;
         }
         
-        // อัปเดตหลอดเลือด/มานา HUD (คงเดิม)
+        // อัปเดตหลอดเลือด/มานา
         const hpPercent = Math.max(0, Math.min((currentHp / maxHp) * 100, 100));
         const hpBar = document.getElementById('hp-bar-fill');
         if(hpBar) hpBar.style.width = hpPercent + "%";
@@ -63,31 +64,26 @@ export const UI = {
         }
 
         // =========================================================
-        // ✨ ส่วนที่ปรับปรุงใหม่: สร้าง HTML หน้า Profile ใหม่ทั้งหมด
+        // ✨ ส่วน Profile Info (เพิ่ม Dmg Red)
         // =========================================================
         
         setText('profile-name', gameData.name);
         setText('profile-class', gameData.className);
 
-        // คำนวณค่าต่างๆ
         const hpRegen = gameData.hpRegen || Math.floor(maxHp * 0.05) || 1;
         const mpRegen = gameData.mpRegen || Math.floor(maxMp * 0.05) || 1;
         const usage = GameLogic.getInventoryUsage(gameData);
 
-        // ค้นหา Container เดิมที่มีพื้นหลังสีเทา
-        // (เราจะล้าง Style มันทิ้ง แล้วยัด HTML ใหม่ใส่เข้าไป)
         const statsContainer = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
         
         if (statsContainer) {
-            // 🧹 ล้าง Style พื้นหลังเดิมทิ้ง ให้ใสสะอาดเหมือนหน้ามอนสเตอร์
             statsContainer.style.background = 'none';
             statsContainer.style.boxShadow = 'none';
             statsContainer.style.border = 'none';
             statsContainer.style.padding = '5px 10px';
-            statsContainer.style.display = 'block'; // ยกเลิก Grid เดิมเพื่อเขียนใหม่เอง
+            statsContainer.style.display = 'block';
 
-            // 🎨 สร้าง HTML ใหม่ (จัดวางแบบหน้า Monster Info)
-            // ใช้สีเข้มสำหรับ Label (#5d4037) และสีสดสำหรับ Value
+            // 🎨 จัด Grid 2 คอลัมน์ (เพิ่ม Dmg Red คู่กับ Block)
             statsContainer.innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; color: #5d4037; text-align: left;">
                     
@@ -112,8 +108,11 @@ export const UI = {
                     <div>⚡ Crit Rate: <b style="color:#f39c12">${gameData.critRate || 0}%</b></div>
                     <div>💥 Crit Dmg: <b style="color:#c0392b">${gameData.critDmg || 150}%</b></div>
                     
+                    <div>🎯 Acc: <b style="color:#e91e63">${gameData.acc || 0}%</b></div>
+                    <div>🍃 Dodge: <b style="color:#2ecc71">${gameData.dodge || 0}%</b></div>
+                    
                     <div>🛡️ Block: <b style="color:#7f8c8d">${gameData.block || 0}%</b></div>
-                    <div>🍃 Dodge: <b style="color:#27ae60">${gameData.dodge || 0}%</b></div>
+                    <div>🛡️ Dmg Red: <b style="color:#7f8c8d">${gameData.dmgRed || 0}%</b></div>
                     
                     <div>💢 Pierce: <b style="color:#c0392b">${gameData.ignoreBlock || 0}%</b></div>
                     <div>⚖️ นน.: <b style="color:#5d4037">${usage.currentWeight.toFixed(1)}/${usage.limitWeight}</b></div>
@@ -121,17 +120,15 @@ export const UI = {
                 </div>
             `;
             
-            // ลบ div ที่เราเคยสร้างซ้อนไว้ (ถ้ามี) เพื่อกันมันเบิ้ล
             const oldExtra = document.getElementById('extra-stats-display');
             if(oldExtra) oldExtra.remove();
         }
 
-        // แสดงแต้มคงเหลือ (ปุ่มอัปเกรด)
+        // --- ส่วนที่เหลือ (Points, Buffs) ---
         const points = gameData.statPoints || 0;
         setText('profile-points', points);
         setText('hud-points', points); 
 
-        // อัปเดตหน้าต่างอัปเกรด (Modal Upgrade)
         setText('modal-points', points);
         const statsToUpdate = {
             'str': gameData.str,
@@ -144,7 +141,6 @@ export const UI = {
             setText('modal-' + key, val);
         });
 
-        // 7. อัปเดตรายการบัพ
         this.renderBuffs(gameData.activeBuffs);
     },
 

@@ -282,17 +282,14 @@ export const GameLogic = {
         }
         baseDmg = baseDmg || 0;
 
-        // 2. คำนวณ Dodge & Accuracy (ความแม่นยำ)
+        // 2. Dodge & Accuracy
         const agiBonus = Math.floor((defender.agi || 0) / 4);
         const totalDodge = (defender.dodge || 0) + agiBonus;
-        
-        // ✅ สูตรใหม่: โอกาสหลบ = Dodgeศัตรู - Accเรา (ต่ำสุดคือ 0)
+        // โอกาสหลบ = Dodgeศัตรู - Accเรา (ต่ำสุดคือ 0)
         const effectiveDodge = Math.max(0, totalDodge - (attacker.acc || 0));
         
-        // โอกาสตีโดน (Hit Chance)
         const hitChance = 100 - effectiveDodge;
 
-        // สุ่ม Hit (ยอมให้มีโอกาสโดนอย่างน้อย 5% เสมอ)
         if (Math.random() * 100 > Math.max(5, hitChance)) {
             return { damage: 0, text: "MISS!", isCrit: false, isBlocked: false };
         }
@@ -315,13 +312,25 @@ export const GameLogic = {
 
         // 4. Defense & Pierce
         let def = defender.def || 0;
-        const dmgRed = defender.dmgRed || 0;
         
+        // Pierce: เจาะเกราะ 60%
         if ((attacker.ignoreBlock || 0) > 0) {
             def = Math.floor(def * 0.4); 
         }
         
-        finalDmg -= (def + dmgRed);
+        // หักลบพลังป้องกันก่อน
+        finalDmg -= def;
+
+        // ✅ แก้ไข: คำนวณ DmgRed เป็น % (สูงสุด 40%)
+        // ค่านี้จะลดดาเมจในตอนท้ายสุด โดยไม่สน Def
+        let dmgRedPct = defender.dmgRed || 0;
+        dmgRedPct = Math.min(40, dmgRedPct); // ล็อคเพดานที่ 40%
+
+        if (dmgRedPct > 0) {
+            finalDmg = Math.floor(finalDmg * (1 - (dmgRedPct / 100)));
+        }
+
+        // การันตีดาเมจขั้นต่ำ 1
         finalDmg = Math.max(1, finalDmg);
         if (isNaN(finalDmg)) finalDmg = 1;
 
