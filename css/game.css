@@ -401,6 +401,15 @@
     object-fit: contain;
 }
 
+.buff-badge .buff-img-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 5px; /* เว้นระยะห่างจากชื่อนิดหน่อย */
+    display: block;
+}
+
 .tooltip-desc {
     font-size: 12px;
     color: #bdc3c7;

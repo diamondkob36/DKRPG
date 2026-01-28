@@ -410,7 +410,7 @@ updateGameScreen(gameData) {
             const timeLeft = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000));
             
             if (timeLeft > 0) {
-                // คำนวณเวลา (นาที/วินาที)
+                // คำนวณเวลา
                 let timeString = "";
                 if (timeLeft >= 60) {
                     const m = Math.floor(timeLeft / 60);
@@ -422,7 +422,7 @@ updateGameScreen(gameData) {
 
                 const badge = document.createElement('div');
                 badge.className = 'buff-badge';
-                // Style ของกล่องบัพ
+                // Style กล่อง
                 badge.style.background = 'rgba(255, 255, 255, 0.1)';
                 badge.style.border = '1px solid #f1c40f';
                 badge.style.borderRadius = '4px';
@@ -432,20 +432,35 @@ updateGameScreen(gameData) {
                 badge.style.display = 'flex';
                 badge.style.alignItems = 'center';
                 badge.style.gap = '5px';
-                badge.style.cursor = 'help'; // เปลี่ยนเมาส์เป็นเครื่องหมาย ?
+                badge.style.cursor = 'help';
                 
-                // ✅ เพิ่ม Custom Tooltip Events ตรงนี้
+                // ✅ 1. เลือกแสดงผล (รูปภาพ หรือ ไอคอน) สำหรับ Badge เล็ก
+                let badgeVisual = '';
+                if (buff.img) {
+                    badgeVisual = `<img src="${buff.img}" class="buff-img-icon" alt="${buff.itemName}">`;
+                } else {
+                    badgeVisual = `<span style="font-size:14px;">${buff.icon}</span>`;
+                }
+                
+                // Event: Tooltip
                 badge.onmouseenter = () => {
                     const tooltip = document.getElementById('item-tooltip');
                     if (!tooltip) return;
                     
-                    // จัดรูปแบบตัวอักษร (เช่น str -> STR)
                     const typeDisplay = buff.type.toUpperCase();
                     
-                    // สร้าง HTML สำหรับ Tooltip (ใช้สไตล์เดียวกับไอเทม)
+                    // ✅ 2. เลือกแสดงผล (รูปภาพ หรือ ไอคอน) สำหรับ Tooltip ใหญ่
+                    let tooltipVisual = '';
+                    if (buff.img) {
+                        // ใช้คลาส item-img-display เดิมที่มีอยู่เพื่อให้ขนาดพอดีกับ Tooltip
+                        tooltipVisual = `<img src="${buff.img}" class="item-img-display" alt="${buff.itemName}">`;
+                    } else {
+                        tooltipVisual = buff.icon;
+                    }
+                    
                     tooltip.innerHTML = `
                         <div class="tooltip-header">
-                            <div class="tooltip-icon">${buff.icon}</div>
+                            <div class="tooltip-icon">${tooltipVisual}</div>
                             <div>
                                 <div class="tooltip-title">${buff.itemName}</div>
                                 <div class="tooltip-type">สถานะ (Buff)</div>
@@ -461,15 +476,14 @@ updateGameScreen(gameData) {
                     tooltip.style.display = 'block';
                 };
                 
-                // สั่งให้ Tooltip ขยับตามเมาส์ และซ่อนเมื่อเมาส์ออก
                 badge.onmousemove = (e) => this.moveTooltip(e);
                 badge.onmouseleave = () => this.hideTooltip();
 
-                // เนื้อหาภายในกล่องบัพ (แสดงแค่นี้พอ)
+                // HTML ภายในกล่องบัพ
                 badge.innerHTML = `
-                    <span style="font-size:14px;">${buff.icon}</span> 
+                    ${badgeVisual}
                     <span>${buff.itemName}</span>
-                    <span style="color:#f1c40f; font-weight:bold;">${timeString}</span>
+                    <span style="color:#f1c40f; font-weight:bold; margin-left:auto;">${timeString}</span>
                 `;
                 buffContainer.appendChild(badge);
             }

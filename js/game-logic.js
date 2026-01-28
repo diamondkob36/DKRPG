@@ -343,46 +343,55 @@ export const GameLogic = {
 
     useItem(currentData, itemId) {
         const newData = { ...currentData };
+        
+        // ตรวจสอบไอเทม
         if (!newData.inventory || !newData.inventory[itemId] || newData.inventory[itemId] <= 0) {
             throw new Error("ไม่มีไอเทมนี้!");
         }
         const item = items[itemId];
 
-        // กรณีเป็นยาเพิ่มเลือด/Stat/MP
+        // 1. กรณีเป็นยาเพิ่มค่าทันที (Effect)
         if (item.effect) {
             if (item.effect.hp) newData.hp = Math.min(newData.hp + item.effect.hp, newData.maxHp);
             
-            // 🆕 เพิ่มการเช็ค MP
             if (item.effect.mp) { 
-                const maxMp = newData.int * 10;
+                const maxMp = (newData.baseMp || 100) + (newData.int * 10);
                 newData.mp = Math.min((newData.mp || 0) + item.effect.mp, maxMp);
             }
             
             if (item.effect.str) newData.str += item.effect.str;
         }
 
-        // กรณีเป็นยาบัพ (มีระยะเวลา)
+        // 2. กรณีเป็นยาบัพต่อเนื่อง (Buff)
         if (item.buff) {
             const buffKey = `buff_${item.buff.type}`;
             const currentTime = Date.now();
             const expireTime = currentTime + (item.buff.duration * 1000);
 
             newData.activeBuffs = newData.activeBuffs || {};
+            
+            // ถ้ามีบัพเดิมซ้ำ ให้ลบค่าเก่าออกก่อน
             if (newData.activeBuffs[buffKey]) {
                 newData[item.buff.type] -= newData.activeBuffs[buffKey].value;
             }
 
+            // บวกค่า Stat ใหม่
             newData[item.buff.type] += item.buff.value;
 
+            // ✅ บันทึกข้อมูลลง Active Buffs
             newData.activeBuffs[buffKey] = {
                 itemName: item.name,
                 type: item.buff.type,
                 value: item.buff.value,
                 expiresAt: expireTime,
-                icon: item.icon
+                icon: item.icon,
+                
+                // ✅ จุดที่แก้ไข: เลือกรูปภาพบัพเฉพาะ (buffImg) ก่อน -> ถ้าไม่มีใช้รูปยา (img)
+                img: item.buffImg || item.img 
             };
         }
 
+        // ตัดของออกจากกระเป๋า
         newData.inventory[itemId]--;
         if (newData.inventory[itemId] <= 0) delete newData.inventory[itemId];
 
@@ -520,17 +529,14 @@ export const GameLogic = {
         
         if (!skill) throw new Error("ไม่พบสกิล!");
 
-        // 1. เช็คอาชีพ
         if (skill.classReq && skill.classReq !== newData.classKey) {
             throw new Error(`อาชีพของคุณใช้สกิลนี้ไม่ได้ (ต้องการ ${skill.classReq})`);
         }
 
-        // 2. เช็ค MP
         if ((newData.mp || 0) < skill.mpCost) {
             throw new Error("MP ไม่พอ!");
         }
 
-        // 3. เช็ค Cooldown
         const now = Date.now();
         newData.skillCooldowns = newData.skillCooldowns || {}; 
         const readyTime = newData.skillCooldowns[skillId] || 0;
@@ -540,45 +546,37 @@ export const GameLogic = {
             throw new Error(`สกิลยังไม่พร้อม (เหลือ ${waitSec} วิ)`);
         }
 
-        // --- ผ่านทุกเงื่อนไข เริ่มร่ายสกิล ---
-        
-        // หัก MP
+        // --- ใช้สกิล ---
         newData.mp -= skill.mpCost;
-
-        // ตั้ง Cooldown ใหม่
         newData.skillCooldowns[skillId] = now + (skill.cooldown * 1000);
 
-        // แสดงผลสกิล (Effect: ฟื้นฟูทันที)
         if (skill.effect) {
             if (skill.effect.hp) newData.hp = Math.min(newData.hp + skill.effect.hp, newData.maxHp);
             if (skill.effect.mp) newData.mp = Math.min(newData.mp + skill.effect.mp, (newData.int * 10));
-            // Damage จะถูกคำนวณใน battleAction (index.js)
         }
 
-        // แสดงผลสกิล (Buff: เพิ่มสถานะชั่วคราว)
+        // กรณีสกิลบัพ (แก้ไข: บันทึก img ลงไปด้วย)
         if (skill.buff) {
             const buffKey = `skill_${skill.id}`;
             const expireTime = now + (skill.buff.duration * 1000);
 
             newData.activeBuffs = newData.activeBuffs || {};
             
-            // ถ้ามีบัพเดิมอยู่ ให้ลบค่าเก่าออกก่อน (กันทับซ้อน)
             if (newData.activeBuffs[buffKey]) {
                 newData[skill.buff.type] -= newData.activeBuffs[buffKey].value;
             }
 
-            // บวกค่าใหม่เข้าไป
             newData[skill.buff.type] = (newData[skill.buff.type] || 0) + skill.buff.value;
 
-            // บันทึกลงรายการ Active Buffs
             newData.activeBuffs[buffKey] = {
                 itemName: skill.name,
                 type: skill.buff.type,
                 value: skill.buff.value,
                 expiresAt: expireTime,
                 icon: skill.icon,
-                // ✅ เพิ่มบรรทัดนี้: รับค่า isBattleOnly มาด้วย (ถ้าไม่มีให้เป็น false)
-                isBattleOnly: skill.buff.isBattleOnly || false 
+                isBattleOnly: skill.buff.isBattleOnly || false,
+                // ✅ เพิ่มบรรทัดนี้: บันทึกรูปภาพสกิลลงไปในบัพ
+                img: skill.img
             };
         }
 

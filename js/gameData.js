@@ -88,7 +88,7 @@ export const items = {
     },
     potion_str_time: {
         id: "potion_str_time", 
-        name: "ยาพลังฮึดสู้", img: "image/items/potion_str_time.png", icon: "💪", desc: "เพิ่ม STR +5 (3 นาที)",
+        name: "ยาพลังฮึดสู้", img: "image/items/potion_str_time.png", icon: "💪", desc: "เพิ่ม STR +5 (3 นาที)",buffImg: "image/buffs/str_time.png",
         type: "consumable", category: "potion", 
         price: 2000, weight: 0.5, inShop: true,
         buff: { type: "str", value: 5, duration: 300 }
