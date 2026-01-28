@@ -478,3 +478,17 @@
     padding: 2px 5px; border-radius: 10px; border: 1px solid #fff;
     z-index: 20;
 }
+
+.skill-img-display {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ขยายรูปให้เต็มพื้นที่โดยไม่เสียสัดส่วน */
+    border-radius: 8px; /* ปรับความมนให้เข้ากับปุ่ม */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
+/* ปรับ Overlay ของ Cooldown ให้ทับรูปภาพได้สนิท */
+.skill-btn .cooldown-overlay {
+    z-index: 5; /* อยู่บนสุด */
+    border-radius: 8px;
+}

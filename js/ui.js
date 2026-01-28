@@ -796,29 +796,39 @@ renderSellShop(inventory, filterCategory = 'all') {
                 const isCooldown = now < readyTime;
                 const timeLeft = isCooldown ? Math.ceil((readyTime - now) / 1000) : 0;
 
-                // HTML ภายในปุ่ม
-                let content = `<span class="skill-icon">${skill.icon}</span>`;
+                // --- 1. ส่วนแสดงผล (รูปภาพ หรือ ไอคอน) ---
+                let visualContent = '';
+                if (skill.img) {
+                    // ✅ ถ้ามีรูป ให้แสดงรูป
+                    visualContent = `<img src="${skill.img}" class="skill-img-display" alt="${skill.name}">`;
+                } else {
+                    // ถ้าไม่มี ให้แสดงไอคอนเดิม
+                    visualContent = `<span class="skill-icon">${skill.icon}</span>`;
+                }
+
+                // --- 2. ประกอบ HTML ภายในปุ่ม ---
+                let content = visualContent;
                 content += `<div class="mp-cost-badge">${skill.mpCost} MP</div>`;
 
                 if (isCooldown) {
                     btn.classList.add('cooldown');
-                    // คำนวณความสูงของ Overlay ตามเวลาที่เหลือ (ลูกเล่นกราฟิก)
                     const totalCd = skill.cooldown;
                     const percent = (timeLeft / totalCd) * 100;
                     content += `<div class="cooldown-overlay" style="height:${percent}%">${timeLeft}</div>`;
                 } else {
-                    btn.onclick = () => window.useSkill(skillId); // เรียกใช้ฟังก์ชัน Global
+                    btn.onclick = () => window.useSkill(skillId); 
                 }
 
                 btn.innerHTML = content;
 
-                // เพิ่ม Tooltip
+                // --- 3. เพิ่ม Tooltip (ส่ง skill.img ไปด้วย) ---
                 this.bindTooltip(btn, {
                     name: skill.name,
                     desc: skill.desc,
                     type: "Skill",
                     icon: skill.icon,
-                    price: "0", // ไม่แสดงราคา
+                    img: skill.img, // ✅ เพิ่มบรรทัดนี้: เพื่อให้ Tooltip เอารูปไปโชว์ด้วย
+                    price: "0", 
                     weight: null,
                     effect: skill.effect, 
                     buff: skill.buff

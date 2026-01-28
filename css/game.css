@@ -350,8 +350,8 @@
 .tooltip-icon { font-size: 24px; }
 
 .custom-tooltip .tooltip-header .tooltip-icon {
-    width: 64px;  /* ✅ กำหนดความกว้าง (ปรับเลขลด/เพิ่มได้ตามชอบ) */
-    height: 64px; /* ✅ กำหนดความสูง */
+    width: 80px;  /* ✅ กำหนดความกว้าง (ปรับเลขลด/เพิ่มได้ตามชอบ) */
+    height: 80px; /* ✅ กำหนดความสูง */
     
     font-size: 30px; /* (เผื่อกรณีเป็น Emoji ให้ขนาดพอดีๆ) */
     display: flex;
