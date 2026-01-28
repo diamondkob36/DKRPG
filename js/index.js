@@ -1142,8 +1142,16 @@ function renderBattleSkills() {
             slot.className = 'battle-skill-slot';
             slot.id = `btn-skill-${skill.id}`;
             
+            // ✅ แก้ไขส่วนนี้: เช็คว่ามีรูปภาพหรือไม่?
+            let visual = '';
+            if (skill.img) {
+                visual = `<img src="${skill.img}" class="skill-img-display">`;
+            } else {
+                visual = `<div class="skill-icon-text">${skill.icon}</div>`;
+            }
+
             slot.innerHTML = `
-                <div>${skill.icon}</div>
+                ${visual}
                 <div class="skill-cost">${skill.mpCost}</div>
                 <div class="cooldown-overlay" style="display:none;"></div>
             `;
@@ -1154,6 +1162,7 @@ function renderBattleSkills() {
                     desc: skill.desc,
                     type: "Skill",
                     icon: skill.icon,
+                    img: skill.img, // ✅ ส่งรูปไปให้ Tooltip ด้วย
                     price: `${skill.mpCost} MP`,
                     buff: skill.buff,
                     effect: skill.effect

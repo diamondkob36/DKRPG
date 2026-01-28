@@ -513,7 +513,7 @@ updateGameScreen(gameData) {
         if (grid.innerHTML === "") grid.innerHTML = "<p style='color:#ccc;'>(ไม่มีสินค้า)</p>";
     },
 
-renderSellShop(inventory, filterCategory = 'all') {
+    renderSellShop(inventory, filterCategory = 'all') {
         const grid = document.getElementById('shop-grid');
         grid.innerHTML = "";
 
@@ -799,7 +799,7 @@ renderSellShop(inventory, filterCategory = 'all') {
                 // --- 1. ส่วนแสดงผล (รูปภาพ หรือ ไอคอน) ---
                 let visualContent = '';
                 if (skill.img) {
-                    // ✅ ถ้ามีรูป ให้แสดงรูป
+                    // ✅ ถ้ามีรูป ให้แสดงรูป (ใช้คลาส .skill-img-display ที่เพิ่มใน CSS)
                     visualContent = `<img src="${skill.img}" class="skill-img-display" alt="${skill.name}">`;
                 } else {
                     // ถ้าไม่มี ให้แสดงไอคอนเดิม
