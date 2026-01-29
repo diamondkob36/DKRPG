@@ -393,7 +393,7 @@ updateGameScreen(gameData) {
     },
 
     // 🆕 1. เพิ่มฟังก์ชันวาด Buff
-    renderBuffs(activeBuffs) {
+        renderBuffs(activeBuffs) {
         const buffContainer = document.getElementById('buff-container');
         if (!buffContainer) return;
 

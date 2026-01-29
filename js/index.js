@@ -390,20 +390,22 @@ function startBuffTimer() {
     buffInterval = setInterval(async () => {
         if (!gameData.activeBuffs) return;
 
-        // เรียก Logic เช็คเวลาตามปกติ
+        // 1. เช็คสถานะบัพ (Logic)
         const result = GameLogic.checkBuffs(gameData);
         
-        // อัปเดตหน้าจอส่วน Buff ให้เวลาวิ่ง (UI เท่านั้น)
+        // 2. อัปเดตเวลาบัพบนหน้าจอ (เฉพาะบัพที่ยังอยู่)
         UI.renderBuffs(gameData.activeBuffs);
 
-        // ถ้าบัพหมดอายุ (hasChanged = true)
+        // 3. ถ้ามีบัพหมดอายุ (hasChanged = true)
         if (result.hasChanged) {
-            gameData = result.newData; // อัปเดตข้อมูลในแรม (Stat ผู้เล่นจะลดลงตามจริง)
-            UI.updateGameScreen(gameData); // อัปเดตค่าพลังบนหน้าจอ
+            gameData = result.newData; // อัปเดตข้อมูลจริง
             
-            // ✅ ส่วนที่แก้ไข: เช็คว่า "ไม่ได้" กำลังต่อสู้ ถึงจะบันทึก
-            // ถ้ากำลังสู้ (battleState มีค่า) เราจะปล่อยผ่านไปก่อน 
-            // รอไปบันทึกทีเดียวตอนจบการต่อสู้ (checkWinCondition / monsterAttack)
+            // ✅ FIX: สั่งปิด Tooltip ทันทีป้องกันการค้างเมื่อบัพหายไป
+            UI.hideTooltip(); 
+
+            UI.updateGameScreen(gameData); // อัปเดตหน้าจอทั้งหมด
+            
+            // บันทึกเฉพาะตอนไม่ได้สู้
             if (!battleState) {
                 await saveToFirebase();
             }
@@ -588,13 +590,14 @@ window.battleAction = async (action, skillId = null) => {
     if (!battleState || battleState.turn !== 'player') return;
 
     try {
+        // --- ⚔️ โจมตีปกติ ---
         if (action === 'attack') {
-            // ✅ ใช้ GameLogic คำนวณดาเมจ (Player -> Monster)
+            // ใช้ GameLogic คำนวณดาเมจ (Player -> Monster)
             const result = GameLogic.calculateBattleDamage(gameData, battleState.monster);
             
             battleState.monster.hp -= result.damage;
             
-            // ✅ แก้ไข: เช็คว่าตีโดนหรือไม่ (Miss)
+            // เช็คว่าตีโดนหรือไม่ (Miss)
             if (result.damage === 0 && result.text) {
                  logBattle(`💨 ${result.text} (คุณโจมตีพลาด!)`);
             } else {
@@ -610,6 +613,7 @@ window.battleAction = async (action, skillId = null) => {
             await checkWinCondition(); 
             switchTurn(); 
 
+        // --- 🔮 ใช้สกิล ---
         } else if (action === 'skill') {
             const skill = skills[skillId];
             if (!skill) return;
@@ -631,19 +635,19 @@ window.battleAction = async (action, skillId = null) => {
             await checkWinCondition(); 
             switchTurn(); 
 
+        // --- 🏃 หนี ---
         } else if (action === 'run') {
-            // --- 🏃 หนี ---
             clearInterval(battleTimer);
             
-            // ✅ ล้างบัพสกิลทิ้งก่อนออก
-            clearBattleBuffs();
+            // ✅ FIX: เรียกฟังก์ชันล้างบัพสกิล (Stat) ออกก่อนจบการต่อสู้
+            clearBattleBuffs(); 
 
             battleState = null;
             
             let msg = "🏃 คุณหนีจากการต่อสู้!";
             let isDead = false;
 
-            // สุ่ม 10% สะดุดล้ม
+            // สุ่ม 10% สะดุดล้มตอนหนี
             if (Math.random() < 0.1) {
                 const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
                 gameData.hp -= damagePenalty; 
