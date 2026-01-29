@@ -523,7 +523,7 @@ export const GameLogic = {
         return { newData, totalGain, soldCount };
     },
     // 🆕 ฟังก์ชันกดใช้สกิล
-    useSkill(currentData, skillId) {
+useSkill(currentData, skillId) {
         const newData = { ...currentData };
         const skill = skills[skillId];
         
@@ -555,7 +555,7 @@ export const GameLogic = {
             if (skill.effect.mp) newData.mp = Math.min(newData.mp + skill.effect.mp, (newData.int * 10));
         }
 
-        // กรณีสกิลบัพ (แก้ไข: บันทึก img ลงไปด้วย)
+        // กรณีสกิลบัพ
         if (skill.buff) {
             const buffKey = `skill_${skill.id}`;
             const expireTime = now + (skill.buff.duration * 1000);
@@ -574,12 +574,14 @@ export const GameLogic = {
                 value: skill.buff.value,
                 expiresAt: expireTime,
                 icon: skill.icon,
-                isBattleOnly: skill.buff.isBattleOnly || false,
-                // ✅ เพิ่มบรรทัดนี้: บันทึกรูปภาพสกิลลงไปในบัพ
-                img: skill.img
+                
+                // ✅ แก้ไขตรงนี้: ให้ดึงค่า isBattleOnly จากตัว skill โดยตรงด้วย
+                isBattleOnly: skill.isBattleOnly || skill.buff.isBattleOnly || false,
+                
+                img: skill.img 
             };
         }
 
         return newData;
-    }
+    },
 };

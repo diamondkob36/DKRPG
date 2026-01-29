@@ -845,7 +845,7 @@ function updateBattleUI() {
 
     const now = Date.now();
 
-    // --- 1. Header & Timer (ส่วนหัวและเวลานับถอยหลัง) ---
+    // --- 1. Header & Timer ---
     const turnBadge = document.getElementById('turn-badge');
     if(turnBadge) {
         turnBadge.innerText = (battleState.turn === 'player') ? "YOUR TURN" : "ENEMY TURN";
@@ -855,15 +855,13 @@ function updateBattleUI() {
     document.getElementById('battle-timer-text').innerText = battleState.timeLeft;
     document.getElementById('battle-timer-bar').style.width = (battleState.timeLeft / 15 * 100) + "%";
 
-    // --- 2. Player Status (สถานะผู้เล่น) ---
+    // --- 2. Player Status ---
     document.getElementById('battle-player-name').innerText = gameData.name;
     
-    // HP Player
     const pHpPct = Math.max(0, (gameData.hp / gameData.maxHp * 100));
     document.getElementById('battle-player-hp').style.width = pHpPct + "%";
     document.getElementById('battle-player-hp-text').innerText = `${gameData.hp}/${gameData.maxHp}`;
     
-    // MP Player
     const maxMp = gameData.maxMp || ((gameData.baseMp || 0) + (gameData.int * 10));
     const pMpPct = Math.max(0, (gameData.mp / maxMp * 100));
     document.getElementById('battle-player-mp').style.width = pMpPct + "%";
@@ -874,10 +872,9 @@ function updateBattleUI() {
         if (playerImg) playerImg.src = classStats[gameData.classKey].img;
     }
 
-    // --- 3. Monster Status (สถานะมอนสเตอร์) ---
+    // --- 3. Monster Status ---
     const mon = battleState.monster;
     
-    // ชื่อและรูปภาพ (คลิกดู Info ได้)
     const monNameEl = document.getElementById('battle-monster-name');
     monNameEl.innerText = mon.name;
     monNameEl.style.cursor = "pointer";
@@ -890,12 +887,10 @@ function updateBattleUI() {
         monImg.title = "คลิกเพื่อดูข้อมูล";
     }
     
-    // Monster HP
     const mHpPct = Math.max(0, (mon.hp / mon.maxHp * 100));
     document.getElementById('battle-monster-hp').style.width = mHpPct + "%";
     document.getElementById('battle-monster-hp-text').innerText = `${mon.hp}/${mon.maxHp}`;
 
-    // Monster MP
     const mMaxMp = mon.maxMp || (mon.int * 10) || 100; 
     const mMp = (mon.mp !== undefined) ? mon.mp : mMaxMp;
     const mMpPct = Math.max(0, (mMp / mMaxMp * 100));
@@ -905,10 +900,16 @@ function updateBattleUI() {
     if (mMpBar) mMpBar.style.width = mMpPct + "%";
     if (mMpText) mMpText.innerText = `${Math.floor(mMp)}/${mMaxMp}`;
 
-    // Monster Buffs Display
+    // --- 3.1 Monster Buffs Display (แก้ไข: รองรับรูปภาพ) ---
     const mBuffDiv = document.getElementById('battle-monster-buffs');
     if (mBuffDiv) {
         const activeBuffs = mon.activeBuffs || {};
+
+        // ลบบัพที่หมดอายุ (UI)
+        Array.from(mBuffDiv.children).forEach(child => {
+            const k = child.dataset.key;
+            if (!activeBuffs[k] || activeBuffs[k].expiresAt <= now) child.remove();
+        });
 
         for (const [k, buff] of Object.entries(activeBuffs)) {
             if (buff.expiresAt > now) {
@@ -920,8 +921,14 @@ function updateBattleUI() {
                     buffEl = document.createElement('div');
                     buffEl.className = 'monster-buff-item';
                     buffEl.dataset.key = k;
+
+                    // ✅ เลือกแสดงผล (รูปภาพ หรือ ไอคอน)
+                    const visual = buff.img 
+                        ? `<img src="${buff.img}" class="buff-img-display">` 
+                        : `<span>${buff.icon || '💀'}</span>`;
+
                     buffEl.innerHTML = `
-                        <span>${buff.icon || '💀'}</span>
+                        ${visual}
                         <div class="buff-tooltip">
                             <span class="tooltip-header">${buff.itemName}</span>
                             <div class="tooltip-desc">
@@ -939,32 +946,26 @@ function updateBattleUI() {
         }
     }
 
-    // --- 4. Cooldown & MP Check (✅ ส่วนที่แก้ไขใหม่) ---
+    // --- 4. Cooldown & MP Check ---
     const cooldowns = gameData.skillCooldowns || {};
-    
     for (const [id, skill] of Object.entries(skills)) {
-        // หาปุ่มสกิลตาม ID (ต้องตรงกับที่สร้างใน renderBattleSkills)
         const btn = document.getElementById(`btn-skill-${id}`);
-        
         if (btn) {
             const readyTime = cooldowns[id] || 0;
             const overlay = btn.querySelector('.cooldown-overlay');
             
-            // 4.1 เช็ค Cooldown: แสดงตัวเลขและ Overlay
             if (now < readyTime) {
                 const timeLeft = Math.ceil((readyTime - now) / 1000);
-                
                 btn.classList.add('cooldown');
                 if(overlay) {
                     overlay.style.display = 'flex';
-                    overlay.innerText = timeLeft; // แสดงตัวเลขวินาที
+                    overlay.innerText = timeLeft;
                 }
             } else {
                 btn.classList.remove('cooldown');
                 if(overlay) overlay.style.display = 'none';
             }
 
-            // 4.2 เช็ค MP: ถ้าไม่พอให้ทำเป็นสีขาว-ดำ (Grayscale)
             if (gameData.mp < skill.mpCost) {
                 btn.classList.add('no-mp');
             } else {
@@ -973,18 +974,16 @@ function updateBattleUI() {
         }
     }
 
-    // --- 5. Player Buffs (บัพผู้เล่น) ---
+    // --- 5. Player Buffs (บัพผู้เล่น) (แก้ไข: รองรับรูปภาพ) ---
     const buffDiv = document.getElementById('battle-buffs');
     if (buffDiv) {
         const activeBuffs = gameData.activeBuffs || {};
         
-        // ลบบัพที่หมดอายุออกจากหน้าจอ
         Array.from(buffDiv.children).forEach(child => {
             const key = child.dataset.key;
             if (!activeBuffs[key] || activeBuffs[key].expiresAt <= now) child.remove();
         });
 
-        // แสดงบัพที่มีอยู่
         for (const [key, buff] of Object.entries(activeBuffs)) {
             if (buff.expiresAt > now) {
                 const timeLeft = Math.ceil((buff.expiresAt - now) / 1000);
@@ -995,7 +994,13 @@ function updateBattleUI() {
                     buffEl = document.createElement('div');
                     buffEl.className = 'buff-item';
                     buffEl.dataset.key = key;
-                    buffEl.innerHTML = `<span>${buff.icon||'✨'}</span><span class="buff-timer">${timeString}</span><div class="buff-tooltip"></div>`;
+
+                    // ✅ เลือกแสดงผล (รูปภาพ หรือ ไอคอน)
+                    const visual = buff.img 
+                        ? `<img src="${buff.img}" class="buff-img-display">` 
+                        : `<span>${buff.icon||'✨'}</span>`;
+
+                    buffEl.innerHTML = `${visual}<span class="buff-timer">${timeString}</span><div class="buff-tooltip"></div>`;
                     buffDiv.appendChild(buffEl);
                 }
 

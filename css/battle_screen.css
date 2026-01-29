@@ -336,6 +336,10 @@
     transition: transform 0.2s;
 }
 
+.buff-img-display{
+    border-radius: 4px;
+}
+
 .monster-buff-item:hover {
     transform: scale(1.2);
     z-index: 100;
