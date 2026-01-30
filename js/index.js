@@ -590,7 +590,7 @@ window.battleAction = async (action, skillId = null) => {
     if (!battleState || battleState.turn !== 'player') return;
 
     try {
-        // --- ⚔️ โจมตีปกติ ---
+        // --- ⚔️ 1. โจมตีปกติ ---
         if (action === 'attack') {
             // ใช้ GameLogic คำนวณดาเมจ (Player -> Monster)
             const result = GameLogic.calculateBattleDamage(gameData, battleState.monster);
@@ -608,12 +608,17 @@ window.battleAction = async (action, skillId = null) => {
                 let blockText = result.isBlocked ? "(ถูกบล็อก!)" : "";
 
                 logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ! ${blockText}`);
+
+                // ✅ FIX: ถ้าทำดาเมจได้ ให้เล่นเอฟเฟกต์ที่มอนสเตอร์
+                if (result.damage > 0) {
+                    playHitEffect('battle-monster-img');
+                }
             }
             
             await checkWinCondition(); 
             switchTurn(); 
 
-        // --- 🔮 ใช้สกิล ---
+        // --- 🔮 2. ใช้สกิล ---
         } else if (action === 'skill') {
             const skill = skills[skillId];
             if (!skill) return;
@@ -625,6 +630,10 @@ window.battleAction = async (action, skillId = null) => {
                 // กรณีสกิลทำดาเมจ
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
+                
+                // ✅ FIX: สกิลโจมตีก็เล่นเอฟเฟกต์ด้วย
+                playHitEffect('battle-monster-img');
+
             } else if (skill.buff) {
                 logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
             } else if (skill.effect && skill.effect.hp) {
@@ -635,7 +644,7 @@ window.battleAction = async (action, skillId = null) => {
             await checkWinCondition(); 
             switchTurn(); 
 
-        // --- 🏃 หนี ---
+        // --- 🏃 3. หนี ---
         } else if (action === 'run') {
             clearInterval(battleTimer);
             
@@ -693,12 +702,12 @@ window.battleAction = async (action, skillId = null) => {
 async function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
-    // ✅ ใช้ GameLogic คำนวณดาเมจ (Monster -> Player)
+    // ใช้ GameLogic คำนวณดาเมจ (Monster -> Player)
     const result = GameLogic.calculateBattleDamage(battleState.monster, gameData);
     
     gameData.hp -= result.damage;
     
-    // ✅ แก้ไข: เช็คว่าผู้เล่นหลบได้หรือไม่ (Miss)
+    // เช็คว่าผู้เล่นหลบได้หรือไม่ (Miss)
     if (result.damage === 0 && result.text) {
         logBattle(`🍃 ${result.text} (คุณหลบการโจมตีได้!)`);
     } else {
@@ -709,6 +718,11 @@ async function monsterAttack() {
         let blockText = result.isBlocked ? "(คุณบล็อกได้!)" : "";
         
         logBattle(`${icon} มอนสเตอร์โจมตี ${result.damage} ดาเมจ! ${blockText}`);
+
+        // ✅ FIX: ถ้าโดนดาเมจ ให้เล่นเอฟเฟกต์ที่รูปผู้เล่น
+        if (result.damage > 0) {
+            playHitEffect('battle-player-img');
+        }
     }
 
     if (gameData.hp <= 0) {
@@ -719,7 +733,7 @@ async function monsterAttack() {
         const lostExp = Math.floor(gameData.exp * 0.10); 
         gameData.exp = Math.max(0, gameData.exp - lostExp);
 
-        // ✅ ล้างบัพสกิลทิ้งเมื่อตาย
+        // ล้างบัพสกิลทิ้งเมื่อตาย
         clearBattleBuffs();
 
         await UI.alert(
@@ -1207,4 +1221,23 @@ function clearBattleBuffs() {
 
     // อัปเดตรายการบัพให้เหลือแต่ของถาวร
     gameData.activeBuffs = persistentBuffs;
+}
+
+function playHitEffect(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        // ลบคลาสเก่าออกก่อน (เผื่ออนิเมชั่นยังไม่จบแต่โดนซ้ำ)
+        el.classList.remove('take-damage');
+        
+        // บังคับให้ Browser คำนวณ Style ใหม่ (Reflow) เพื่อให้เล่นซ้ำได้ทันที
+        void el.offsetWidth; 
+        
+        // ใส่คลาสเพื่อเริ่มอนิเมชั่น
+        el.classList.add('take-damage');
+        
+        // ลบคลาสออกเมื่อจบ (ตามเวลาใน CSS 0.4s = 400ms)
+        setTimeout(() => {
+            el.classList.remove('take-damage');
+        }, 400);
+    }
 }

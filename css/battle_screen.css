@@ -522,3 +522,17 @@
     border: 1px solid #5d4037; /* เพิ่มขอบสีน้ำตาลเข้ม */
     overflow: hidden; /* ตัดส่วนที่ล้นออก */
 }
+
+@keyframes shake-red {
+    0% { transform: translate(0, 0) rotate(0deg); filter: none; }
+    20% { transform: translate(-3px, 0) rotate(-1deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); } /* แดง */
+    40% { transform: translate(3px, 0) rotate(1deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
+    60% { transform: translate(-3px, 0) rotate(0deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
+    80% { transform: translate(3px, 0) rotate(1deg); filter: none; }
+    100% { transform: translate(0, 0) rotate(0deg); filter: none; }
+}
+
+/* คลาสที่จะใส่ให้ตัวละครชั่วคราว */
+.take-damage {
+    animation: shake-red 0.4s ease-in-out;
+}
