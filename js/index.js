@@ -592,27 +592,32 @@ window.battleAction = async (action, skillId = null) => {
     try {
         // --- ⚔️ 1. โจมตีปกติ ---
         if (action === 'attack') {
-            // ใช้ GameLogic คำนวณดาเมจ (Player -> Monster)
+            // คำนวณดาเมจ
             const result = GameLogic.calculateBattleDamage(gameData, battleState.monster);
             
             battleState.monster.hp -= result.damage;
             
-            // เช็คว่าตีโดนหรือไม่ (Miss)
-            if (result.damage === 0 && result.text) {
-                 logBattle(`💨 ${result.text} (คุณโจมตีพลาด!)`);
+            // --- ✅ จัดการเอฟเฟกต์ ---
+            if (result.damage === 0) {
+                // หลบได้
+                logBattle(`💨 ${result.text || "ศัตรูหลบได้!"} (Miss)`);
+                playHitEffect('battle-monster-img', 'dodge'); 
             } else {
                 let icon = "⚔️";
-                if (result.isCrit) icon = "💥 CRITICAL!";
-                
-                // เพิ่มข้อความถ้าถูกบล็อก
-                let blockText = result.isBlocked ? "(ถูกบล็อก!)" : "";
+                let type = 'normal';
 
-                logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ! ${blockText}`);
-
-                // ✅ FIX: ถ้าทำดาเมจได้ ให้เล่นเอฟเฟกต์ที่มอนสเตอร์
-                if (result.damage > 0) {
-                    playHitEffect('battle-monster-img');
+                if (result.isCrit) {
+                    icon = "💥 CRITICAL!";
+                    type = 'critical';
+                } else if (result.isBlocked) {
+                    type = 'blocked';
                 }
+
+                let blockText = result.isBlocked ? "(ถูกบล็อก!)" : "";
+                logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ! ${blockText}`);
+                
+                // เล่นเอฟเฟกต์ที่รูปมอนสเตอร์
+                playHitEffect('battle-monster-img', type);
             }
             
             await checkWinCondition(); 
@@ -623,16 +628,15 @@ window.battleAction = async (action, skillId = null) => {
             const skill = skills[skillId];
             if (!skill) return;
 
-            // ใช้สกิล (GameLogic จะจัดการเรื่อง MP/Cooldown)
             gameData = GameLogic.useSkill(gameData, skillId);
 
             if (skill.effect && skill.effect.damage) {
-                // กรณีสกิลทำดาเมจ
+                // สกิลโจมตี
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
                 
-                // ✅ FIX: สกิลโจมตีก็เล่นเอฟเฟกต์ด้วย
-                playHitEffect('battle-monster-img');
+                // สกิลมักจะรุนแรง ให้เป็น Crit หรือ Normal
+                playHitEffect('battle-monster-img', 'critical');
 
             } else if (skill.buff) {
                 logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
@@ -648,7 +652,7 @@ window.battleAction = async (action, skillId = null) => {
         } else if (action === 'run') {
             clearInterval(battleTimer);
             
-            // ✅ FIX: เรียกฟังก์ชันล้างบัพสกิล (Stat) ออกก่อนจบการต่อสู้
+            // ล้างบัพต่อสู้ทิ้ง
             clearBattleBuffs(); 
 
             battleState = null;
@@ -656,7 +660,7 @@ window.battleAction = async (action, skillId = null) => {
             let msg = "🏃 คุณหนีจากการต่อสู้!";
             let isDead = false;
 
-            // สุ่ม 10% สะดุดล้มตอนหนี
+            // สุ่ม 10% สะดุดล้ม
             if (Math.random() < 0.1) {
                 const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
                 gameData.hp -= damagePenalty; 
@@ -702,38 +706,42 @@ window.battleAction = async (action, skillId = null) => {
 async function monsterAttack() {
     if (!battleState || battleState.turn !== 'enemy') return;
 
-    // ใช้ GameLogic คำนวณดาเมจ (Monster -> Player)
+    // คำนวณดาเมจ
     const result = GameLogic.calculateBattleDamage(battleState.monster, gameData);
     
     gameData.hp -= result.damage;
     
-    // เช็คว่าผู้เล่นหลบได้หรือไม่ (Miss)
-    if (result.damage === 0 && result.text) {
-        logBattle(`🍃 ${result.text} (คุณหลบการโจมตีได้!)`);
+    // --- ✅ จัดการเอฟเฟกต์ ---
+    if (result.damage === 0) {
+        // เราหลบได้
+        logBattle(`🍃 ${result.text || "คุณหลบได้!"} (Miss)`);
+        playHitEffect('battle-player-img', 'dodge');
     } else {
         let icon = "👾";
-        if (result.isCrit) icon = "💥";
+        let type = 'normal';
+
+        if (result.isCrit) {
+            icon = "💥";
+            type = 'critical';
+        } else if (result.isBlocked) {
+            type = 'blocked';
+        }
         
-        // เช็คว่าผู้เล่นบล็อกได้หรือไม่
         let blockText = result.isBlocked ? "(คุณบล็อกได้!)" : "";
-        
         logBattle(`${icon} มอนสเตอร์โจมตี ${result.damage} ดาเมจ! ${blockText}`);
 
-        // ✅ FIX: ถ้าโดนดาเมจ ให้เล่นเอฟเฟกต์ที่รูปผู้เล่น
-        if (result.damage > 0) {
-            playHitEffect('battle-player-img');
-        }
+        // เล่นเอฟเฟกต์ที่รูปเรา
+        playHitEffect('battle-player-img', type);
     }
 
+    // เช็คตาย
     if (gameData.hp <= 0) {
-        // --- 💀 กรณีผู้เล่นตาย ---
         gameData.hp = 0;
         clearInterval(battleTimer);
 
         const lostExp = Math.floor(gameData.exp * 0.10); 
         gameData.exp = Math.max(0, gameData.exp - lostExp);
 
-        // ล้างบัพสกิลทิ้งเมื่อตาย
         clearBattleBuffs();
 
         await UI.alert(
@@ -755,7 +763,7 @@ async function monsterAttack() {
         UI.updateGameScreen(gameData);
         saveToFirebase(); 
     } else {
-        // ยังไม่ตาย -> สลับเทิร์น
+        // สลับเทิร์น
         switchTurn();
     }
     
@@ -1223,21 +1231,29 @@ function clearBattleBuffs() {
     gameData.activeBuffs = persistentBuffs;
 }
 
-function playHitEffect(elementId) {
+function playHitEffect(elementId, type = 'normal') {
     const el = document.getElementById(elementId);
     if (el) {
-        // ลบคลาสเก่าออกก่อน (เผื่ออนิเมชั่นยังไม่จบแต่โดนซ้ำ)
-        el.classList.remove('take-damage');
+        // 1. ลบคลาสเก่าออกให้หมดก่อน
+        el.classList.remove('take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge');
         
-        // บังคับให้ Browser คำนวณ Style ใหม่ (Reflow) เพื่อให้เล่นซ้ำได้ทันที
+        // 2. Reset Animation
         void el.offsetWidth; 
+
+        // 3. ใส่คลาสตามประเภท
+        if (type === 'critical') {
+            el.classList.add('take-damage-crit');
+        } else if (type === 'blocked') {
+            el.classList.add('take-damage-block');
+        } else if (type === 'dodge') {
+            el.classList.add('action-dodge');
+        } else {
+            el.classList.add('take-damage'); // ปกติ
+        }
         
-        // ใส่คลาสเพื่อเริ่มอนิเมชั่น
-        el.classList.add('take-damage');
-        
-        // ลบคลาสออกเมื่อจบ (ตามเวลาใน CSS 0.4s = 400ms)
+        // 4. ตั้งเวลาลบออก
         setTimeout(() => {
-            el.classList.remove('take-damage');
-        }, 400);
+            el.classList.remove('take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge');
+        }, 600);
     }
 }

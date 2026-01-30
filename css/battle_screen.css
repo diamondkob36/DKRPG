@@ -523,16 +523,41 @@
     overflow: hidden; /* ตัดส่วนที่ล้นออก */
 }
 
+/* 1. โดนตีปกติ (สีแดง สั่น) */
+.take-damage { animation: shake-red 0.4s ease-in-out; }
 @keyframes shake-red {
     0% { transform: translate(0, 0) rotate(0deg); filter: none; }
-    20% { transform: translate(-3px, 0) rotate(-1deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); } /* แดง */
+    20% { transform: translate(-3px, 0) rotate(-1deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
     40% { transform: translate(3px, 0) rotate(1deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
     60% { transform: translate(-3px, 0) rotate(0deg); filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
     80% { transform: translate(3px, 0) rotate(1deg); filter: none; }
     100% { transform: translate(0, 0) rotate(0deg); filter: none; }
 }
 
-/* คลาสที่จะใส่ให้ตัวละครชั่วคราว */
-.take-damage {
-    animation: shake-red 0.4s ease-in-out;
+/* 2. โดนคริติคอล (สีส้ม/เหลือง สั่นแรง ขยายใหญ่) */
+.take-damage-crit { animation: shake-crit 0.5s ease-in-out; }
+@keyframes shake-crit {
+    0% { transform: scale(1); filter: none; }
+    10% { transform: scale(1.3) rotate(-5deg); filter: brightness(2) sepia(1) saturate(5) hue-rotate(-30deg); } /* สว่างวาบ */
+    30% { transform: scale(1.3) rotate(5deg); filter: brightness(1.5) sepia(1) saturate(5) hue-rotate(-30deg); }
+    50% { transform: scale(1.1) rotate(-5deg); filter: brightness(1.2); }
+    100% { transform: scale(1); filter: none; }
+}
+
+/* 3. บล็อกได้ (สีฟ้า/เทา สั่นเล็กน้อยเหมือนชนกำแพง) */
+.take-damage-block { animation: shake-block 0.3s ease-out; }
+@keyframes shake-block {
+    0% { transform: translateX(0); filter: none; }
+    20% { transform: translateX(2px); filter: brightness(1.5) grayscale(1); box-shadow: 0 0 10px white; } /* แสงขาว */
+    40% { transform: translateX(-2px); filter: brightness(1.2) grayscale(0.8); }
+    100% { transform: translateX(0); filter: none; }
+}
+
+/* 4. หลบหลีก (พริ้วหลบไปด้านข้างจางๆ) */
+.action-dodge { animation: dodge-move 0.5s ease; }
+@keyframes dodge-move {
+    0% { transform: translateX(0); opacity: 1; }
+    20% { transform: translateX(-30px) skewX(-10deg); opacity: 0.5; } /* วูบหลบ */
+    50% { transform: translateX(-30px) skewX(-10deg); opacity: 0.5; }
+    100% { transform: translateX(0); opacity: 1; }
 }
