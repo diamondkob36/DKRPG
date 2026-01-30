@@ -561,3 +561,28 @@
     50% { transform: translateX(-30px) skewX(-10deg); opacity: 0.5; }
     100% { transform: translateX(0); opacity: 1; }
 }
+
+/* 1. บัพ (Buff): แสงสีทองลอยขึ้น */
+.effect-buff { animation: buff-shine 0.8s ease-out; }
+@keyframes buff-shine {
+    0% { filter: drop-shadow(0 0 0px gold); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 15px gold); transform: scale(1.05); }
+    100% { filter: drop-shadow(0 0 0px gold); transform: scale(1); }
+}
+
+/* 2. ฮีล (Heal): แสงสีเขียวสว่างวาบ */
+.effect-heal { animation: heal-glow 0.8s ease-out; }
+@keyframes heal-glow {
+    0% { filter: sepia(1) hue-rotate(50deg) saturate(1); }
+    50% { filter: sepia(1) hue-rotate(50deg) saturate(5) brightness(1.5) drop-shadow(0 0 10px #2ecc71); }
+    100% { filter: none; }
+}
+
+/* 3. สกิลโจมตี (Skill Attack): ขยายวูบและเปลี่ยนสีรุนแรง */
+.effect-skill-attack { animation: skill-impact 0.5s ease-out; }
+@keyframes skill-impact {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.2) rotate(5deg); filter: brightness(2) saturate(0); } /* ขาวสว่าง */
+    40% { transform: scale(0.9) rotate(-5deg); filter: sepia(1) hue-rotate(-50deg) saturate(5); } /* สีแดง/ส้ม */
+    100% { transform: scale(1); filter: none; }
+}

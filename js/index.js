@@ -597,15 +597,16 @@ window.battleAction = async (action, skillId = null) => {
             
             battleState.monster.hp -= result.damage;
             
-            // --- ✅ จัดการเอฟเฟกต์ ---
+            // --- ✅ จัดการเอฟเฟกต์การโจมตี ---
             if (result.damage === 0) {
-                // หลบได้
+                // กรณีศัตรูหลบได้
                 logBattle(`💨 ${result.text || "ศัตรูหลบได้!"} (Miss)`);
                 playHitEffect('battle-monster-img', 'dodge'); 
             } else {
                 let icon = "⚔️";
                 let type = 'normal';
 
+                // เช็คเงื่อนไขพิเศษ
                 if (result.isCrit) {
                     icon = "💥 CRITICAL!";
                     type = 'critical';
@@ -616,7 +617,7 @@ window.battleAction = async (action, skillId = null) => {
                 let blockText = result.isBlocked ? "(ถูกบล็อก!)" : "";
                 logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ! ${blockText}`);
                 
-                // เล่นเอฟเฟกต์ที่รูปมอนสเตอร์
+                // เล่นเอฟเฟกต์ใส่ "รูปมอนสเตอร์"
                 playHitEffect('battle-monster-img', type);
             }
             
@@ -630,18 +631,28 @@ window.battleAction = async (action, skillId = null) => {
 
             gameData = GameLogic.useSkill(gameData, skillId);
 
+            // --- ✅ ตรวจสอบประเภทสกิลเพื่อแสดงเอฟเฟกต์ ---
             if (skill.effect && skill.effect.damage) {
-                // สกิลโจมตี
+                // 2.1 สกิลโจมตี -> แสดงที่ "ศัตรู"
                 battleState.monster.hp -= skill.effect.damage;
                 logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
                 
-                // สกิลมักจะรุนแรง ให้เป็น Crit หรือ Normal
-                playHitEffect('battle-monster-img', 'critical');
+                // เล่นเอฟเฟกต์โจมตีรุนแรงใส่ศัตรู
+                playHitEffect('battle-monster-img', 'skill'); 
 
             } else if (skill.buff) {
+                // 2.2 สกิลบัพ -> แสดงที่ "ตัวเรา"
                 logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
+                
+                // เล่นเอฟเฟกต์บัพใส่ตัวเอง
+                playHitEffect('battle-player-img', 'buff');
+
             } else if (skill.effect && skill.effect.hp) {
+                // 2.3 สกิลฮีล -> แสดงที่ "ตัวเรา"
                 logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
+                
+                // เล่นเอฟเฟกต์ฮีลใส่ตัวเอง
+                playHitEffect('battle-player-img', 'heal');
             }
 
             updateBattleUI(); 
@@ -652,7 +663,7 @@ window.battleAction = async (action, skillId = null) => {
         } else if (action === 'run') {
             clearInterval(battleTimer);
             
-            // ล้างบัพต่อสู้ทิ้ง
+            // ✅ เรียกฟังก์ชันล้างบัพสกิล (Stat) ออกก่อนจบการต่อสู้
             clearBattleBuffs(); 
 
             battleState = null;
@@ -1234,26 +1245,35 @@ function clearBattleBuffs() {
 function playHitEffect(elementId, type = 'normal') {
     const el = document.getElementById(elementId);
     if (el) {
-        // 1. ลบคลาสเก่าออกให้หมดก่อน
-        el.classList.remove('take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge');
+        // 1. ลบคลาสเก่าออกให้หมด (รวมถึงคลาสใหม่ที่เพิ่งเพิ่ม)
+        el.classList.remove(
+            'take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge',
+            'effect-buff', 'effect-heal', 'effect-skill-attack' // ✅ เพิ่มคลาสใหม่ตรงนี้
+        );
         
         // 2. Reset Animation
         void el.offsetWidth; 
 
-        // 3. ใส่คลาสตามประเภท
-        if (type === 'critical') {
-            el.classList.add('take-damage-crit');
-        } else if (type === 'blocked') {
-            el.classList.add('take-damage-block');
-        } else if (type === 'dodge') {
-            el.classList.add('action-dodge');
-        } else {
-            el.classList.add('take-damage'); // ปกติ
+        // 3. เลือกใส่คลาสตาม Type
+        switch (type) {
+            case 'critical': el.classList.add('take-damage-crit'); break;
+            case 'blocked':  el.classList.add('take-damage-block'); break;
+            case 'dodge':    el.classList.add('action-dodge'); break;
+            
+            // ✅ เพิ่มเคสสำหรับสกิล
+            case 'buff':     el.classList.add('effect-buff'); break;
+            case 'heal':     el.classList.add('effect-heal'); break;
+            case 'skill':    el.classList.add('effect-skill-attack'); break;
+            
+            default:         el.classList.add('take-damage'); // โจมตีปกติ
         }
         
         // 4. ตั้งเวลาลบออก
         setTimeout(() => {
-            el.classList.remove('take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge');
-        }, 600);
+            el.classList.remove(
+                'take-damage', 'take-damage-crit', 'take-damage-block', 'action-dodge',
+                'effect-buff', 'effect-heal', 'effect-skill-attack'
+            );
+        }, 800); // ปรับเวลาเผื่อไว้สัก 800ms
     }
 }
