@@ -72,7 +72,7 @@ updateGameScreen(gameData) {
         }
 
         // =========================================================
-        // ✨ ส่วน Profile Info (เพิ่ม Dmg Red)
+        // ✨ ส่วน Profile Info (แก้ไข: แสดงผล Dodge ที่รวมโบนัส AGI แล้ว)
         // =========================================================
         
         setText('profile-name', gameData.name);
@@ -81,6 +81,10 @@ updateGameScreen(gameData) {
         const hpRegen = gameData.hpRegen || Math.floor(maxHp * 0.05) || 1;
         const mpRegen = gameData.mpRegen || Math.floor(maxMp * 0.05) || 1;
         const usage = GameLogic.getInventoryUsage(gameData);
+
+        // ✅ คำนวณค่า Dodge จริง (Base + AGI/4)
+        const agiBonus = Math.floor((gameData.agi || 0) / 4);
+        const totalDodge = (gameData.dodge || 0) + agiBonus;
 
         const statsContainer = document.querySelector('#profile-modal .modal-box > div[style*="grid"]');
         
@@ -91,7 +95,7 @@ updateGameScreen(gameData) {
             statsContainer.style.padding = '5px 10px';
             statsContainer.style.display = 'block';
 
-            // 🎨 จัด Grid 2 คอลัมน์ (เพิ่ม Dmg Red คู่กับ Block)
+            // 🎨 แสดงผล totalDodge แทนค่าดิบ
             statsContainer.innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; color: #5d4037; text-align: left;">
                     
@@ -117,7 +121,8 @@ updateGameScreen(gameData) {
                     <div>💥 Crit Dmg: <b style="color:#c0392b">${gameData.critDmg || 150}%</b></div>
                     
                     <div>🎯 Acc: <b style="color:#e91e63">${gameData.acc || 0}%</b></div>
-                    <div>🍃 Dodge: <b style="color:#2ecc71">${gameData.dodge || 0}%</b></div>
+                    
+                    <div title="Base: ${gameData.dodge}% + AGI: ${agiBonus}%">🍃 Dodge: <b style="color:#2ecc71">${totalDodge}%</b></div>
                     
                     <div>🛡️ Block: <b style="color:#7f8c8d">${gameData.block || 0}%</b></div>
                     <div>🛡️ Dmg Red: <b style="color:#7f8c8d">${gameData.dmgRed || 0}%</b></div>
@@ -393,7 +398,7 @@ updateGameScreen(gameData) {
     },
 
     // 🆕 1. เพิ่มฟังก์ชันวาด Buff
-        renderBuffs(activeBuffs) {
+    renderBuffs(activeBuffs) {
         const buffContainer = document.getElementById('buff-container');
         if (!buffContainer) return;
 
