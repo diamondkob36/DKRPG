@@ -389,6 +389,24 @@
     bottom: 115%; /* Animation เลื่อนลง */
 }
 
+/* ปรับรูปให้เต็มกล่องบัพ */
+.buff-img-display {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ขยายรูปให้เต็มพื้นที่โดยไม่เสียสัดส่วน */
+    display: block;
+}
+
+/* ปรับมุมโค้งให้เข้ากับกรอบ (ผู้เล่น) */
+.buff-item .buff-img-display {
+    border-radius: 6px; 
+}
+
+/* ปรับมุมโค้งให้เข้ากับกรอบ (มอนสเตอร์) */
+.monster-buff-item .buff-img-display {
+    border-radius: 4px; 
+}
+
 .tooltip-header {
     color: #f1c40f;
     font-weight: bold;

@@ -280,6 +280,7 @@ export const monsters = {
                 type: "def",
                 value: 1000,
                 expiresAt: 9999999999999, // ตลอดกาล
+                img: "image/buffs/dummy_passive.png",
                 icon: "🛡️"
             }
         }
