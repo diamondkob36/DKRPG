@@ -1,9 +1,13 @@
-// นำเข้า Library ของ Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// js/firebase-init.js
 
-// ตั้งค่า Firebase (Config)
+// Import Firebase SDK (แบบ Modular)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query,where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+// =========================================================
+// ⚠️ สำคัญ: ใส่ Config ของคุณตรงนี้ (เอามาจาก Firebase Console)
+// =========================================================
 const firebaseConfig = {
     apiKey: "AIzaSyB4xTY6BTjufK9fi0YlgzllOSK2349l0Zk",
     authDomain: "dk-rpg.firebaseapp.com",
@@ -13,15 +17,11 @@ const firebaseConfig = {
     appId: "1:954909256548:web:4f347b5cbf5f55fbdc6871"
 };
 
-// เริ่มต้นระบบ
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ส่งออกตัวแปรให้ไฟล์อื่นเอาไปใช้ต่อได้ (Export)
-export { 
-    db, auth, provider, 
-    doc, setDoc, getDoc, 
-    signInWithPopup, onAuthStateChanged, signOut 
-};
+// Export ฟังก์ชันต่างๆ ให้ไฟล์อื่น (js/index.js) เรียกใช้ได้
+export { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut,collection, query, where, getDocs };

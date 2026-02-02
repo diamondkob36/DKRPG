@@ -1,6 +1,7 @@
 // js/index.js
 
-import { db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut } from "./firebase-init.js";
+import { 
+    db, auth, provider, doc, setDoc, getDoc, signInWithPopup, onAuthStateChanged, signOut,collection, query, where, getDocs } from "./firebase-init.js";
 import { GameLogic } from "./game-logic.js"; // 🧠 นำเข้าสมอง
 import { UI } from "./ui.js";                // 🎨 นำเข้าหน้าตา
 import { items, monsters, skills, classStats } from "./gameData.js"; // ✅ เพิ่ม classStats เข้าไป
@@ -66,6 +67,31 @@ window.confirmCreate = async () => {
     const name = document.getElementById('hero-name').value.trim();
     if(!name || !selectedClassKey) return alert("กรุณากรอกข้อมูลให้ครบ");
     
+    // --- 🆕 ส่วนที่เพิ่ม: ตรวจสอบชื่อซ้ำ (Check Duplicate Name) ---
+    UI.setStatus("กำลังตรวจสอบชื่อ...", "warning");
+    
+    try {
+        // 1. อ้างอิงไปยัง Collection "players"
+        const playersRef = collection(db, "players");
+        
+        // 2. สร้างคำสั่งค้นหา: หาคนที่ field 'name' ตรงกับที่กรอกมา
+        const q = query(playersRef, where("name", "==", name));
+        
+        // 3. ดึงข้อมูลจริง
+        const querySnapshot = await getDocs(q);
+
+        // 4. ถ้าเจอข้อมูล (size > 0) แปลว่าชื่อซ้ำ
+        if (!querySnapshot.empty) {
+            UI.setStatus("ชื่อซ้ำ!", "error");
+            return alert(`❌ ชื่อ "${name}" มีผู้ใช้งานแล้ว กรุณาตั้งชื่ออื่น`);
+        }
+
+    } catch (e) {
+        console.error("Check name error:", e);
+        return alert("เกิดข้อผิดพลาดในการตรวจสอบชื่อ: " + e.message);
+    }
+    // -----------------------------------------------------------
+
     UI.setStatus("กำลังสร้างตัวละคร...", "");
     
     // เรียกใช้ Logic สร้างข้อมูล
