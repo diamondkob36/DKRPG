@@ -228,7 +228,7 @@ export const skills = {
         scale: { str: 1.8 } // ✅ ใช้ scaling
     },
     knight_break: {
-        id: "knight_break", name: "Armor Break", img: "image/skulls/knight_bash.png", icon: "🔨",
+        id: "knight_break", name: "Armor Break", img: "image/skulls/knight_break.png", icon: "🔨",
         desc: "ลดเกราะศัตรู (Dmg 120% STR, Def -5)",
         mpCost: 15, cooldown: 15,
         classReq: "knight",
@@ -253,6 +253,14 @@ export const skills = {
         isBattleOnly: true,
         buff: { type: "int", value: 15, duration: 20 }
     },
+    mage_fireball: {
+        id: "mage_fireball", name: "Fireball", img: "image/skulls/mage_fireball.png", icon: "🔥",
+        desc: "ปาลูกไฟ (Dmg 250% INT)",
+        mpCost: 25, cooldown: 8,
+        classReq: "mage",
+        isBattleOnly: true,
+        scale: { int: 2.5 } // ✅ scaling
+    },
 
     // --- 🗡️ สกิลของ Rogue ---
     rogue_sprint: {
@@ -270,7 +278,16 @@ export const skills = {
         classReq: "rogue",
         isBattleOnly: true,
         buff: { type: "critRate", value: 10, duration: 60 }
-    }
+    },
+    rogue_sand: {
+        id: "rogue_sand", name: "Sand Throw", img: "image/skulls/rogue_sand.png", icon: "🌫️",
+        desc: "ปาทราย (Dmg 120% AGI, Acc -20%)",
+        mpCost: 10, cooldown: 10,
+        classReq: "rogue",
+        isBattleOnly: true,
+        scale: { agi: 1.2 }, // ✅ scaling
+        debuff: { type: "acc", value: -20, duration: 15 }
+    },
 };
 
 export const monsters = {
