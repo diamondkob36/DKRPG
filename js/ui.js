@@ -697,7 +697,7 @@ updateGameScreen(gameData) {
         const tooltip = document.getElementById('item-tooltip');
         if (!tooltip) return;
 
-        // ... (ส่วนสร้าง HTML statsHTML คงเดิม) ...
+        // --- 1. สร้าง HTML สำหรับ Stats, Effect, Buff ---
         let statsHTML = '';
         if (item.stats || item.effect || item.buff) {
             statsHTML += '<div class="tooltip-stats">';
@@ -729,7 +729,7 @@ updateGameScreen(gameData) {
             statsHTML += '</div>';
         }
 
-        // ... (ส่วน slotDisplay คงเดิม) ...
+        // --- 2. ส่วนแสดง Slot (เฉพาะอุปกรณ์) ---
         let slotDisplay = '';
         if (item.type === 'equipment' && item.slot) {
             const slotDef = (typeof equipmentSlots !== 'undefined') ? equipmentSlots.find(s => s.id === item.slot) : null;
@@ -737,7 +737,7 @@ updateGameScreen(gameData) {
             slotDisplay = `<div style="font-size:11px; color:#f39c12; margin-top:-2px; margin-bottom: 2px;">📍 สวมใส่: ${slotName}</div>`;
         }
 
-        // ... (ส่วน classReqDisplay คงเดิม) ...
+        // --- 3. ส่วนแสดง Class Requirement ---
         let classReqDisplay = '';
         if (item.allowedClasses) {
             const classNames = item.allowedClasses.map(key => {
@@ -746,9 +746,30 @@ updateGameScreen(gameData) {
             classReqDisplay = `<div style="font-size:11px; color:#e74c3c; margin-top:2px;">⚠️ เฉพาะ: ${classNames}</div>`;
         }
 
-        // ✅ แก้ไข: ดึงรูปภาพมาแสดงใน Tooltip ด้วย
+        // เรียกใช้ Helper แสดงรูป
+        // (ฟังก์ชัน getItemVisual ต้องประกาศไว้ด้านบนของไฟล์ ui.js ตามโค้ดที่คุณมีอยู่แล้ว)
         const visual = getItemVisual(item);
 
+        // --- ✅ 4. ส่วน Footer (แก้ไขใหม่) ---
+        let footerHTML = '';
+        
+        if (item.type === 'Skill') {
+            // กรณีเป็นสกิล: แสดง MP ที่ใช้ (รับค่ามาจาก property 'price' ที่ส่งมา)
+            footerHTML = `
+                <div class="tooltip-footer" style="color:#3498db; border-top: 1px dashed #555; padding-top:5px; margin-top:5px;">
+                    🔮 ใช้ ${item.price}
+                </div>
+            `;
+        } else {
+            // กรณีเป็นไอเทมปกติ: แสดงน้ำหนักและราคา
+            footerHTML = `
+                <div class="tooltip-footer">
+                    ⚖️ ${item.weight || 0} kg | 💰 ราคา: ${item.price} G
+                </div>
+            `;
+        }
+
+        // --- 5. ประกอบร่าง Tooltip ---
         tooltip.innerHTML = `
             <div class="tooltip-header">
                 <div class="tooltip-icon">${visual}</div>
@@ -760,9 +781,7 @@ updateGameScreen(gameData) {
             </div>
             ${statsHTML}
             <div class="tooltip-desc">${item.desc}</div>
-            <div class="tooltip-footer">
-                ⚖️ ${item.weight || 0} kg | 💰 ราคา: ${item.price} G
-            </div>
+            ${footerHTML}
         `;
 
         tooltip.style.display = 'block';
@@ -818,10 +837,8 @@ updateGameScreen(gameData) {
                 // --- 1. ส่วนแสดงผล (รูปภาพ หรือ ไอคอน) ---
                 let visualContent = '';
                 if (skill.img) {
-                    // ✅ ถ้ามีรูป ให้แสดงรูป (ใช้คลาส .skill-img-display ที่เพิ่มใน CSS)
                     visualContent = `<img src="${skill.img}" class="skill-img-display" alt="${skill.name}">`;
                 } else {
-                    // ถ้าไม่มี ให้แสดงไอคอนเดิม
                     visualContent = `<span class="skill-icon">${skill.icon}</span>`;
                 }
 
@@ -840,15 +857,18 @@ updateGameScreen(gameData) {
 
                 btn.innerHTML = content;
 
-                // --- 3. เพิ่ม Tooltip (ส่ง skill.img ไปด้วย) ---
+                // --- 3. เพิ่ม Tooltip ---
                 this.bindTooltip(btn, {
                     name: skill.name,
                     desc: skill.desc,
-                    type: "Skill",
+                    type: "Skill",     // ระบุ Type เป็น Skill เพื่อให้ showTooltip รู้
                     icon: skill.icon,
-                    img: skill.img, // ✅ เพิ่มบรรทัดนี้: เพื่อให้ Tooltip เอารูปไปโชว์ด้วย
-                    price: "0", 
-                    weight: null,
+                    img: skill.img, 
+                    
+                    // ✅ แก้ไข: ส่งข้อความ MP ไปในช่อง price
+                    price: `${skill.mpCost} MP`, 
+                    
+                    weight: null,      // ไม่ใช้น้ำหนัก
                     effect: skill.effect, 
                     buff: skill.buff
                 });

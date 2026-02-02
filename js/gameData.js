@@ -205,36 +205,36 @@ export const skills = {
     // --- 🛡️ สกิลของ Knight ---
     knight_bash: {
         id: "knight_bash", name: "Heavy Bash", img: "image/skulls/knight_bash.png", icon: "💥",
-        desc: "เพิ่มพลังโจมตี (STR +10) นาน 30 วิ",
+        desc: "เพิ่มพลังโจมตี (STR +15) นาน 30 วิ",
         mpCost: 10, cooldown: 60,
         classReq: "knight",
         isBattleOnly: true,
-        buff: { type: "str", value: 10, duration: 30 }
+        buff: { type: "str", value: 15, duration: 30 }
     },
     knight_fortify: {
         id: "knight_fortify", name: "Iron Skin", img: "image/skulls/knight_fortify.png", icon: "🛡️",
-        desc: "ผิวเหล็กไหล (DEF +5) นาน 45 วิ",
+        desc: "ผิวเหล็กไหล (DEF +20) นาน 45 วิ",
         mpCost: 15, cooldown: 90,
         classReq: "knight",
         isBattleOnly: true,
-        buff: { type: "def", value: 5, duration: 45 }
+        buff: { type: "def", value: 20, duration: 45 }
     },
     Cross_Cut: {
         id: "Cross_Cut", name: "Cross Cut", img: "image/skulls/Cross_Cut.png", icon: "⚔️",
         desc: "ทุบอย่างแรง (Dmg 180% STR)",
-        mpCost: 10, cooldown: 5,
+        mpCost: 10, cooldown: 15,
         classReq: "knight",
         isBattleOnly: true,
         scale: { str: 1.8 } // ✅ ใช้ scaling
     },
     knight_break: {
         id: "knight_break", name: "Armor Break", img: "image/skulls/knight_break.png", icon: "🔨",
-        desc: "ลดเกราะศัตรู (Dmg 120% STR, Def -5)",
-        mpCost: 15, cooldown: 15,
+        desc: "ลดเกราะศัตรู (Dmg 120% STR, Def -15)",
+        mpCost: 15, cooldown: 20,
         classReq: "knight",
         isBattleOnly: true,
         scale: { str: 1.2 }, // ✅ scaling
-        debuff: { type: "def", value: -5, duration: 20 }
+        debuff: { type: "def", value: -15, duration: 20 }
     },
 
     // --- 🔮 สกิลของ Mage ---
@@ -248,7 +248,7 @@ export const skills = {
     mage_meditate: {
         id: "mage_meditate", name: "Focus", img: "image/skulls/mage_meditate.png", icon: "🧘",
         desc: "รวบรวมสมาธิ (INT +15) นาน 20 วิ",
-        mpCost: 0, cooldown: 120,
+        mpCost: 30, cooldown: 60,
         classReq: "mage",
         isBattleOnly: true,
         buff: { type: "int", value: 15, duration: 20 }
@@ -256,7 +256,7 @@ export const skills = {
     mage_fireball: {
         id: "mage_fireball", name: "Fireball", img: "image/skulls/mage_fireball.png", icon: "🔥",
         desc: "ปาลูกไฟ (Dmg 250% INT)",
-        mpCost: 25, cooldown: 8,
+        mpCost: 25, cooldown: 20,
         classReq: "mage",
         isBattleOnly: true,
         scale: { int: 2.5 } // ✅ scaling
@@ -282,7 +282,7 @@ export const skills = {
     rogue_sand: {
         id: "rogue_sand", name: "Sand Throw", img: "image/skulls/rogue_sand.png", icon: "🌫️",
         desc: "ปาทราย (Dmg 120% AGI, Acc -20%)",
-        mpCost: 10, cooldown: 10,
+        mpCost: 10, cooldown: 30,
         classReq: "rogue",
         isBattleOnly: true,
         scale: { agi: 1.2 }, // ✅ scaling
