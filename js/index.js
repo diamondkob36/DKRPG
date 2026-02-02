@@ -106,18 +106,73 @@ window.confirmCreate = async () => {
 function enterGame() {
     UI.showScreen('game-screen');
     
-    // 🆕 1. ก่อนเริ่มเกม เช็คว่ามีบัพหมดอายุตอน Offline ไหม
+    // --- 🆕 Migration: ตรวจสอบและซ่อมแซม Save Data เก่า ---
+    if (!gameData.skills) {
+        console.log("Migrating skills data...");
+        gameData.skills = {};
+        // แจกสกิลเริ่มต้นให้ผู้เล่นเก่า (Lv.1)
+        for(const [id, sk] of Object.entries(skills)) {
+            if(sk.classReq === gameData.classKey) {
+                gameData.skills[id] = 1;
+            }
+        }
+    }
+    
+    if (!gameData.loadout) {
+        console.log("Migrating loadout data...");
+        // เอาสกิลที่มี มาใส่ช่อง Loadout ให้เต็ม 6 ช่องแรก
+        const learnedSkills = Object.keys(gameData.skills);
+        gameData.loadout = [null, null, null, null, null, null];
+        
+        for(let i=0; i<6; i++) {
+            if(learnedSkills[i]) gameData.loadout[i] = learnedSkills[i];
+        }
+    }
+    // -----------------------------------------------------
+
     const result = GameLogic.checkBuffs(gameData);
     if (result.hasChanged) {
         gameData = result.newData;
-        saveToFirebase(); // บันทึกค่าที่ถูกต้อง (ลบบัพออก) ทันที
+        saveToFirebase(); 
     }
 
     UI.updateGameScreen(gameData);
-    
-    // 🆕 2. เริ่มตัวนับเวลา (Game Loop)
+    UI.renderSkillBar(gameData); // อัปเดตบาร์สกิลตาม Loadout
     startBuffTimer();
 }
+
+// ✅ 1. เพิ่ม: ฟังก์ชัน Global สำหรับเปิดหน้าต่างสกิล
+window.openSkillManager = () => {
+    UI.toggleSkillModal(true);
+    UI.renderSkillModal(gameData);
+};
+
+window.closeSkillManager = () => {
+    UI.toggleSkillModal(false);
+};
+
+window.upgradeSkill = async (skillId) => {
+    try {
+        gameData = GameLogic.upgradeSkill(gameData, skillId);
+        UI.renderSkillModal(gameData); // รีเฟรชหน้าต่างสกิล
+        UI.updateGameScreen(gameData); // อัปเดตเงินใน HUD
+        await saveToFirebase();
+    } catch (e) {
+        await UI.alert("ไม่สำเร็จ", e.message);
+    }
+};
+
+// ✅ 3. เพิ่ม: ฟังก์ชัน Global สำหรับติดตั้งสกิล
+window.equipSkill = async (skillId, slotIndex) => {
+    try {
+        gameData = GameLogic.equipSkillToSlot(gameData, skillId, slotIndex);
+        UI.renderSkillModal(gameData); // รีเฟรชหน้าต่างสกิล
+        UI.renderSkillBar(gameData);   // รีเฟรชบาร์สกิลด้านล่าง
+        await saveToFirebase();
+    } catch (e) {
+        await UI.alert("ผิดพลาด", e.message);
+    }
+};
 
 // --- 3. ระบบเกม (Game Actions) ---
 window.train = async () => {
@@ -1214,25 +1269,18 @@ function renderBattleSkills() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    const availableSkills = [];
-    for (const [id, skill] of Object.entries(skills)) {
-        if (!skill.classReq || skill.classReq === gameData.classKey) {
-            availableSkills.push({ id, ...skill });
-        }
-    }
+    // ใช้ Loadout แทนการวนลูปสกิลทั้งหมด
+    const loadout = gameData.loadout || [null,null,null,null,null,null];
 
-    const maxSlots = 6;
-    
-    for (let i = 0; i < maxSlots; i++) {
+    for (let i = 0; i < 6; i++) {
         const slot = document.createElement('div');
+        const skillId = loadout[i];
         
-        if (i < availableSkills.length) {
-            const skill = availableSkills[i];
-            
+        if (skillId) {
+            const skill = skills[skillId];
             slot.className = 'battle-skill-slot';
             slot.id = `btn-skill-${skill.id}`;
             
-            // ✅ แก้ไขส่วนนี้: เช็คว่ามีรูปภาพหรือไม่?
             let visual = '';
             if (skill.img) {
                 visual = `<img src="${skill.img}" class="skill-img-display">`;
@@ -1246,23 +1294,18 @@ function renderBattleSkills() {
                 <div class="cooldown-overlay" style="display:none;"></div>
             `;
             
+            // Tooltip (แสดงเลเวลด้วย)
+            const lvl = (gameData.skills && gameData.skills[skillId]) ? gameData.skills[skillId] : 1;
             if(typeof UI.bindTooltip === 'function') {
-                UI.bindTooltip(slot, {
-                    name: skill.name,
-                    desc: skill.desc,
-                    type: "Skill",
-                    icon: skill.icon,
-                    img: skill.img, // ✅ ส่งรูปไปให้ Tooltip ด้วย
-                    price: `${skill.mpCost} MP`,
-                    buff: skill.buff,
-                    effect: skill.effect
-                });
+                UI.bindTooltip(slot, { ...skill, name: `${skill.name} (Lv.${lvl})`, price: `${skill.mpCost} MP` });
             }
 
             slot.onclick = () => window.battleAction('skill', skill.id);
 
         } else {
+            // ช่องว่างในฉากต่อสู้
             slot.className = 'battle-skill-slot empty';
+            slot.innerHTML = '<span style="opacity:0.2; font-size:20px;">🔒</span>';
         }
 
         grid.appendChild(slot);

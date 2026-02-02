@@ -87,14 +87,28 @@ export const GameLogic = {
     // 1. แก้ไข createCharacter ให้มีสเตตัสใหม่
     createCharacter(name, classKey) {
         const base = classStats[classKey];
-        
-        // ใช้สูตร MaxMP ใหม่ (Base + INT*10)
-        // หมายเหตุ: base.baseMp มาจากที่เราแก้ไปเมื่อกี้
         const initialMaxMp = getMaxMp(base.baseMp, base.int);
 
         let startWeaponId = 'wooden_sword';
         if (classKey === 'mage') startWeaponId = 'novice_staff';
         else if (classKey === 'rogue') startWeaponId = 'novice_dagger';
+
+        // --- 🆕 ส่วนที่เพิ่ม: แจกสกิลเริ่มต้นเลเวล 1 ---
+        const startingSkills = {};
+        const startingLoadout = [null, null, null, null, null, null]; // 6 ช่อง
+        
+        let slotIndex = 0;
+        for (const [id, skill] of Object.entries(skills)) {
+            // เรียนสกิลทั้งหมดของอาชีพตัวเอง เริ่มที่ Lv.1
+            if (skill.classReq === classKey) {
+                startingSkills[id] = 1;
+                // ติดตั้งลงช่องว่างให้อัตโนมัติ (ไม่เกิน 6 ช่อง)
+                if (slotIndex < 6) {
+                    startingLoadout[slotIndex] = id;
+                    slotIndex++;
+                }
+            }
+        }
 
         return {
             name: name, 
@@ -103,32 +117,79 @@ export const GameLogic = {
             lvl: 1, exp: 0, maxExp: 100, 
             gold: 0, statPoints: 5,
             
-            // Base Stats
+            // Stats พื้นฐาน
             baseMp: base.baseMp || 100, 
             hp: base.hp, maxHp: base.maxHp, 
             mp: initialMaxMp, maxMp: initialMaxMp,
-            
-            // Main Attributes
             str: base.str, int: base.int, agi: base.agi, def: base.def || 0,
+            
+            // Combat Stats
+            block: base.block || 0, dmgRed: base.dmgRed || 0,
+            critRate: base.critRate || 0, critDmg: base.critDmg || 150,
+            dodge: base.dodge || 0, ignoreBlock: base.ignoreBlock || 0, acc: base.acc || 0,
 
-            // ✅ เพิ่ม: Combat Stats (ค่าเสริม) ที่ขาดหายไป
-            block: base.block || 0,
-            dmgRed: base.dmgRed || 0,
-            critRate: base.critRate || 0,
-            critDmg: base.critDmg || 150, // ค่าพื้นฐานคือ 150%
-            dodge: base.dodge || 0,
-            ignoreBlock: base.ignoreBlock || 0,
-            acc: base.acc || 0,
-
-            // Regen
             hpRegen: Math.floor(base.maxHp * 0.05) || 1,
             mpRegen: Math.floor(initialMaxMp * 0.05) || 1,
             
             inventory: { "potion_s": 3, [startWeaponId]: 1 },
             equipment: {},
             activeBuffs: {},
-            maxSlots: 32, maxWeight: 60 
+            maxSlots: 32, maxWeight: 60,
+
+            // ✅ บันทึกข้อมูลสกิล
+            skills: startingSkills,   
+            loadout: startingLoadout 
         };
+    },
+
+    upgradeSkill(currentData, skillId) {
+        const newData = { ...currentData };
+        newData.skills = newData.skills || {};
+        
+        const currentLevel = newData.skills[skillId] || 0;
+        const skill = skills[skillId];
+
+        if (!skill) throw new Error("ไม่พบข้อมูลสกิล");
+        if (currentLevel === 0) throw new Error("คุณยังไม่ได้เรียนสกิลนี้");
+        if (currentLevel >= (skill.maxLevel || 10)) throw new Error("สกิลเลเวลตันแล้ว!");
+
+        // สูตรคำนวณราคา: (Level + 1) * 200 Gold
+        const cost = (currentLevel + 1) * 200;
+
+        if (newData.gold < cost) throw new Error(`เงินไม่พอ! (ต้องการ ${cost} G)`);
+
+        newData.gold -= cost;
+        newData.skills[skillId] = currentLevel + 1; // เพิ่มเลเวล
+
+        return newData;
+    },
+
+    equipSkillToSlot(currentData, skillId, slotIndex) {
+        const newData = { ...currentData };
+        // Clone array เพื่อความปลอดภัย
+        newData.loadout = [...(newData.loadout || [null,null,null,null,null,null])];
+
+        if (slotIndex < 0 || slotIndex >= 6) throw new Error("ช่องสกิลไม่ถูกต้อง");
+
+        // กรณีถอดสกิล (skillId เป็น null)
+        if (skillId === null) {
+            newData.loadout[slotIndex] = null;
+            return newData;
+        }
+
+        // กรณีใส่สกิล: ต้องเช็คว่าเรียนหรือยัง
+        if (!newData.skills || !newData.skills[skillId]) {
+            throw new Error("คุณยังไม่ได้เรียนสกิลนี้");
+        }
+
+        // ถ้าสกิลนี้ถูกใส่อยู่ช่องอื่น ให้ลบออกจากช่องเดิมก่อน (ย้ายช่อง)
+        const existingIndex = newData.loadout.indexOf(skillId);
+        if (existingIndex !== -1 && existingIndex !== slotIndex) {
+            newData.loadout[existingIndex] = null;
+        }
+
+        newData.loadout[slotIndex] = skillId;
+        return newData;
     },
 
     // 🆕 Helper: คำนวณการใช้งานกระเป๋า (Slots & Weight)
@@ -529,11 +590,19 @@ export const GameLogic = {
         
         if (!skill) throw new Error("ไม่พบสกิล!");
 
-        if (skill.classReq && skill.classReq !== newData.classKey) {
-            throw new Error(`อาชีพของคุณใช้สกิลนี้ไม่ได้ (ต้องการ ${skill.classReq})`);
+        // --- 🆕 เช็คว่าเรียนหรือยัง ---
+        if (!newData.skills || !newData.skills[skillId]) {
+            throw new Error("คุณยังไม่ได้เรียนสกิลนี้!");
         }
 
-        if ((newData.mp || 0) < skill.mpCost) {
+        if (skill.classReq && skill.classReq !== newData.classKey) {
+            throw new Error(`อาชีพของคุณใช้สกิลนี้ไม่ได้`);
+        }
+
+        // (อนาคต: สามารถเพิ่ม MP Cost ตามเลเวลได้ตรงนี้)
+        const realMpCost = skill.mpCost;
+
+        if ((newData.mp || 0) < realMpCost) {
             throw new Error("MP ไม่พอ!");
         }
 
@@ -547,18 +616,33 @@ export const GameLogic = {
         }
 
         // --- ใช้สกิล ---
-        newData.mp -= skill.mpCost;
+        newData.mp -= realMpCost;
         newData.skillCooldowns[skillId] = now + (skill.cooldown * 1000);
 
+        // ดึงเลเวลสกิลมาใช้คำนวณ
+        const skillLvl = newData.skills[skillId];
+        const multiplier = 1 + ((skillLvl - 1) * 0.1); // ตัวคูณ 10% ต่อเลเวล
+
+        // Effect (Heal/Mana)
         if (skill.effect) {
-            if (skill.effect.hp) newData.hp = Math.min(newData.hp + skill.effect.hp, newData.maxHp);
-            if (skill.effect.mp) newData.mp = Math.min(newData.mp + skill.effect.mp, (newData.int * 10));
+            if (skill.effect.hp) {
+                // ฮีลแรงขึ้นตามเลเวล
+                const healAmt = Math.floor(skill.effect.hp * multiplier);
+                newData.hp = Math.min(newData.hp + healAmt, newData.maxHp);
+            }
+            if (skill.effect.mp) {
+                const manaAmt = Math.floor(skill.effect.mp * multiplier);
+                newData.mp = Math.min(newData.mp + manaAmt, (newData.int * 10));
+            }
         }
 
-        // กรณีสกิลบัพ
+        // Buff (Status)
         if (skill.buff) {
             const buffKey = `skill_${skill.id}`;
             const expireTime = now + (skill.buff.duration * 1000);
+            
+            // บัพเพิ่มค่าสถานะแรงขึ้น 5% ต่อเลเวล
+            const buffValue = Math.floor(skill.buff.value * (1 + (skillLvl-1)*0.05));
 
             newData.activeBuffs = newData.activeBuffs || {};
             
@@ -566,18 +650,15 @@ export const GameLogic = {
                 newData[skill.buff.type] -= newData.activeBuffs[buffKey].value;
             }
 
-            newData[skill.buff.type] = (newData[skill.buff.type] || 0) + skill.buff.value;
+            newData[skill.buff.type] = (newData[skill.buff.type] || 0) + buffValue;
 
             newData.activeBuffs[buffKey] = {
                 itemName: skill.name,
                 type: skill.buff.type,
-                value: skill.buff.value,
+                value: buffValue,
                 expiresAt: expireTime,
                 icon: skill.icon,
-                
-                // ✅ แก้ไขตรงนี้: ให้ดึงค่า isBattleOnly จากตัว skill โดยตรงด้วย
                 isBattleOnly: skill.isBattleOnly || skill.buff.isBattleOnly || false,
-                
                 img: skill.img 
             };
         }
@@ -586,78 +667,57 @@ export const GameLogic = {
     },
     // ✅ ฟังก์ชันคำนวณดาเมจสกิล (ใช้ Stat ผู้เล่น 100% + คิด Hit/Block/Crit/Def)
     calculateSkillDamage(attacker, defender, skill) {
-        // 1. คำนวณดาเมจตั้งต้น (Scaling from Player Stats)
-        let dmg = 0;
+        // หาเลเวลของสกิล (ถ้าเป็นมอนสเตอร์ให้ถือว่าเป็นเลเวล 1)
+        const skillLvl = (attacker.skills && attacker.skills[skill.id]) ? attacker.skills[skill.id] : 1;
         
-        // ถ้ามี scaling ให้คำนวณจาก stat ผู้เล่น
+        // 1. คำนวณดาเมจตั้งต้น (Scaling)
+        let dmg = 0;
         if (skill.scale) {
             if (skill.scale.str) dmg += (attacker.str || 0) * skill.scale.str;
             if (skill.scale.int) dmg += (attacker.int || 0) * skill.scale.int;
         }
+        if (dmg === 0) dmg = (attacker.str || 0);
 
-        // กรณีสกิลไม่มี scaling (กันบั๊ก) ให้ใช้ STR เป็นฐาน
-        if (dmg === 0) {
-            dmg = (attacker.str || 0); 
-        }
+        // --- 🆕 ส่วนที่เพิ่ม: Level Multiplier (+10% ต่อเลเวล) ---
+        // สูตร: Damage * (1 + (Level - 1) * 0.1)
+        const levelMultiplier = 1 + ((skillLvl - 1) * 0.1);
+        dmg = Math.floor(dmg * levelMultiplier);
+        // -----------------------------------------------------
 
-        // 2. คำนวณความแม่นยำ (Hit Chance)
-        // สูตร: (Dodge พื้นฐาน + โบนัส AGI) - ความแม่นยำผู้ใช้
+        // 2. Hit Chance
         const agiBonus = Math.floor((defender.agi || 0) / 4);
         const totalDodge = (defender.dodge || 0) + agiBonus;
-        
-        // ค่าการหลบจริง (ต่ำสุดคือ 0)
         const effectiveDodge = Math.max(0, totalDodge - (attacker.acc || 0));
-        
-        // โอกาสโดน (เต็ม 100)
         const hitChance = 100 - effectiveDodge;
 
-        // สุ่ม: ถ้าพลาดเป้า (Miss) -> จบเลย ดาเมจ 0
-        // (ให้โอกาสโดนขั้นต่ำ 5% เสมอ)
         if (Math.random() * 100 > Math.max(5, hitChance)) {
             return { damage: 0, text: "MISS!", isCrit: false, isBlocked: false };
         }
 
-        // 3. คำนวณการบล็อก (Block)
+        // 3. Block
         let isBlocked = false;
-        // โอกาสบล็อก = Blockศัตรู - เจาะบล็อกเรา
         let blockChance = (defender.block || 0) - (attacker.ignoreBlock || 0);
-        
         if (Math.random() * 100 < blockChance) {
             isBlocked = true;
-            dmg = Math.floor(dmg * 0.5); // บล็อกลดดาเมจ 50%
+            dmg = Math.floor(dmg * 0.5);
         }
 
-        // 4. คำนวณคริติคอล (Critical)
+        // 4. Crit
         let isCrit = false;
         if (Math.random() * 100 < (attacker.critRate || 0)) {
             isCrit = true;
-            // คูณความแรงคริ (เช่น 150% = 1.5 เท่า)
             dmg = Math.floor(dmg * ((attacker.critDmg || 150) / 100));
         }
 
-        // 5. คำนวณเกราะ (Defense) & เจาะเกราะ (Pierce)
+        // 5. Def & Pierce
         let def = defender.def || 0;
-        
-        // ถ้าเรามีค่า IgnoreBlock (เจาะเกราะ) ให้ลดเกราะศัตรูลง 60%
-        // (หรือจะใช้ค่า IgnoreBlock เป็น % เจาะเกราะตรงๆ ก็ได้ตามดีไซน์)
-        if ((attacker.ignoreBlock || 0) > 0) { 
-            def = Math.floor(def * 0.4); 
-        }
-        
-        // หักลบเกราะ
+        if ((attacker.ignoreBlock || 0) > 0) def = Math.floor(def * 0.4); 
         dmg -= def;
 
-        // 6. ลดดาเมจเปอร์เซ็นต์ (Damage Reduction - เช่น สกิลโล่)
-        let dmgRed = Math.min(40, defender.dmgRed || 0); // ตันที่ 40%
-        if (dmgRed > 0) {
-            dmg = Math.floor(dmg * (1 - dmgRed/100));
-        }
+        // 6. DmgRed
+        let dmgRed = Math.min(40, defender.dmgRed || 0);
+        if (dmgRed > 0) dmg = Math.floor(dmg * (1 - dmgRed/100));
 
-        // การันตีดาเมจขั้นต่ำ 1 (ถ้าไม่ Miss)
-        return { 
-            damage: Math.max(1, dmg), 
-            isCrit, 
-            isBlocked 
-        };
+        return { damage: Math.max(1, dmg), isCrit, isBlocked };
     },
 };

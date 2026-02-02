@@ -821,61 +821,171 @@ updateGameScreen(gameData) {
 
         const now = Date.now();
         const cooldowns = gameData.skillCooldowns || {};
+        const loadout = gameData.loadout || [null, null, null, null, null, null];
 
-        // วนลูปหาเฉพาะสกิลของอาชีพเรา
-        for (const [skillId, skill] of Object.entries(skills)) {
+        // วนลูปตามช่อง Loadout (6 ช่อง)
+        loadout.forEach(skillId => {
+            // ถ้าช่องว่าง ให้ข้ามไป (หรือจะสร้างช่องเปล่าๆ ก็ได้)
+            if (!skillId) return;
+
+            const skill = skills[skillId];
+            if (!skill) return;
+
+            const btn = document.createElement('div');
+            btn.className = 'skill-btn';
+            
+            // เช็ค Cooldown
+            const readyTime = cooldowns[skillId] || 0;
+            const isCooldown = now < readyTime;
+            const timeLeft = isCooldown ? Math.ceil((readyTime - now) / 1000) : 0;
+
+            let visualContent = '';
+            if (skill.img) {
+                visualContent = `<img src="${skill.img}" class="skill-img-display" alt="${skill.name}">`;
+            } else {
+                visualContent = `<span class="skill-icon">${skill.icon}</span>`;
+            }
+
+            let content = visualContent;
+            content += `<div class="mp-cost-badge">${skill.mpCost} MP</div>`;
+
+            if (isCooldown) {
+                btn.classList.add('cooldown');
+                const totalCd = skill.cooldown;
+                const percent = (timeLeft / totalCd) * 100;
+                content += `<div class="cooldown-overlay" style="height:${percent}%">${timeLeft}</div>`;
+            } else {
+                btn.onclick = () => window.useSkill(skillId); 
+            }
+
+            btn.innerHTML = content;
+
+            // Tooltip
+            const lvl = (gameData.skills && gameData.skills[skillId]) ? gameData.skills[skillId] : 1;
+            this.bindTooltip(btn, {
+                name: `${skill.name} (Lv.${lvl})`,
+                desc: skill.desc,
+                type: "Skill",
+                icon: skill.icon,
+                img: skill.img,
+                price: `${skill.mpCost} MP`,
+                weight: null,
+                effect: skill.effect,
+                buff: skill.buff
+            });
+
+            container.appendChild(btn);
+        });
+    },
+    renderSkillModal(gameData) {
+        const listContainer = document.getElementById('skill-list-content');
+        const loadoutContainer = document.getElementById('skill-loadout-grid');
+        
+        // ถ้ายังไม่ได้สร้าง HTML container ให้ return ไปก่อน (ป้องกัน Error)
+        if (!listContainer || !loadoutContainer) return;
+
+        listContainer.innerHTML = '';
+        loadoutContainer.innerHTML = '';
+
+        // --- ส่วน A: วาดช่อง Loadout (6 ช่องด้านบน) ---
+        const loadout = gameData.loadout || [null, null, null, null, null, null];
+        
+        loadout.forEach((skillId, index) => {
+            const slot = document.createElement('div');
+            slot.className = `skill-loadout-slot ${skillId ? 'occupied' : ''}`;
+            slot.dataset.index = index;
+            
+            if (skillId) {
+                const skill = skills[skillId];
+                // แสดงรูปหรือไอคอน
+                if (skill.img) slot.innerHTML = `<img src="${skill.img}">`;
+                else slot.innerHTML = `<span>${skill.icon}</span>`;
+                
+                // ปุ่มถอดสกิล (x)
+                const removeBtn = document.createElement('div');
+                removeBtn.className = 'remove-skill-btn';
+                removeBtn.innerText = 'x';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.equipSkill(null, index); // สั่งถอดสกิล
+                };
+                slot.appendChild(removeBtn);
+                
+                // Tooltip บอกเลเวล
+                const lvl = gameData.skills[skillId] || 1;
+                this.bindTooltip(slot, { ...skill, price: `Lv.${lvl}` });
+            } else {
+                // ช่องว่าง
+                slot.innerHTML = `<small style="color:#555;">${index+1}</small>`;
+            }
+            
+            loadoutContainer.appendChild(slot);
+        });
+
+        // --- ส่วน B: วาดรายชื่อสกิลที่มีให้เลือก (ด้านล่าง) ---
+        for (const [id, skill] of Object.entries(skills)) {
+            // โชว์เฉพาะสกิลของอาชีพเรา
             if (skill.classReq === gameData.classKey) {
-                
-                const btn = document.createElement('div');
-                btn.className = 'skill-btn';
-                
-                // เช็ค Cooldown
-                const readyTime = cooldowns[skillId] || 0;
-                const isCooldown = now < readyTime;
-                const timeLeft = isCooldown ? Math.ceil((readyTime - now) / 1000) : 0;
+                const currentLvl = (gameData.skills && gameData.skills[id]) ? gameData.skills[id] : 0;
+                const isLearned = currentLvl > 0;
+                const maxLvl = skill.maxLevel || 10;
+                const cost = (currentLvl + 1) * 200; // ราคาอัปเกรด
 
-                // --- 1. ส่วนแสดงผล (รูปภาพ หรือ ไอคอน) ---
-                let visualContent = '';
-                if (skill.img) {
-                    visualContent = `<img src="${skill.img}" class="skill-img-display" alt="${skill.name}">`;
+                const row = document.createElement('div');
+                row.className = 'skill-list-item';
+                
+                // Icon
+                const iconHtml = skill.img ? `<img src="${skill.img}" class="skill-icon-small">` : `<span class="skill-icon-text">${skill.icon}</span>`;
+
+                // Info & Upgrade Button
+                let upgradeBtnHtml = '';
+                if (currentLvl < maxLvl) {
+                    const disabled = gameData.gold < cost ? 'disabled' : '';
+                    upgradeBtnHtml = `<button class="upgrade-btn" ${disabled} onclick="window.upgradeSkill('${id}')">⬆️ ${cost}G</button>`;
                 } else {
-                    visualContent = `<span class="skill-icon">${skill.icon}</span>`;
+                    upgradeBtnHtml = `<span style="color:#2ecc71; font-size:12px;">MAX</span>`;
                 }
 
-                // --- 2. ประกอบ HTML ภายในปุ่ม ---
-                let content = visualContent;
-                content += `<div class="mp-cost-badge">${skill.mpCost} MP</div>`;
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                        ${iconHtml}
+                        <div class="skill-info">
+                            <div class="skill-name">${skill.name} <span style="color:#f1c40f; font-size:12px;">Lv.${currentLvl}</span></div>
+                            <div class="skill-desc" style="font-size:10px; color:#aaa;">${skill.desc}</div>
+                        </div>
+                    </div>
+                    <div class="skill-actions" style="display:flex; align-items:center; gap:5px;">
+                        ${upgradeBtnHtml}
+                    </div>
+                `;
 
-                if (isCooldown) {
-                    btn.classList.add('cooldown');
-                    const totalCd = skill.cooldown;
-                    const percent = (timeLeft / totalCd) * 100;
-                    content += `<div class="cooldown-overlay" style="height:${percent}%">${timeLeft}</div>`;
-                } else {
-                    btn.onclick = () => window.useSkill(skillId); 
+                // ปุ่มติดตั้ง (Equip) - แสดงเฉพาะเมื่อเรียนแล้ว
+                if (isLearned) {
+                    const equipBtn = document.createElement('button');
+                    equipBtn.className = 'equip-btn';
+                    equipBtn.innerText = 'ติดตั้ง';
+                    equipBtn.onclick = () => {
+                        // หาช่องว่างช่องแรก
+                        const emptyIndex = loadout.indexOf(null);
+                        if (emptyIndex !== -1) {
+                            window.equipSkill(id, emptyIndex);
+                        } else {
+                            alert("ช่องสกิลเต็ม! กรุณาถอดสกิลด้านบนออกก่อน");
+                        }
+                    };
+                    row.querySelector('.skill-actions').appendChild(equipBtn);
                 }
 
-                btn.innerHTML = content;
+                // Tooltip
+                this.bindTooltip(row, { ...skill, price: `Upgrade: ${cost} G` });
 
-                // --- 3. เพิ่ม Tooltip ---
-                this.bindTooltip(btn, {
-                    name: skill.name,
-                    desc: skill.desc,
-                    type: "Skill",     // ระบุ Type เป็น Skill เพื่อให้ showTooltip รู้
-                    icon: skill.icon,
-                    img: skill.img, 
-                    
-                    // ✅ แก้ไข: ส่งข้อความ MP ไปในช่อง price
-                    price: `${skill.mpCost} MP`, 
-                    
-                    weight: null,      // ไม่ใช้น้ำหนัก
-                    effect: skill.effect, 
-                    buff: skill.buff
-                });
-
-                container.appendChild(btn);
+                listContainer.appendChild(row);
             }
         }
+    },
+    toggleSkillModal(show) {
+        const el = document.getElementById('skill-modal');
+        if(el) el.style.display = show ? 'flex' : 'none';
     },
 };
 
