@@ -618,21 +618,17 @@ window.battleAction = async (action, skillId = null) => {
     try {
         // --- ⚔️ 1. โจมตีปกติ ---
         if (action === 'attack') {
-            // คำนวณดาเมจ
             const result = GameLogic.calculateBattleDamage(gameData, battleState.monster);
             
             battleState.monster.hp -= result.damage;
             
-            // --- ✅ จัดการเอฟเฟกต์การโจมตี ---
             if (result.damage === 0) {
-                // กรณีศัตรูหลบได้
                 logBattle(`💨 ${result.text || "ศัตรูหลบได้!"} (Miss)`);
                 playHitEffect('battle-monster-img', 'dodge'); 
             } else {
                 let icon = "⚔️";
                 let type = 'normal';
 
-                // เช็คเงื่อนไขพิเศษ
                 if (result.isCrit) {
                     icon = "💥 CRITICAL!";
                     type = 'critical';
@@ -642,8 +638,6 @@ window.battleAction = async (action, skillId = null) => {
 
                 let blockText = result.isBlocked ? "(ถูกบล็อก!)" : "";
                 logBattle(`${icon} คุณโจมตี ${result.damage} ดาเมจ! ${blockText}`);
-                
-                // เล่นเอฟเฟกต์ใส่ "รูปมอนสเตอร์"
                 playHitEffect('battle-monster-img', type);
             }
             
@@ -655,29 +649,79 @@ window.battleAction = async (action, skillId = null) => {
             const skill = skills[skillId];
             if (!skill) return;
 
+            // หักลบ MP และติด Cooldown
             gameData = GameLogic.useSkill(gameData, skillId);
 
-            // --- ✅ ตรวจสอบประเภทสกิลเพื่อแสดงเอฟเฟกต์ ---
-            if (skill.effect && skill.effect.damage) {
-                // 2.1 สกิลโจมตี -> แสดงที่ "ศัตรู"
-                battleState.monster.hp -= skill.effect.damage;
-                logBattle(`✨ ใช้สกิล ${skill.name} ทำดาเมจ ${skill.effect.damage}!`);
+            // 2.1 สกิลโจมตี (Check Scaling or Damage)
+            if (skill.scale || (skill.effect && skill.effect.damage)) {
                 
-                // เล่นเอฟเฟกต์โจมตีรุนแรงใส่ศัตรู
-                playHitEffect('battle-monster-img', 'skill'); 
+                // ✅ เรียกใช้ฟังก์ชันคำนวณแบบใหม่
+                const result = GameLogic.calculateSkillDamage(gameData, battleState.monster, skill);
+                
+                battleState.monster.hp -= result.damage;
 
-            } else if (skill.buff) {
-                // 2.2 สกิลบัพ -> แสดงที่ "ตัวเรา"
+                if (result.damage === 0) {
+                    logBattle(`💨 ${skill.name} พลาดเป้า! (Miss)`);
+                    playHitEffect('battle-monster-img', 'dodge');
+                } else {
+                    let type = 'skill'; 
+                    let extraText = "";
+
+                    if (result.isCrit) {
+                        type = 'critical';
+                        extraText = " (CRITICAL!)";
+                    } else if (result.isBlocked) {
+                        type = 'blocked';
+                        extraText = " (ถูกบล็อก!)";
+                    }
+
+                    logBattle(`✨ ${skill.name} ทำดาเมจ ${result.damage}!${extraText}`);
+                    playHitEffect('battle-monster-img', type);
+                }
+            }
+
+            // 2.2 สกิลดีบัพ (Debuff -> Monster)
+            if (skill.debuff) {
+                const mon = battleState.monster;
+                const now = Date.now();
+                const buffKey = `debuff_${skill.id}`;
+                
+                mon.activeBuffs = mon.activeBuffs || {};
+
+                // ลบค่าเก่าก่อนบวกใหม่ (กัน Stack มั่ว)
+                if (mon.activeBuffs[buffKey]) {
+                    if (mon[skill.debuff.type] !== undefined) {
+                        mon[skill.debuff.type] -= mon.activeBuffs[buffKey].value;
+                    }
+                }
+
+                // ใช้งานดีบัพ
+                if (mon[skill.debuff.type] !== undefined) {
+                    mon[skill.debuff.type] += skill.debuff.value;
+                }
+
+                mon.activeBuffs[buffKey] = {
+                    itemName: skill.name,
+                    type: skill.debuff.type,
+                    value: skill.debuff.value,
+                    expiresAt: now + (skill.debuff.duration * 1000),
+                    img: skill.img,
+                    icon: "☠️"
+                };
+
+                logBattle(`☠️ ศัตรูติดสถานะ ${skill.name} (${skill.debuff.type.toUpperCase()} ${skill.debuff.value})`);
+                playHitEffect('battle-monster-img', 'critical');
+            }
+            
+            // 2.3 สกิลบัพ (Buff -> Player)
+            if (skill.buff) {
                 logBattle(`💪 ใช้สกิล ${skill.name} เพิ่ม ${skill.buff.type.toUpperCase()}!`);
-                
-                // เล่นเอฟเฟกต์บัพใส่ตัวเอง
                 playHitEffect('battle-player-img', 'buff');
-
-            } else if (skill.effect && skill.effect.hp) {
-                // 2.3 สกิลฮีล -> แสดงที่ "ตัวเรา"
+            } 
+            
+            // 2.4 สกิลฮีล (Heal -> Player)
+            if (skill.effect && skill.effect.hp) {
                 logBattle(`💚 ใช้สกิล ${skill.name} ฟื้นฟู HP!`);
-                
-                // เล่นเอฟเฟกต์ฮีลใส่ตัวเอง
                 playHitEffect('battle-player-img', 'heal');
             }
 
@@ -688,47 +732,25 @@ window.battleAction = async (action, skillId = null) => {
         // --- 🏃 3. หนี ---
         } else if (action === 'run') {
             clearInterval(battleTimer);
-            
-            // ✅ เรียกฟังก์ชันล้างบัพสกิล (Stat) ออกก่อนจบการต่อสู้
             clearBattleBuffs(); 
-
             battleState = null;
-            
             let msg = "🏃 คุณหนีจากการต่อสู้!";
             let isDead = false;
-
-            // สุ่ม 10% สะดุดล้ม
             if (Math.random() < 0.1) {
                 const damagePenalty = Math.floor(gameData.maxHp * 0.10); 
                 gameData.hp -= damagePenalty; 
                 msg += `\n💥 แต่สะดุดล้ม! เสียเลือด ${damagePenalty} หน่วย`;
-
-                if (gameData.hp <= 0) {
-                    isDead = true;
-                    msg += `\n💀 (บาดเจ็บสาหัส...)`;
-                }
+                if (gameData.hp <= 0) isDead = true;
             }
-            
             logBattle(msg);
-            
             setTimeout(async () => {
                 if (isDead) {
                     gameData.hp = 0;
                     const lostExp = Math.floor(gameData.exp * 0.10); 
                     gameData.exp = Math.max(0, gameData.exp - lostExp);
-
-                    await UI.alert(
-                        "💀 อุบัติเหตุ!",
-                        `<div style="text-align:center;">
-                            <span style="font-size:40px;">🤕</span><br>
-                            <b>สะดุดล้มหัวฟาดพื้นดับอนาถ...</b><br>
-                            <span style="color:#e74c3c;">เสีย ${lostExp} EXP</span>
-                         </div>`
-                    );
-                    
+                    await UI.alert("💀 อุบัติเหตุ!", "สะดุดล้มหัวฟาดพื้นดับอนาถ...");
                     gameData.hp = Math.floor(gameData.maxHp * 0.5); 
                 }
-
                 UI.showScreen('game-screen');
                 UI.updateGameScreen(gameData);
                 saveToFirebase(); 

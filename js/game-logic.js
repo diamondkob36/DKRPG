@@ -523,7 +523,7 @@ export const GameLogic = {
         return { newData, totalGain, soldCount };
     },
     // 🆕 ฟังก์ชันกดใช้สกิล
-useSkill(currentData, skillId) {
+    useSkill(currentData, skillId) {
         const newData = { ...currentData };
         const skill = skills[skillId];
         
@@ -583,5 +583,81 @@ useSkill(currentData, skillId) {
         }
 
         return newData;
+    },
+    // ✅ ฟังก์ชันคำนวณดาเมจสกิล (ใช้ Stat ผู้เล่น 100% + คิด Hit/Block/Crit/Def)
+    calculateSkillDamage(attacker, defender, skill) {
+        // 1. คำนวณดาเมจตั้งต้น (Scaling from Player Stats)
+        let dmg = 0;
+        
+        // ถ้ามี scaling ให้คำนวณจาก stat ผู้เล่น
+        if (skill.scale) {
+            if (skill.scale.str) dmg += (attacker.str || 0) * skill.scale.str;
+            if (skill.scale.int) dmg += (attacker.int || 0) * skill.scale.int;
+        }
+
+        // กรณีสกิลไม่มี scaling (กันบั๊ก) ให้ใช้ STR เป็นฐาน
+        if (dmg === 0) {
+            dmg = (attacker.str || 0); 
+        }
+
+        // 2. คำนวณความแม่นยำ (Hit Chance)
+        // สูตร: (Dodge พื้นฐาน + โบนัส AGI) - ความแม่นยำผู้ใช้
+        const agiBonus = Math.floor((defender.agi || 0) / 4);
+        const totalDodge = (defender.dodge || 0) + agiBonus;
+        
+        // ค่าการหลบจริง (ต่ำสุดคือ 0)
+        const effectiveDodge = Math.max(0, totalDodge - (attacker.acc || 0));
+        
+        // โอกาสโดน (เต็ม 100)
+        const hitChance = 100 - effectiveDodge;
+
+        // สุ่ม: ถ้าพลาดเป้า (Miss) -> จบเลย ดาเมจ 0
+        // (ให้โอกาสโดนขั้นต่ำ 5% เสมอ)
+        if (Math.random() * 100 > Math.max(5, hitChance)) {
+            return { damage: 0, text: "MISS!", isCrit: false, isBlocked: false };
+        }
+
+        // 3. คำนวณการบล็อก (Block)
+        let isBlocked = false;
+        // โอกาสบล็อก = Blockศัตรู - เจาะบล็อกเรา
+        let blockChance = (defender.block || 0) - (attacker.ignoreBlock || 0);
+        
+        if (Math.random() * 100 < blockChance) {
+            isBlocked = true;
+            dmg = Math.floor(dmg * 0.5); // บล็อกลดดาเมจ 50%
+        }
+
+        // 4. คำนวณคริติคอล (Critical)
+        let isCrit = false;
+        if (Math.random() * 100 < (attacker.critRate || 0)) {
+            isCrit = true;
+            // คูณความแรงคริ (เช่น 150% = 1.5 เท่า)
+            dmg = Math.floor(dmg * ((attacker.critDmg || 150) / 100));
+        }
+
+        // 5. คำนวณเกราะ (Defense) & เจาะเกราะ (Pierce)
+        let def = defender.def || 0;
+        
+        // ถ้าเรามีค่า IgnoreBlock (เจาะเกราะ) ให้ลดเกราะศัตรูลง 60%
+        // (หรือจะใช้ค่า IgnoreBlock เป็น % เจาะเกราะตรงๆ ก็ได้ตามดีไซน์)
+        if ((attacker.ignoreBlock || 0) > 0) { 
+            def = Math.floor(def * 0.4); 
+        }
+        
+        // หักลบเกราะ
+        dmg -= def;
+
+        // 6. ลดดาเมจเปอร์เซ็นต์ (Damage Reduction - เช่น สกิลโล่)
+        let dmgRed = Math.min(40, defender.dmgRed || 0); // ตันที่ 40%
+        if (dmgRed > 0) {
+            dmg = Math.floor(dmg * (1 - dmgRed/100));
+        }
+
+        // การันตีดาเมจขั้นต่ำ 1 (ถ้าไม่ Miss)
+        return { 
+            damage: Math.max(1, dmg), 
+            isCrit, 
+            isBlocked 
+        };
     },
 };

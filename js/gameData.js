@@ -219,6 +219,23 @@ export const skills = {
         isBattleOnly: true,
         buff: { type: "def", value: 5, duration: 45 }
     },
+    Cross_Cut: {
+        id: "Cross_Cut", name: "Cross Cut", img: "image/skulls/Cross_Cut.png", icon: "⚔️",
+        desc: "ทุบอย่างแรง (Dmg 180% STR)",
+        mpCost: 10, cooldown: 5,
+        classReq: "knight",
+        isBattleOnly: true,
+        scale: { str: 1.8 } // ✅ ใช้ scaling
+    },
+    knight_break: {
+        id: "knight_break", name: "Armor Break", img: "image/skulls/knight_bash.png", icon: "🔨",
+        desc: "ลดเกราะศัตรู (Dmg 120% STR, Def -5)",
+        mpCost: 15, cooldown: 15,
+        classReq: "knight",
+        isBattleOnly: true,
+        scale: { str: 1.2 }, // ✅ scaling
+        debuff: { type: "def", value: -5, duration: 20 }
+    },
 
     // --- 🔮 สกิลของ Mage ---
     mage_heal: {
