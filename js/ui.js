@@ -746,8 +746,6 @@ updateGameScreen(gameData) {
             classReqDisplay = `<div style="font-size:11px; color:#e74c3c; margin-top:2px;">⚠️ เฉพาะ: ${classNames}</div>`;
         }
 
-        // เรียกใช้ Helper แสดงรูป
-        // (ฟังก์ชัน getItemVisual ต้องประกาศไว้ด้านบนของไฟล์ ui.js ตามโค้ดที่คุณมีอยู่แล้ว)
         const visual = getItemVisual(item);
 
         // --- ✅ 4. ส่วน Footer (แก้ไขใหม่) ---
@@ -755,6 +753,7 @@ updateGameScreen(gameData) {
         
         if (item.type === 'Skill') {
             // กรณีเป็นสกิล: แสดง MP ที่ใช้ (รับค่ามาจาก property 'price' ที่ส่งมา)
+            // เช่น "🔮 ใช้ 10 MP"
             footerHTML = `
                 <div class="tooltip-footer" style="color:#3498db; border-top: 1px dashed #555; padding-top:5px; margin-top:5px;">
                     🔮 ใช้ ${item.price}
@@ -877,11 +876,10 @@ updateGameScreen(gameData) {
             container.appendChild(btn);
         });
     },
-    renderSkillModal(gameData) {
+renderSkillModal(gameData) {
         const listContainer = document.getElementById('skill-list-content');
         const loadoutContainer = document.getElementById('skill-loadout-grid');
         
-        // ถ้ายังไม่ได้สร้าง HTML container ให้ return ไปก่อน (ป้องกัน Error)
         if (!listContainer || !loadoutContainer) return;
 
         listContainer.innerHTML = '';
@@ -897,7 +895,6 @@ updateGameScreen(gameData) {
             
             if (skillId) {
                 const skill = skills[skillId];
-                // แสดงรูปหรือไอคอน
                 if (skill.img) slot.innerHTML = `<img src="${skill.img}">`;
                 else slot.innerHTML = `<span>${skill.icon}</span>`;
                 
@@ -907,15 +904,18 @@ updateGameScreen(gameData) {
                 removeBtn.innerText = 'x';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
-                    window.equipSkill(null, index); // สั่งถอดสกิล
+                    window.equipSkill(null, index);
                 };
                 slot.appendChild(removeBtn);
                 
-                // Tooltip บอกเลเวล
-                const lvl = gameData.skills[skillId] || 1;
-                this.bindTooltip(slot, { ...skill, price: `Lv.${lvl}` });
+                // ✅ Tooltip: แสดง Level ในชื่อ และ MP ในคำอธิบาย
+                const lvl = (gameData.skills && gameData.skills[skillId]) ? gameData.skills[skillId] : 1;
+                this.bindTooltip(slot, { 
+                    ...skill, 
+                    name: `${skill.name} (Lv.${lvl})`, 
+                    price: `${skill.mpCost} MP` 
+                });
             } else {
-                // ช่องว่าง
                 slot.innerHTML = `<small style="color:#555;">${index+1}</small>`;
             }
             
@@ -929,15 +929,14 @@ updateGameScreen(gameData) {
                 const currentLvl = (gameData.skills && gameData.skills[id]) ? gameData.skills[id] : 0;
                 const isLearned = currentLvl > 0;
                 const maxLvl = skill.maxLevel || 10;
-                const cost = (currentLvl + 1) * 200; // ราคาอัปเกรด
+                const cost = (currentLvl + 1) * 200;
 
                 const row = document.createElement('div');
                 row.className = 'skill-list-item';
                 
-                // Icon
                 const iconHtml = skill.img ? `<img src="${skill.img}" class="skill-icon-small">` : `<span class="skill-icon-text">${skill.icon}</span>`;
 
-                // Info & Upgrade Button
+                // ปุ่ม Upgrade
                 let upgradeBtnHtml = '';
                 if (currentLvl < maxLvl) {
                     const disabled = gameData.gold < cost ? 'disabled' : '';
@@ -959,13 +958,12 @@ updateGameScreen(gameData) {
                     </div>
                 `;
 
-                // ปุ่มติดตั้ง (Equip) - แสดงเฉพาะเมื่อเรียนแล้ว
+                // ปุ่มติดตั้ง (Equip)
                 if (isLearned) {
                     const equipBtn = document.createElement('button');
                     equipBtn.className = 'equip-btn';
                     equipBtn.innerText = 'ติดตั้ง';
                     equipBtn.onclick = () => {
-                        // หาช่องว่างช่องแรก
                         const emptyIndex = loadout.indexOf(null);
                         if (emptyIndex !== -1) {
                             window.equipSkill(id, emptyIndex);
@@ -976,8 +974,8 @@ updateGameScreen(gameData) {
                     row.querySelector('.skill-actions').appendChild(equipBtn);
                 }
 
-                // Tooltip
-                this.bindTooltip(row, { ...skill, price: `Upgrade: ${cost} G` });
+                // ✅ Tooltip: ส่งค่า MP ไปแสดง (ส่วนราคามีบนปุ่มแล้ว)
+                this.bindTooltip(row, { ...skill, price: `${skill.mpCost} MP` });
 
                 listContainer.appendChild(row);
             }

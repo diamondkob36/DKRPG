@@ -144,6 +144,8 @@
                 🎒 กระเป๋า
             </button>
 
+            <button onclick="openSkillManager()" class="menu-btn" style="background:#8e44ad;">📜 สกิล</button>
+
         </div> 
     </div>
 
@@ -418,6 +420,24 @@
 
                     <div id="shop-grid" class="shop-grid"></div>
                 </div>
+    </div>
+
+    <div id="skill-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="width: 400px; max-height: 80vh; display:flex; flex-direction:column;">
+            <div class="modal-header">
+                <h2>📜 จัดการสกิล</h2>
+                <button class="close-btn" onclick="closeSkillManager()">×</button>
+            </div>
+            
+            <div style="background:rgba(0,0,0,0.3); padding:10px; margin-bottom:10px; border-radius:5px;">
+                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">สกิลที่ติดตั้ง (Battle Loadout)</div>
+                <div id="skill-loadout-grid" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:5px;">
+                    </div>
+            </div>
+
+            <div id="skill-list-content" style="flex:1; overflow-y:auto; padding-right:5px;">
+                </div>
+        </div>
     </div>
 
     <div id="item-tooltip" class="custom-tooltip" style="display: none;"></div>
