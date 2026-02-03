@@ -444,21 +444,26 @@
 }
 
 /* จัดตำแหน่งปุ่มกระเป๋า (ถ้ายังไม่มี ให้กำหนดให้ชัดเจน) */
-#bag-btn {
-    position: absolute;
-    bottom: 20px;       /* ระยะห่างจากขอบล่าง */
-    right: 20px;        /* ระยะห่างจากขอบขวา (มุมสุด) */
-    width: 50px;        /* ขนาดปุ่มสมมติ */
-    height: 50px;
-    z-index: 100;       /* ให้ปุ่มอยู่ชั้นบนสุด */
+.main-skill-btn {
+    position: absolute;  /* บังคับให้ลอยอยู่บนหน้าจอ */
+    bottom: 20px;        /* ความสูงระดับเดียวกับกระเป๋า */
+    left: 130px;         /* ขยับห่างจากกระเป๋า (20px + ความกว้างกระเป๋า) */
+    z-index: 100;        /* ให้อยู่ชั้นบนสุด */
+    
+    /* ตกแต่งปุ่มให้สวยงามเหมือนปุ่มอื่น */
+    background: linear-gradient(to bottom, #8e44ad, #6c3483) !important; /* สีม่วง */
+    border: 2px solid #9b59b6 !important;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: transform 0.1s;
 }
 
-/* ย้ายปุ่มดูแลสกิล มาไว้ข้างๆ (ด้านซ้ายของกระเป๋า) */
-#skill-btn { 
-    position: absolute;
-    bottom: 20px;       /* ความสูงเท่ากับกระเป๋า */
-    right: 80px;        /* 20px (ขอบขวา) + 50px (ขนาดกระเป๋า) + 10px (ช่องว่าง) */
-    width: 50px;
-    height: 50px;
-    z-index: 100;
+.main-skill-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #9b59b6;
 }
